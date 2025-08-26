@@ -16,7 +16,7 @@ const HeroSection = () => {
       </div>
       
       {/* Contenido principal con layout de dos columnas */}
-      <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between px-4 sm:px-6 lg:px-8 max-w-[1090px] mx-auto w-full">
         {/* Columna izquierda - Texto */}
         <div className="text-left lg:w-1/2 lg:pr-8 mb-8 lg:mb-0">
           {/* Logo oficial */}
@@ -29,12 +29,12 @@ const HeroSection = () => {
           </div>
           
           {/* Título principal */}
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-8 leading-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-8 leading-tight">
             ¿Qué es CulturAll Access?
           </h1>
           
           {/* Descripción */}
-          <p className="text-base sm:text-lg lg:text-xl text-white leading-relaxed">
+          <p className="text-sm sm:text-base lg:text-lg text-white leading-relaxed">
             Este proyecto de la Secretaría de Cultura del Gobierno del Estado reconoce y valora la participación de la ciudadanía en la vida cultural de Nuevo León. A través de él, se ofrecen beneficios y promociones exclusivas para quienes disfrutan de la oferta cultural del estado: productos, eventos, talleres, exposiciones, conciertos y mucho más.
           </p>
         </div>

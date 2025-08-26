@@ -27,7 +27,7 @@
       <div className="relative overflow-hidden h-full">
         {/* Header fijo */}
         <header className="fixed top-0 left-0 right-0 z-50 bg-orange-500 backdrop-blur-sm shadow-lg">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-[1090px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-center py-6 space-x-8">
               {/* Logo izquierdo */}
               <div className="flex items-center">
@@ -78,7 +78,7 @@
 
           {/* Formulario centrado */}
           <div className="flex-1 flex items-center justify-center px-6 py-20 pb-32">
-            <div className="bg-orange-500 rounded-2xl p-10 shadow-2xl max-w-3xl w-full">
+            <div className="bg-orange-500 rounded-2xl p-10 shadow-2xl max-w-[1090px] w-full">
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Campo Institución */}
                 <div>

@@ -6,6 +6,8 @@ import BarraNaranja from './components/BarraNaranja'
 import ContenidoPrincipal from './components/ContenidoPrincipal'
 import Footer from './components/Footer'
 import Formulario from './components/Formularios/Control_Acceso'
+import CargarPromo from './components/Formularios/CargarPromo'
+import Registro from './components/Formularios/Registro'
 
 function App() {
   return (
@@ -22,6 +24,12 @@ function App() {
           } />
           <Route path="/Control_Acceso" element={
             <Formulario />
+          } />
+          <Route path="/CargarPromo" element={
+            <CargarPromo />
+          } />
+          <Route path="/Registro" element={
+            <Registro />
           } />
           {/* Add more routes here as needed */}
         </Routes>

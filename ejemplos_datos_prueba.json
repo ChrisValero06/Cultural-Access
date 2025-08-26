@@ -1,0 +1,172 @@
+{
+  "ejemplos_promociones": [
+    {
+      "nombre": "Promoción Básica - Museo de Arte",
+      "datos": {
+        "institucion": "Museo de Arte Contemporáneo",
+        "tipo_promocion": "Descuento",
+        "disciplina": "Arte",
+        "beneficios": "50% de descuento en entradas para estudiantes",
+        "comentarios_restricciones": "Válido solo los martes y jueves, presentar credencial de estudiante",
+        "fecha_inicio": "2024-01-01",
+        "fecha_fin": "2024-12-31",
+        "imagen_principal": "REEMPLAZAR_CON_URL_REAL",
+        "imagen_secundaria": null
+      },
+      "descripcion": "Promoción básica con solo imagen principal"
+    },
+    {
+      "nombre": "Promoción Completa - Teatro",
+      "datos": {
+        "institucion": "Teatro de la Ciudad",
+        "tipo_promocion": "Entrada Gratuita",
+        "disciplina": "Teatro",
+        "beneficios": "Entrada gratuita para adultos mayores de 65 años",
+        "comentarios_restricciones": "Presentar identificación oficial, válido solo los domingos, cupo limitado",
+        "fecha_inicio": "2024-01-15",
+        "fecha_fin": "2024-06-30",
+        "imagen_principal": "REEMPLAZAR_CON_URL_REAL",
+        "imagen_secundaria": "REEMPLAZAR_CON_URL_REAL"
+      },
+      "descripcion": "Promoción completa con ambas imágenes"
+    },
+    {
+      "nombre": "Promoción - Galería de Arte",
+      "datos": {
+        "institucion": "Galería de Arte Moderno",
+        "tipo_promocion": "2x1",
+        "disciplina": "Arte",
+        "beneficios": "Lleva a un amigo gratis en exposiciones temporales",
+        "comentarios_restricciones": "Válido solo en exposiciones temporales, no aplica en colección permanente",
+        "fecha_inicio": "2024-02-01",
+        "fecha_fin": "2024-05-31",
+        "imagen_principal": "REEMPLAZAR_CON_URL_REAL",
+        "imagen_secundaria": null
+      },
+      "descripcion": "Promoción 2x1 para exposiciones temporales"
+    },
+    {
+      "nombre": "Promoción - Biblioteca",
+      "datos": {
+        "institucion": "Biblioteca Central",
+        "tipo_promocion": "Acceso VIP",
+        "disciplina": "Literatura",
+        "beneficios": "Acceso a salas especiales y eventos exclusivos",
+        "comentarios_restricciones": "Requiere membresía anual, reservación previa obligatoria",
+        "fecha_inicio": "2024-03-01",
+        "fecha_fin": "2024-12-31",
+        "imagen_principal": "REEMPLAZAR_CON_URL_REAL",
+        "imagen_secundaria": "REEMPLAZAR_CON_URL_REAL"
+      },
+      "descripcion": "Promoción de acceso VIP a biblioteca"
+    },
+    {
+      "nombre": "Promoción - Centro Cultural",
+      "datos": {
+        "institucion": "Centro Cultural Nuevo León",
+        "tipo_promocion": "Talleres Gratuitos",
+        "disciplina": "Artes Plásticas",
+        "beneficios": "Talleres gratuitos de pintura y escultura para niños",
+        "comentarios_restricciones": "Edad 6-12 años, cupo máximo 20 niños por taller, inscripción previa",
+        "fecha_inicio": "2024-04-01",
+        "fecha_fin": "2024-08-31",
+        "imagen_principal": "REEMPLAZAR_CON_URL_REAL",
+        "imagen_secundaria": null
+      },
+      "descripcion": "Talleres gratuitos para niños"
+    }
+  ],
+  "ejemplos_busquedas": [
+    {
+      "tipo": "Por Institución",
+      "parametros": {
+        "institucion": "Museo"
+      },
+      "descripcion": "Buscar todas las promociones que contengan 'Museo' en el nombre"
+    },
+    {
+      "tipo": "Por Institución",
+      "parametros": {
+        "institucion": "Teatro"
+      },
+      "descripcion": "Buscar todas las promociones que contengan 'Teatro' en el nombre"
+    },
+    {
+      "tipo": "Por Disciplina",
+      "parametros": {
+        "disciplina": "Arte"
+      },
+      "descripcion": "Buscar todas las promociones de la disciplina 'Arte'"
+    },
+    {
+      "tipo": "Por Disciplina",
+      "parametros": {
+        "disciplina": "Teatro"
+      },
+      "descripcion": "Buscar todas las promociones de la disciplina 'Teatro'"
+    },
+    {
+      "tipo": "Por Disciplina",
+      "parametros": {
+        "disciplina": "Literatura"
+      },
+      "descripcion": "Buscar todas las promociones de la disciplina 'Literatura'"
+    }
+  ],
+  "ejemplos_errores": [
+    {
+      "nombre": "Datos Incompletos",
+      "datos": {
+        "institucion": "Museo Test",
+        "tipo_promocion": "Descuento"
+      },
+      "error_esperado": "Código 400 - Campos requeridos faltantes",
+      "descripcion": "Solo se proporcionan 2 campos de los 8 requeridos"
+    },
+    {
+      "nombre": "Fechas Inválidas",
+      "datos": {
+        "institucion": "Museo Test",
+        "tipo_promocion": "Descuento",
+        "disciplina": "Arte",
+        "beneficios": "Test",
+        "comentarios_restricciones": "Test",
+        "fecha_inicio": "2024-12-31",
+        "fecha_fin": "2024-01-01",
+        "imagen_principal": "http://test.com/imagen.jpg"
+      },
+      "error_esperado": "Código 400 - Fecha fin anterior a fecha inicio",
+      "descripcion": "La fecha de fin es anterior a la fecha de inicio"
+    },
+    {
+      "nombre": "URL de Imagen Inválida",
+      "datos": {
+        "institucion": "Museo Test",
+        "tipo_promocion": "Descuento",
+        "disciplina": "Arte",
+        "beneficios": "Test",
+        "comentarios_restricciones": "Test",
+        "fecha_inicio": "2024-01-01",
+        "fecha_fin": "2024-12-31",
+        "imagen_principal": "no_es_una_url_valida"
+      },
+      "error_esperado": "Código 400 - URL de imagen inválida",
+      "descripcion": "La URL de la imagen no es válida"
+    }
+  ],
+  "notas_importantes": [
+    "REEMPLAZAR_CON_URL_REAL: Debes reemplazar este texto con la URL real de la imagen subida",
+    "Las fechas deben estar en formato YYYY-MM-DD",
+    "Las imágenes deben ser JPG, PNG, GIF o WEBP (máximo 5MB)",
+    "Todos los campos marcados son obligatorios excepto imagen_secundaria",
+    "Para probar errores, usa los ejemplos de la sección 'ejemplos_errores'"
+  ],
+  "orden_pruebas_recomendado": [
+    "1. Verificar conexión a base de datos",
+    "2. Subir imágenes de prueba",
+    "3. Crear promociones usando las URLs de las imágenes subidas",
+    "4. Verificar que las promociones se crearon correctamente",
+    "5. Probar búsquedas por institución y disciplina",
+    "6. Probar validaciones y manejo de errores"
+  ]
+}
