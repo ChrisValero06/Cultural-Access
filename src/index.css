@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -64,4 +66,27 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* Layout de Grid para mantener header y footer fijos */
+#root {
+  display: grid;
+  min-height: 100dvh;
+  grid-template-rows: auto 1fr auto;
+}
+
+/* Asegurar que el contenido principal ocupe todo el espacio disponible */
+main {
+  min-height: 0;
+}
+
+/* Estilos para formularios que se integren con el grid */
+main > div {
+  height: 100%;
+}
+
+/* Asegurar que los formularios ocupen todo el espacio disponible */
+main form,
+main > div > div {
+  height: 100%;
 }

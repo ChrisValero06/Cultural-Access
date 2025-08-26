@@ -67,44 +67,12 @@ const Footer = () => {
 
           {/* Logos del Gobierno */}
           <div>
-            <div className="flex items-center space-x-4">
-              {/* Logo NL con escudo */}
-              <div className="flex items-center space-x-2">
-                <div className="relative">
-                  {/* Escudo con león */}
-                  <div className="w-12 h-14 bg-white rounded-t-full relative">
-                    <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                      <div className="w-6 h-6 bg-gray-800 rounded-full"></div>
-                    </div>
-                    {/* Corona */}
-                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-4 h-2 bg-yellow-400 rounded-t-full"></div>
-                  </div>
-                  {/* Letras NL */}
-                  <div className="text-center mt-1">
-                    <div className="text-white font-bold text-sm">N</div>
-                    <div className="text-white font-bold text-sm">L</div>
-                  </div>
-                </div>
-                
-                {/* Texto CULTURA */}
-                <div className="text-white font-bold text-sm leading-tight">
-                  <div>CULTURA</div>
-                  <div className="text-xs font-normal">GABINETE DE IGUALDAD</div>
-                  <div className="text-xs font-normal">PARA TODAS LAS PERSONAS</div>
-                </div>
-              </div>
-              
-              {/* Logo NL simple */}
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                  <div className="w-6 h-6 bg-gray-800 rounded-full"></div>
-                </div>
-                <div className="text-white font-bold text-sm">
-                  <div>N</div>
-                  <div>-</div>
-                  <div>L</div>
-                </div>
-              </div>
+            <div className="flex items-center justify-center">
+              <img 
+                src="/images/logo footer.png" 
+                alt="Logo Gobierno Nuevo León"
+                className="h-16 w-auto object-contain"
+              />
             </div>
           </div>
         </div>

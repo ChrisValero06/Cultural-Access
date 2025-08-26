@@ -5,6 +5,10 @@ export const imagenes = {
   bannerLAB: "https://www.culturallaccess.com/Banner%20LAB.png",
   logoPrincipal: "https://www.culturallaccess.com/culturaaaaaaaaaalaccesssssslogo-04.png",
   
+  // Logos del header
+  logoIzquierdo: "/images/LogoIzquiero.png",
+  logoDerecho: "/images/LogoDerecho.png",
+  
   // Imágenes de fondo y elementos
   fondoEstrellado: "https://estrellasdenuevoleon.com.mx/fotos/fotos-estaticas/componente-cultural/fondo-estrellado-completo.jpg",
   ventanaGotica: "https://estrellasdenuevoleon.com.mx/fotos/fotos-estaticas/componente-cultural/ventana-gotica.png",
