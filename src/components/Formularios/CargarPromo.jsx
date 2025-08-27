@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { imagenes } from '../../constants/imagenes'
 import { apiService } from '../../services/apiService'
 
@@ -15,6 +15,136 @@ const CargarPromo = () => {
     imagenSecundaria: null
   })
 
+  const [showInstituciones, setShowInstituciones] = useState(false)
+  const [filteredInstituciones, setFilteredInstituciones] = useState([])
+  const autocompleteRef = useRef(null)
+
+  const [showTiposPromocion,setShowTiposPromocion] = useState(false)
+  const [filteredTiposPromocion, setFilteredTiposPromocion] = useState([])
+  const autocompleteRefTiposPromocion = useRef(null)
+
+  const [showDisciplina, setShowDisciplina] = useState(false)
+  const [filteredDisciplina, setFilteredDisciplina] = useState([])
+  const autocompleteRefDisciplina = useRef(null)
+
+  // Lista de instituciones culturales
+  const instituciones = [
+    'Ballet de Monterrey',
+    'Bread Coffee Roasters',
+    'Café Belmonte',
+    'Casa Coa',
+    'Casa de la Cultura de Nuevo León',
+    'Casa Motis',
+    'Casa Musa',
+    'Centro Roberto Garza Sada',
+    'Cineteca de Nuevo León',
+    'Constelación Feria de Arte',
+    'Dramático',
+    'El Lingote Restaurante',
+    'Escuela Superior de Música y Danza de Monterrey',
+    'Fondo de Cultura Económica',
+    'Fondo Editorial de Nuevo León',
+    'Fototeca de Nuevo León',
+    'Heart Ego',
+    'Horno 3',
+    'La Gran Audiencia',
+    'La Milarca',
+    'Librería Bruma',
+    'Librería Sentido',
+    'Monstera Coffee Bar',
+    'Museo 31',
+    'Museo del Acero Horno 3',
+    'Museo de Arte Contemporáneo de Monterrey (MARCO)',
+    'Museo de la Batalla',
+    'Museo de Historia Mexicana',
+    'Museo del Noreste',
+    'Museo del Palacio',
+    'Museo del Vidrio (MUVI)',
+    'Museo Estatal de Culturas Populares de Nuevo León',
+    'Museo Regional de Nuevo León El Obispado',
+    'Papalote Museo del Niño Monterrey',
+    'Salón de la Fama de Beisbol Mexicano',
+    'Saxy Jazz Club',
+    'Secretaría de Cultura',
+    'Seabird Coffee',
+    'Teatro de la Ciudad',
+    'Vaso Roto Ediciones'
+  ]
+
+  // Lista de tipos de promoción
+  const tiposPromocion = [
+    'Entradas gratuitas',
+    'Descuentos',
+    'Acceso prioritario',
+    'Descuentos para la educación',
+    'Visitas guiadas exclusivas',
+    'Descuentos en publicaciones CONARTE',
+    'Asistencia a conferencias',
+    'Descuentos en cafés/comida',
+    'Boletos 2x4',
+    'Descuentos por temporada',
+    'Otra'
+  ]
+
+  // Lista de disciplinas
+  const disciplinas = [
+    'Artes Plásticas',
+    'Cine',
+    'Danza',
+    'Teatro',
+    'Música',
+    'Literatura',
+    'Diseño Gráfico',
+    'Arquitectura',
+    'Arte Textil',
+    'Otra'
+  ]
+
+  // Cerrar autocomplete cuando se hace click afuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target)) {
+        setShowInstituciones(false)
+        setFilteredInstituciones([])
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  // Cerrar autocomplete cuando se hace click afuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (autocompleteRefTiposPromocion.current && !autocompleteRefTiposPromocion.current.contains(event.target)) {
+        setShowTiposPromocion(false)
+        setFilteredTiposPromocion([])
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  // Cerrar autocomplete cuando se hace click afuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (autocompleteRefDisciplina.current && !autocompleteRefDisciplina.current.contains(event.target)) {
+        setShowDisciplina(false)
+        setFilteredDisciplina([])
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   const handleChange = (e) => {
     const { name, value, files } = e.target
     if (files) {
@@ -27,6 +157,96 @@ const CargarPromo = () => {
         ...prevState,
         [name]: value
       }))
+
+      // Filtrar instituciones para el autocomplete
+      if (name === 'institucion') {
+        if (value.trim() === '') {
+          setFilteredInstituciones([])
+          setShowInstituciones(false)
+        } else {
+          const filtered = instituciones.filter(inst =>
+            inst.toLowerCase().includes(value.toLowerCase())
+          )
+          setFilteredInstituciones(filtered)
+          setShowInstituciones(filtered.length > 0)
+        }
+      }
+
+      // Filtrar tipos de promoción para el autocomplete
+      if (name === 'tipoPromocion') {
+        if (value.trim() === '') {
+          setFilteredTiposPromocion([])
+          setShowTiposPromocion(false)
+        } else {
+          const filtered = tiposPromocion.filter(inst =>
+            inst.toLowerCase().includes(value.toLowerCase())
+          )
+          setFilteredTiposPromocion(filtered)
+          setShowTiposPromocion(filtered.length > 0)
+        }
+      }
+
+      // Filtrar disciplinas para el autocomplete
+      if (name === 'disciplina') {
+        if (value.trim() === '') {
+          setFilteredDisciplina([])
+          setShowDisciplina(false)
+        } else {
+          const filtered = disciplinas.filter(inst =>
+            inst.toLowerCase().includes(value.toLowerCase())
+          )
+          setFilteredDisciplina(filtered)
+          setShowDisciplina(filtered.length > 0)
+        }
+      }
+    }
+  }
+
+  const selectInstitucion = (institucion) => {
+    setFormData(prevState => ({
+      ...prevState,
+      institucion: institucion
+    }))
+    setShowInstituciones(false)
+    setFilteredInstituciones([])
+  }
+
+  const handleInstitucionFocus = () => {
+    if (formData.institucion.trim() === '') {
+      setFilteredInstituciones(instituciones)
+      setShowInstituciones(true)
+    }
+  }
+
+  const selectTipoPromocion = (tipoPromocion) => {
+    setFormData(prevState => ({
+      ...prevState,
+      tipoPromocion: tipoPromocion
+    }))
+    setShowTiposPromocion(false)
+    setFilteredTiposPromocion([])
+  }
+
+  const handleTipoPromocionFocus = () => {
+    if (formData.tipoPromocion.trim() === '') {
+      setFilteredTiposPromocion(tiposPromocion)
+      setShowTiposPromocion(true)
+    }
+  }
+
+  const selectDisciplina = (disciplina) => {
+    setFormData(prevState => ({
+      ...prevState,
+      disciplina: disciplina
+    }))
+    setShowDisciplina(false)
+    setFilteredDisciplina([])
+  }
+
+  const handleDisciplinaFocus = () => {
+    if (formData.disciplina.trim() === '') {
+      setFilteredDisciplina(disciplinas)
+      setShowDisciplina(true)
     }
   }
 
@@ -157,22 +377,33 @@ const CargarPromo = () => {
                 <label htmlFor="institucion" className="block text-base font-bold text-gray-800 mb-2">
                   INSTITUCIÓN *
                 </label>
-                <div className="relative">
+                <div className="relative" ref={autocompleteRef}>
                   <input
                     type="text"
                     id="institucion"
                     name="institucion"
                     value={formData.institucion}
                     onChange={handleChange}
+                    onFocus={handleInstitucionFocus}
                     required
-                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base placeholder:text-gray-500"
-                    placeholder="Ingresa el nombre de la institución"
+                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
+                    placeholder="Busca o escribe el nombre de la institución"
                   />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+                  
+                  {/* Dropdown de autocomplete */}
+                  {showInstituciones && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border-2 border-orange-400 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {filteredInstituciones.map((institucion, index) => (
+                        <div
+                          key={index}
+                          className="px-4 py-3 hover:bg-orange-100 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors text-gray-800 font-medium text-base"
+                          onClick={() => selectInstitucion(institucion)}
+                        >
+                          {institucion}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -181,22 +412,33 @@ const CargarPromo = () => {
                 <label htmlFor="tipoPromocion" className="block text-base font-bold text-gray-800 mb-2">
                   TIPO DE PROMOCIÓN *
                 </label>
-                <div className="relative">
+                <div className="relative" ref={autocompleteRefTiposPromocion}>
                   <input
                     type="text"
                     id="tipoPromocion"
                     name="tipoPromocion"
                     value={formData.tipoPromocion}
                     onChange={handleChange}
+                    onFocus={handleTipoPromocionFocus}
                     required
-                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base placeholder:text-gray-500"
-                    placeholder="Ingresa el tipo de promoción"
+                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
+                    placeholder="Busca o escribe el tipo de promoción"
                   />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+                  
+                  {/* Dropdown de autocomplete */}
+                  {showTiposPromocion && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border-2 border-orange-400 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {filteredTiposPromocion.map((tipoPromocion, index) => (
+                        <div
+                          key={index}
+                          className="px-4 py-3 hover:bg-orange-100 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors text-gray-800 font-medium text-base"
+                          onClick={() => selectTipoPromocion(tipoPromocion)}
+                        >
+                          {tipoPromocion}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -205,22 +447,33 @@ const CargarPromo = () => {
                 <label htmlFor="disciplina" className="block text-base font-bold text-gray-800 mb-2">
                   DISCIPLINA *
                 </label>
-                <div className="relative">
+                <div className="relative" ref={autocompleteRefDisciplina}>
                   <input
                     type="text"
                     id="disciplina"
                     name="disciplina"
                     value={formData.disciplina}
                     onChange={handleChange}
+                    onFocus={handleDisciplinaFocus}
                     required
-                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base placeholder:text-gray-500"
-                    placeholder="Ingresa la disciplina"
+                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
+                    placeholder="Busca o escribe la disciplina"
                   />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+                  
+                  {/* Dropdown de autocomplete */}
+                  {showDisciplina && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border-2 border-orange-400 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {filteredDisciplina.map((disciplina, index) => (
+                        <div
+                          key={index}
+                          className="px-4 py-3 hover:bg-orange-100 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors text-gray-800 font-medium text-base"
+                          onClick={() => selectDisciplina(disciplina)}
+                        >
+                          {disciplina}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -236,7 +489,7 @@ const CargarPromo = () => {
                   onChange={handleChange}
                   required
                   rows="3"
-                  className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white resize-none text-base placeholder:text-gray-500"
+                  className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black resize-none text-base placeholder:text-gray-500"
                   placeholder="Descripción de la promoción"
                 />
               </div>
@@ -253,7 +506,7 @@ const CargarPromo = () => {
                   onChange={handleChange}
                   required
                   rows="3"
-                  className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white resize-none text-base placeholder:text-gray-500"
+                  className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black resize-none text-base placeholder:text-gray-500"
                   placeholder="Describe las limitantes de tu promoción"
                 />
               </div>
@@ -273,7 +526,7 @@ const CargarPromo = () => {
                       value={formData.fechaInicio}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base"
+                      className="w-full px-9 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base"
                     />
                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                       <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -296,7 +549,7 @@ const CargarPromo = () => {
                       value={formData.fechaFin}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:border-transparent transition duration-200 bg-white text-base"
+                      className="w-full px-9 py-3 border-2 border-orange-400 rounded-lg focus:border-transparent transition duration-200 bg-white text-black text-base"
                     />
                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                       <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -322,11 +575,11 @@ const CargarPromo = () => {
                       onChange={handleChange}
                       accept="image/*"
                       required
-                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600"
+                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600"
                     />
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                       <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
                   </div>
@@ -345,9 +598,9 @@ const CargarPromo = () => {
                       name="imagenSecundaria"
                       onChange={handleChange}
                       accept="image/*"
-                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600"
+                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600"
                     />
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                       <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
@@ -404,4 +657,4 @@ const CargarPromo = () => {
   )
 }
 
-export default CargarPromo
+export default CargarPromo;

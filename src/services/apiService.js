@@ -1,4 +1,4 @@
-// Servicio para manejar las llamadas a la API del backend PHP
+// Servicio para manejar las llamadas a la API del backend Node.js
 import { API_CONFIG, getApiUrl } from '../config/api.js';
 
 const API_BASE_URL = API_CONFIG.BASE_URL;
@@ -7,7 +7,7 @@ export const apiService = {
   // Crear nueva promoción
   async crearPromocion(promocionData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/crear_promocion.php`, {
+      const response = await fetch(`${API_BASE_URL}/crear_promocion`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -30,7 +30,7 @@ export const apiService = {
   // Obtener todas las promociones
   async obtenerPromociones() {
     try {
-      const response = await fetch(`${API_BASE_URL}/obtener_promociones.php`, {
+      const response = await fetch(`${API_BASE_URL}/obtener_promociones`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ export const apiService = {
       formData.append('imagen', imagen);
       formData.append('nombre', nombreArchivo);
 
-      const response = await fetch(`${API_BASE_URL}/subir_imagen.php`, {
+      const response = await fetch(`${API_BASE_URL}/subir_imagen`, {
         method: 'POST',
         body: formData,
       });
@@ -76,7 +76,7 @@ export const apiService = {
   // Buscar promociones por institución
   async buscarPorInstitucion(institucion) {
     try {
-      const response = await fetch(`${API_BASE_URL}/buscar_promocion.php?institucion=${encodeURIComponent(institucion)}`, {
+      const response = await fetch(`${API_BASE_URL}/buscar_promocion?institucion=${encodeURIComponent(institucion)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ export const apiService = {
   // Buscar promociones por disciplina
   async buscarPorDisciplina(disciplina) {
     try {
-      const response = await fetch(`${API_BASE_URL}/buscar_promocion.php?disciplina=${encodeURIComponent(disciplina)}`, {
+      const response = await fetch(`${API_BASE_URL}/buscar_promocion?disciplina=${encodeURIComponent(disciplina)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

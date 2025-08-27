@@ -1,14 +1,14 @@
 // Configuración de la API del backend
 export const API_CONFIG = {
-  // URL base del backend (ajustar según tu configuración de XAMPP)
-  BASE_URL: 'http://localhost/cultural-access/backend/api',
+  // URL base del backend Node.js
+  BASE_URL: 'http://localhost:3001/api',
   
   // Endpoints específicos
   ENDPOINTS: {
-    CREAR_PROMOCION: '/crear_promocion.php',
-    OBTENER_PROMOCIONES: '/obtener_promociones.php',
-    BUSCAR_PROMOCION: '/buscar_promocion.php',
-    SUBIR_IMAGEN: '/subir_imagen.php'
+    CREAR_PROMOCION: '/crear_promocion',
+    OBTENER_PROMOCIONES: '/obtener_promociones',
+    BUSCAR_PROMOCION: '/buscar_promocion',
+    SUBIR_IMAGEN: '/subir_imagen'
   },
   
   // Configuración de subida de archivos
