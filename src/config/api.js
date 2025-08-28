@@ -8,7 +8,8 @@ export const API_CONFIG = {
     CREAR_PROMOCION: '/crear_promocion',
     OBTENER_PROMOCIONES: '/obtener_promociones',
     BUSCAR_PROMOCION: '/buscar_promocion',
-    SUBIR_IMAGEN: '/subir_imagen'
+    SUBIR_IMAGEN: '/subir_imagen',
+    PROMOCIONES_CARRUSEL: '/promociones-carrusel'
   },
   
   // Configuración de subida de archivos

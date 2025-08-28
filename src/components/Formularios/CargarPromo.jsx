@@ -27,6 +27,37 @@ const CargarPromo = () => {
   const [filteredDisciplina, setFilteredDisciplina] = useState([])
   const autocompleteRefDisciplina = useRef(null)
 
+  // Estados para el carrusel de ejemplo
+  const [currentImage, setCurrentImage] = useState(0)
+  const [carruselEjemplo, setCarruselEjemplo] = useState({
+    imagenes: [
+      
+    ]
+  })
+
+  // Funciones de navegación del carrusel
+  const nextImage = () => {
+    setCurrentImage((prev) => (prev + 1) % carruselEjemplo.imagenes.length)
+  }
+
+  const prevImage = () => {
+    setCurrentImage((prev) => (prev - 1 + carruselEjemplo.imagenes.length) % carruselEjemplo.imagenes.length)
+  }
+
+  // Sin auto-rotación - imagen estática por defecto
+  
+  // Limpiar URLs de objetos cuando el componente se desmonte
+  useEffect(() => {
+    return () => {
+      // Limpiar URLs de objetos para evitar memory leaks
+      carruselEjemplo.imagenes.forEach(url => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url)
+        }
+      })
+    }
+  }, [])
+
   // Lista de instituciones culturales
   const instituciones = [
     'Ballet de Monterrey',
@@ -152,6 +183,20 @@ const CargarPromo = () => {
         ...prevState,
         [name]: files[0]
       }))
+
+      // Actualizar el carrusel de ejemplo cuando se selecciona una imagen
+      if (name === 'imagenPrincipal' && files[0]) {
+        const imageUrl = URL.createObjectURL(files[0])
+        setCarruselEjemplo(prev => ({
+          imagenes: [imageUrl, ...prev.imagenes.slice(1)]
+        }))
+        setCurrentImage(0) // Mostrar la nueva imagen principal
+      } else if (name === 'imagenSecundaria' && files[0]) {
+        const imageUrl = URL.createObjectURL(files[0])
+        setCarruselEjemplo(prev => ({
+          imagenes: [...prev.imagenes.slice(0, 1), imageUrl, ...prev.imagenes.slice(2)]
+        }))
+      }
     } else {
       setFormData(prevState => ({
         ...prevState,
@@ -362,12 +407,14 @@ const CargarPromo = () => {
           </div>
         </div>
 
-        {/* Formulario centrado */}
+        {/* Formulario y carrusel en dos columnas */}
         <div className="flex-1 flex items-center justify-center px-6 py-8">
-          <div className="bg-orange-500 rounded-2xl p-8 shadow-2xl max-w-[1090px] w-full max-h-full overflow-y-auto">
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-[1400px] max-h-full">
+            {/* Columna del formulario */}
+            <div className="bg-orange-500 rounded-2xl p-6 shadow-2xl overflow-y-auto">
+              <form onSubmit={handleSubmit} className="space-y-4">
               {/* Título del formulario */}
-              <div className="text-center mb-6">
+              <div className="text-center mb-4">
                 <h2 className="text-3xl font-bold text-white mb-2">CARGAR PROMOCIÓN</h2>
                 <p className="text-orange-100 text-base">Completa los datos de la nueva promoción</p>
               </div>
@@ -639,6 +686,57 @@ const CargarPromo = () => {
                 </button>
               </div>
             </form>
+            </div>
+
+            {/* Columna del carrusel de ejemplo */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="text-center mb-4">
+                <h3 className="text-xl font-bold text-white mb-2">VISTA PREVIA</h3>
+                <p className="text-orange-100 text-sm">Tu promoción se verá así en el carrusel</p>
+              </div>
+              
+              {/* Carrusel */}
+              <div className="relative w-full max-w-5xl">
+                <div className="overflow-hidden shadow-2xl">
+                  <div className="relative h-[280px] overflow-hidden">
+                    {carruselEjemplo.imagenes.map((imagen, index) => (
+                      <img
+                        key={index}
+                        src={imagen}
+                        alt={`Ejemplo promoción ${index + 1}`}
+                        className={`absolute inset-0 w-full h-full object-contain transition-transform duration-700 ease-in-out ${
+                          index === currentImage ? 'translate-x-0' : 
+                          index < currentImage ? '-translate-x-full' : 'translate-x-full'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Navegación del carrusel */}
+                {currentImage > 0 && (
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-orange-500 rounded-full p-3 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                )}
+                
+                {currentImage < carruselEjemplo.imagenes.length - 1 && (
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-orange-500 rounded-full p-3 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

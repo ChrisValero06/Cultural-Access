@@ -8,33 +8,42 @@ import Footer from './components/Footer'
 import Formulario from './components/Formularios/Control_Acceso'
 import CargarPromo from './components/Formularios/CargarPromo'
 import Registro from './components/Formularios/Registro'
+import AdminDashboard from './components/Dashboard/AdminDashboard'
 
 function App() {
   return (
     <>
-      <Header />
-      <main>
-        <Routes>
-          <Route path="/" element={
-            <div>
-              <HeroSection />
-              <BarraNaranja />
-              <ContenidoPrincipal />
-            </div>
-          } />
-          <Route path="/Control_Acceso" element={
-            <Formulario />
-          } />
-          <Route path="/CargarPromo" element={
-            <CargarPromo />
-          } />
-          <Route path="/Registro" element={
-            <Registro />
-          } />
-          {/* Add more routes here as needed */}
-        </Routes>
-      </main>
-      <Footer />
+      <Routes>
+        <Route path="/AdminDashboard" element={
+          <AdminDashboard />
+        } />
+        <Route path="/*" element={
+          <>
+            <Header />
+            <main>
+              <Routes>
+                <Route path="/" element={
+                  <div>
+                    <HeroSection />
+                    <BarraNaranja />
+                    <ContenidoPrincipal />
+                  </div>
+                } />
+                <Route path="/Control_Acceso" element={
+                  <Formulario />
+                } />
+                <Route path="/CargarPromo" element={
+                  <CargarPromo />
+                } />
+                <Route path="/Registro" element={
+                  <Registro />
+                } />
+              </Routes>
+            </main>
+            <Footer />
+          </>
+        } />
+      </Routes>
     </>
   )
 }

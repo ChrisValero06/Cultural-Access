@@ -90,3 +90,56 @@ main form,
 main > div > div {
   height: 100%;
 }
+
+/* Estilos de impresión para el Dashboard */
+@media print {
+  /* Ocultar elementos no necesarios para impresión */
+  header,
+  footer,
+  button,
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Asegurar que el contenido sea legible */
+  body {
+    font-size: 12pt;
+    line-height: 1.4;
+    color: #000;
+    background: #fff;
+  }
+  
+  /* Estilos para la tabla */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  th {
+    background-color: #f8f9fa !important;
+    font-weight: bold;
+  }
+  
+  /* Asegurar que las imágenes se muestren */
+  img {
+    max-width: 100px;
+    height: auto;
+  }
+  
+  /* Estilos para las tarjetas de estadísticas */
+  .stats-card {
+    break-inside: avoid;
+    margin-bottom: 20px;
+  }
+  
+  /* Asegurar que el contenido no se corte entre páginas */
+  tr {
+    break-inside: avoid;
+  }
+}
