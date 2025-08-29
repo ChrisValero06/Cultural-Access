@@ -61,35 +61,35 @@ const CulturalAccessForm = () => {
     setIsSubmitting(true)
 
     try {
-      // Mapear los campos del frontend al formato del backend
-      const estudiosValue = formData.estudios === "sin-estudios" ? null : formData.estudios;
+             // Mapear los campos del frontend al formato del backend
+       const estudiosValue = formData.estudios === "sin-estudios" ? null : formData.estudios;
 
-      const dataToSend = {
-        nombre: formData.nombre,
-        apellido_paterno: formData.apellidoPaterno,
-        apellido_materno: formData.apellidoMaterno,
-        genero: formData.genero,
-        email: formData.email,
-        calle_numero: formData.calleNumero,
-        municipio: formData.municipio,
-        estado: formData.estado,
-        colonia: formData.colonia,
-        codigo_postal: formData.codigoPostal,
-        edad: formData.edad,
-        estado_civil: formData.estadoCivil,
-        estudios: estudiosValue,
-        curp: curpOption === "curp" ? formData.curp : null,
-        estado_nacimiento: formData.estadoNacimiento,
-        diaNacimiento: formData.diaNacimiento,
-        mesNacimiento: formData.mesNacimiento,
-        anoNacimiento: formData.anoNacimiento,
-        numero_tarjeta: formData.numeroTarjeta,
-        acepta_info: formData.aceptaInfo,
-      }
+               const dataToSend = {
+          nombre: formData.nombre,
+          apellido_paterno: formData.apellidoPaterno,
+          apellido_materno: formData.apellidoMaterno,
+          genero: formData.genero,
+          email: formData.email,
+          calle_numero: formData.calleNumero,
+          municipio: formData.municipio,
+          estado: formData.estado,
+          colonia: formData.colonia,
+          codigo_postal: formData.codigoPostal,
+          edad: formData.edad,
+          estado_civil: formData.estadoCivil,
+          estudios: estudiosValue,
+          curp: curpOption === "curp" ? formData.curp : null,
+          estado_nacimiento: formData.estadoNacimiento,
+          dia_nacimiento: formData.diaNacimiento,
+          mes_nacimiento: formData.mesNacimiento,
+          ano_nacimiento: formData.anoNacimiento,
+          numero_tarjeta: formData.numeroTarjeta,
+          acepta_info: formData.aceptaInfo,
+        }
 
       console.log("Enviando datos:", dataToSend)
 
-      const response = await fetch("https://estrellasdenuevoleon.com.mx/api/culturalaccessform", {
+      const response = await fetch("http://localhost:3001/api/culturalaccessform", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -447,7 +447,7 @@ const CulturalAccessForm = () => {
                       onChange={(e) => handleInputChange("municipio", e.target.value)}
                       required
                       disabled={isSubmitting}
-                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none"
+                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none text-black"
                     >
                       <option value="" className="text-gray-800">
                         Selecciona municipio
@@ -472,7 +472,7 @@ const CulturalAccessForm = () => {
                       onChange={(e) => handleInputChange("estado", e.target.value)}
                       required
                       disabled={isSubmitting}
-                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none"
+                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none text-black"
                     >
                       <option value="" className="text-gray-800">
                         Selecciona estado
@@ -541,7 +541,7 @@ const CulturalAccessForm = () => {
                     onChange={(e) => handleInputChange("estudios", e.target.value)}
                     required
                     disabled={isSubmitting}
-                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none"
+                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none text-black"
                   >
                     <option value="" className="text-gray-800">
                       Elige uno
@@ -584,7 +584,7 @@ const CulturalAccessForm = () => {
                     onChange={e => handleInputChange("estadoCivil", e.target.value)}
                     required
                     disabled={isSubmitting}
-                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none"
+                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none text-black"
                   >
                     <option value="" className="text-gray-800">
                       Selecciona una opción
@@ -689,7 +689,7 @@ const CulturalAccessForm = () => {
                     onChange={(e) => handleInputChange("estadoNacimiento", e.target.value)}
                     required
                     disabled={isSubmitting}
-                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none"
+                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none text-black"
                   >
                     <option value="" className="text-gray-800">
                       Selecciona estado
@@ -736,7 +736,7 @@ const CulturalAccessForm = () => {
                         onChange={(e) => handleInputChange("mesNacimiento", e.target.value)}
                         required
                         disabled={isSubmitting}
-                        className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none"
+                        className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none text-black"
                       >
                         <option value="" className="text-gray-800">
                           Mes
@@ -900,3 +900,4 @@ const CulturalAccessForm = () => {
 }
 
 export default CulturalAccessForm
+  

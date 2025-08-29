@@ -207,6 +207,51 @@ export const apiService = {
       console.error('Error al actualizar promoción:', error);
       throw error;
     }
+  },
+
+  // Crear registro de control de acceso
+  async crearControlAcceso(controlAccesoData) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/control-acceso`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(controlAccesoData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error al crear registro de control de acceso:', error);
+      throw error;
+    }
+  },
+
+  // Obtener todos los registros de control de acceso
+  async obtenerControlAcceso() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/control-acceso`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error al obtener registros de control de acceso:', error);
+      throw error;
+    }
   }
 };
 

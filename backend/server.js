@@ -50,12 +50,13 @@ async function createConnection() {
   }
 }
 
-// Crear tabla de promociones si no existe
+// Crear tablas si no existen
 async function createTables() {
   try {
     const connection = await createConnection();
     
-    const createTableQuery = `
+    // Crear tabla de promociones
+    const createPromocionesQuery = `
       CREATE TABLE IF NOT EXISTS promociones (
         id INT AUTO_INCREMENT PRIMARY KEY,
         institucion VARCHAR(255) NOT NULL,
@@ -72,8 +73,55 @@ async function createTables() {
       )
     `;
     
-    await connection.execute(createTableQuery);
+    // Crear tabla de control de acceso
+    const createControlAccesoQuery = `
+      CREATE TABLE IF NOT EXISTS control_acceso (
+        id_institucion INT AUTO_INCREMENT PRIMARY KEY,
+        institucion VARCHAR(255) NOT NULL,
+        numero_tarjeta VARCHAR(255) NOT NULL,
+        fecha DATE NOT NULL,
+        estado ENUM('activo', 'inactivo') DEFAULT 'activo'
+      )
+    `;
+
+    // Crear tabla de registro de usuarios
+    const createRegistroUsuariosQuery = `
+      CREATE TABLE IF NOT EXISTS registro_usuarios (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(255) NOT NULL,
+        apellido_paterno VARCHAR(255) NOT NULL,
+        apellido_materno VARCHAR(255) NOT NULL,
+        genero ENUM('femenino', 'masculino', 'prefiero-no-decir', 'otro'),
+        email VARCHAR(255) NOT NULL UNIQUE,
+        calle_numero VARCHAR(500) NOT NULL,
+        municipio VARCHAR(255) NOT NULL,
+        estado_direccion VARCHAR(255) NOT NULL,
+        colonia VARCHAR(255) NOT NULL,
+        codigo_postal VARCHAR(10) NOT NULL,
+        edad ENUM('16-17', '18-29', '30-49', '50-59', '60+') NOT NULL,
+        estado_civil ENUM('soltero', 'casado', 'viudo', 'divorciado', 'union_libre', 'sociedad_convivencia', 'prefiero_no_decir') NOT NULL,
+        estudios ENUM('primaria', 'secundaria', 'preparatoria', 'licenciatura', 'maestria', 'doctorado', 'sin-estudios'),
+        curp VARCHAR(18),
+        estado_nacimiento VARCHAR(255) NOT NULL,
+        dia_nacimiento INT NOT NULL,
+        mes_nacimiento INT NOT NULL,
+        ano_nacimiento INT NOT NULL,
+        numero_tarjeta VARCHAR(5) NOT NULL,
+        acepta_info ENUM('si', 'no') NOT NULL,
+        fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        estado_usuario ENUM('activo', 'inactivo') DEFAULT 'activo'
+      )
+    `;
+    
+    await connection.execute(createPromocionesQuery);
     console.log('Tabla de promociones creada/verificada');
+    
+    await connection.execute(createControlAccesoQuery);
+    console.log('Tabla de control_acceso creada/verificada');
+
+    await connection.execute(createRegistroUsuariosQuery);
+    console.log('Tabla de registro_usuarios creada/verificada');
+    
     await connection.end();
   } catch (error) {
     console.error('Error creando tablas:', error);
@@ -488,6 +536,203 @@ app.put('/api/actualizar-promocion/:id', async (req, res) => {
 
   } catch (error) {
     console.error('Error actualizando promoción:', error);
+    res.status(500).json({
+      estado: 'error',
+      mensaje: 'Error interno del servidor'
+    });
+  }
+});
+
+// Endpoint para crear registro de control de acceso
+app.post('/api/control-acceso', async (req, res) => {
+  try {
+    const { institucion, numeroTarjeta, fecha } = req.body;
+
+    // Validar campos requeridos
+    if (!institucion || !numeroTarjeta || !fecha) {
+      return res.status(400).json({
+        estado: 'error',
+        mensaje: 'Todos los campos son requeridos'
+      });
+    }
+
+    const connection = await createConnection();
+    
+    const insertQuery = `
+      INSERT INTO control_acceso (institucion, numero_tarjeta, fecha) 
+      VALUES (?, ?, ?)
+    `;
+
+    const [result] = await connection.execute(insertQuery, [institucion, numeroTarjeta, fecha]);
+
+    await connection.end();
+
+    res.status(201).json({
+      estado: 'exito',
+      mensaje: 'Registro de control de acceso creado exitosamente',
+      id_institucion: result.insertId
+    });
+
+  } catch (error) {
+    console.error('Error creando registro de control de acceso:', error);
+    res.status(500).json({
+      estado: 'error',
+      mensaje: 'Error interno del servidor'
+    });
+  }
+});
+
+// Endpoint para procesar formulario de registro cultural access
+app.post('/api/culturalaccessform', async (req, res) => {
+  try {
+    const {
+      nombre,
+      apellido_paterno,
+      apellido_materno,
+      genero,
+      email,
+      calle_numero,
+      municipio,
+      estado,
+      colonia,
+      codigo_postal,
+      edad,
+      estado_civil,
+      estudios,
+      curp,
+      estado_nacimiento,
+      dia_nacimiento,
+      mes_nacimiento,
+      ano_nacimiento,
+      numero_tarjeta,
+      acepta_info
+    } = req.body;
+
+    // Validar campos requeridos según la estructura de la base de datos
+    if (!nombre || !apellido_paterno || !email || 
+        !calle_numero || !municipio || !estado || !colonia || !codigo_postal || 
+        !edad || !estado_nacimiento || !dia_nacimiento || 
+        !mes_nacimiento || !ano_nacimiento || !numero_tarjeta || !acepta_info) {
+      return res.status(400).json({
+        success: false,
+        message: 'Todos los campos obligatorios deben ser completados'
+      });
+    }
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Formato de email inválido'
+      });
+    }
+
+    // Validar que el email no esté duplicado
+    const connection = await createConnection();
+    
+    const [existingUsers] = await connection.execute(
+      'SELECT id FROM registro_usuarios WHERE email = ?',
+      [email]
+    );
+
+    if (existingUsers.length > 0) {
+      await connection.end();
+      return res.status(400).json({
+        success: false,
+        message: 'Ya existe un usuario registrado con este email'
+      });
+    }
+
+    // Insertar nuevo usuario
+    const insertQuery = `
+      INSERT INTO registro_usuarios (
+        nombre, apellido_paterno, apellido_materno, genero, email,
+        calle_numero, municipio, estado, colonia, codigo_postal,
+        edad, estado_civil, estudios, curp, estado_nacimiento,
+        dia_nacimiento, mes_nacimiento, ano_nacimiento, numero_tarjeta, acepta_info
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const [result] = await connection.execute(insertQuery, [
+      nombre, apellido_paterno, apellido_materno, genero, email,
+      calle_numero, municipio, estado, colonia, codigo_postal,
+      edad, estado_civil, estudios, curp, estado_nacimiento,
+      dia_nacimiento, mes_nacimiento, ano_nacimiento, numero_tarjeta, acepta_info
+    ]);
+
+    await connection.end();
+
+    res.status(201).json({
+      success: true,
+      message: 'Usuario registrado exitosamente',
+      userId: result.insertId
+    });
+
+  } catch (error) {
+    console.error('Error procesando formulario de registro:', error);
+    
+    // Si es un error de duplicado de email
+    if (error.code === 'ER_DUP_ENTRY' && error.message.includes('email')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Ya existe un usuario registrado con este email'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+// Endpoint para obtener todos los usuarios registrados
+app.get('/api/usuarios', async (req, res) => {
+  try {
+    const connection = await createConnection();
+    
+    const [rows] = await connection.execute(`
+      SELECT id, nombre, apellido_paterno, apellido_materno, email, 
+             municipio, estado, edad, estado_civil, estudios,
+             fecha_registro
+      FROM registro_usuarios 
+      ORDER BY fecha_registro DESC
+    `);
+    
+    await connection.end();
+
+    res.json({
+      success: true,
+      usuarios: rows,
+      total: rows.length
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo usuarios:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+// Endpoint para obtener todos los registros de control de acceso
+app.get('/api/control-acceso', async (req, res) => {
+  try {
+    const connection = await createConnection();
+    
+    const [rows] = await connection.execute('SELECT * FROM control_acceso ORDER BY id_institucion DESC');
+    
+    await connection.end();
+
+    res.json({
+      estado: 'exito',
+      datos: rows
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo registros de control de acceso:', error);
     res.status(500).json({
       estado: 'error',
       mensaje: 'Error interno del servidor'
