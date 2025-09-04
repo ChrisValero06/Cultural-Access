@@ -20,7 +20,9 @@ const AdminDashboard = () => {
     beneficios: '',
     comentarios_restricciones: '',
     fecha_inicio: '',
-    fecha_fin: ''
+    fecha_fin: '',
+    imagen_principal: '',
+    imagen_secundaria: ''
   });
 
   // Usar el contexto para controlar carruseles
@@ -96,7 +98,9 @@ const AdminDashboard = () => {
       beneficios: promocion.beneficios,
       comentarios_restricciones: promocion.comentarios_restricciones,
       fecha_inicio: promocion.fecha_inicio,
-      fecha_fin: promocion.fecha_fin
+      fecha_fin: promocion.fecha_fin,
+      imagen_principal: promocion.imagen_principal || '',
+      imagen_secundaria: promocion.imagen_secundaria || ''
     });
     setModalAbierto(true);
   };
@@ -165,7 +169,12 @@ const AdminDashboard = () => {
   // Función para guardar cambios del modal
   const handleGuardarCambios = async () => {
     try {
+      console.log('Datos a enviar:', editandoForm);
+      console.log('ID de promoción:', promocionEditando.id);
+      
       const response = await apiService.actualizarPromocion(promocionEditando.id, editandoForm);
+      
+      console.log('Respuesta del servidor:', response);
       
       if (response.estado === 'exito') {
         // Actualizar la lista local
@@ -174,9 +183,13 @@ const AdminDashboard = () => {
         ));
         setModalAbierto(false);
         setPromocionEditando(null);
+        alert('Promoción actualizada exitosamente');
+      } else {
+        alert('Error al actualizar la promoción: ' + (response.mensaje || 'Error desconocido'));
       }
     } catch (error) {
-      // Error silencioso al actualizar promoción
+      console.error('Error al actualizar promoción:', error);
+      alert('Error al actualizar la promoción: ' + error.message);
     }
   };
 
@@ -418,71 +431,8 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Panel de Control de Carruseles */}
-        <div className="mt-8 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-          <h3 className="text-lg font-medium text-gray-800 mb-6">🎠 Control de Carruseles</h3>
           
-          {/* Nota informativa */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h4 className="text-sm font-medium text-blue-800">💡 Cómo funciona el sistema</h4>
-                <div className="mt-2 text-sm text-blue-700">
-                  <p className="mb-2">• <strong>Promociones Activas:</strong> Aparecen en el carrusel principal del sitio web</p>
-                  <p className="mb-2">• <strong>Promociones Inactivas:</strong> No aparecen en el carrusel, pero se mantienen en la base de datos</p>
-                  <p>• <strong>Cambios automáticos:</strong> Al cambiar el estado de una promoción, el carrusel se actualiza inmediatamente</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Object.entries(carruseles).map(([carruselId, carrusel]) => (
-              <div key={carruselId} className="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="flex items-center mb-4">
-                  <div className={`p-2 rounded-full mr-3 ${
-                    carrusel.visible ? 'bg-green-100' : 'bg-red-100'
-                  }`}>
-                    {carrusel.visible ? (
-                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    ) : (
-                      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                      </svg>
-                    )}
-                  </div>
-                  <h4 className="font-semibold text-gray-800">{carrusel.nombre}</h4>
-                </div>
-                <p className="text-gray-600 text-sm mb-4">{carrusel.descripcion}</p>
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm font-medium ${
-                    carrusel.visible ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {carrusel.visible ? '🟢 Visible' : '🔴 Oculto'}
-                  </span>
-                  <button 
-                    onClick={() => carrusel.visible ? desactivarCarrusel(carruselId) : activarCarrusel(carruselId)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      carrusel.visible 
-                        ? 'bg-red-500 text-white hover:bg-red-600' 
-                        : 'bg-green-500 text-white hover:bg-green-600'
-                    }`}
-                  >
-                    {carrusel.visible ? 'Ocultar' : 'Mostrar'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+        
 
       {/* Modal de Edición */}
       {modalAbierto && (
@@ -579,6 +529,7 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };

@@ -98,6 +98,7 @@ async function createTables() {
         estado_direccion VARCHAR(255) NOT NULL,
         colonia VARCHAR(255) NOT NULL,
         codigo_postal VARCHAR(10) NOT NULL,
+        telefono VARCHAR(15) NOT NULL,
         edad ENUM('16-17', '18-29', '30-49', '50-59', '60+') NOT NULL,
         estado_civil ENUM('soltero', 'casado', 'viudo', 'divorciado', 'union_libre', 'sociedad_convivencia', 'prefiero_no_decir') NOT NULL,
         estudios ENUM('primaria', 'secundaria', 'preparatoria', 'licenciatura', 'maestria', 'doctorado', 'sin-estudios'),
@@ -121,6 +122,29 @@ async function createTables() {
 
     await connection.execute(createRegistroUsuariosQuery);
     console.log('Tabla de registro_usuarios creada/verificada');
+    
+    // Verificar y agregar columna de teléfono si no existe
+    try {
+      const [columns] = await connection.execute(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_NAME = 'registro_usuarios' 
+        AND COLUMN_NAME = 'telefono'
+        AND TABLE_SCHEMA = DATABASE()
+      `);
+      
+      if (columns.length === 0) {
+        await connection.execute(`
+          ALTER TABLE registro_usuarios 
+          ADD COLUMN telefono VARCHAR(15) AFTER email
+        `);
+        console.log('Columna de teléfono agregada a la tabla registro_usuarios');
+      } else {
+        console.log('Columna de teléfono ya existe en la tabla registro_usuarios');
+      }
+    } catch (error) {
+      console.error('Error verificando/agregando columna de teléfono:', error);
+    }
     
     await connection.end();
   } catch (error) {
@@ -591,6 +615,7 @@ app.post('/api/culturalaccessform', async (req, res) => {
       apellido_materno,
       genero,
       email,
+      telefono,
       calle_numero,
       municipio,
       estado,
@@ -609,7 +634,7 @@ app.post('/api/culturalaccessform', async (req, res) => {
     } = req.body;
 
     // Validar campos requeridos según la estructura de la base de datos
-    if (!nombre || !apellido_paterno || !email || 
+    if (!nombre || !apellido_paterno || !email || !telefono ||
         !calle_numero || !municipio || !estado || !colonia || !codigo_postal || 
         !edad || !estado_nacimiento || !dia_nacimiento || 
         !mes_nacimiento || !ano_nacimiento || !numero_tarjeta || !acepta_info) {
@@ -625,6 +650,15 @@ app.post('/api/culturalaccessform', async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Formato de email inválido'
+      });
+    }
+
+    // Validar formato de teléfono (solo números, guiones y paréntesis)
+    const telefonoRegex = /^[\d\-\s\(\)]+$/;
+    if (!telefonoRegex.test(telefono)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Formato de teléfono inválido. Solo se permiten números, guiones, espacios y paréntesis'
       });
     }
 
@@ -668,15 +702,15 @@ app.post('/api/culturalaccessform', async (req, res) => {
     // Insertar nuevo usuario
     const insertQuery = `
       INSERT INTO registro_usuarios (
-        nombre, apellido_paterno, apellido_materno, genero, email,
+        nombre, apellido_paterno, apellido_materno, genero, email, telefono,
         calle_numero, municipio, estado, colonia, codigo_postal,
         edad, estado_civil, estudios, curp, estado_nacimiento,
         dia_nacimiento, mes_nacimiento, ano_nacimiento, numero_tarjeta, acepta_info
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const [result] = await connection.execute(insertQuery, [
-      nombre, apellido_paterno, apellido_materno, genero, email,
+      nombre, apellido_paterno, apellido_materno, genero, email, telefono,
       calle_numero, municipio, estado, colonia, codigo_postal,
       edad, estado_civil, estudios, curp, estado_nacimiento,
       dia_nacimiento, mes_nacimiento, ano_nacimiento, numero_tarjeta, acepta_info

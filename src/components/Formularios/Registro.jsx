@@ -14,6 +14,7 @@ const CulturalAccessForm = () => {
     apellidoMaterno: "",
     genero: "",
     email: "",
+    telefono: "",
     calleNumero: "",
     municipio: "",
     estado: "",
@@ -117,6 +118,7 @@ const CulturalAccessForm = () => {
           apellido_materno: formData.apellidoMaterno,
           genero: formData.genero,
           email: formData.email,
+          telefono: formData.telefono,
           calle_numero: formData.calleNumero,
           municipio: formData.municipio,
           estado: formData.estado,
@@ -155,6 +157,7 @@ const CulturalAccessForm = () => {
           apellidoMaterno: "",
           genero: "",
           email: "",
+          telefono: "",
           calleNumero: "",
           municipio: "",
           estado: "",
@@ -553,15 +556,15 @@ const CulturalAccessForm = () => {
                 </div>
               </div>
 
-               {/* Número */}
+               {/* Teléfono */}
             <div className="space-y-2">
-              <label htmlFor="numero" className="block text-white font-medium text-sm">
-                NÚMERO *
+              <label htmlFor="telefono" className="block text-white font-medium text-sm">
+                TELÉFONO *
               </label>
               <input
-                id="numero"
+                id="telefono"
                 type="text"
-                value={formData.numero}
+                value={formData.telefono}
                 onChange={(e) => {
                   let value = e.target.value.replace(/\D/g, ''); // Solo números
                   
@@ -574,7 +577,7 @@ const CulturalAccessForm = () => {
                     value = value.replace(/(\d{3})(\d{3})/, '$1-$2');
                   }
                   
-                  handleInputChange("numero", value);
+                  handleInputChange("telefono", value);
                 }}
                 className="w-full px-3 py-2 bg-white border-black border-2 rounded text-black placeholder:text-black focus:border-white focus:outline-none transition-colors"
                 maxLength="12"
