@@ -136,7 +136,7 @@ const ContenidoPrincipal = () => {
       <div className="mb-0">
         <div className="relative">
           <div className="overflow-hidden rounded-xl">
-            <div className="relative h-[500px] overflow-hidden">
+            <div className="relative h-[200px] md:h-[500px] overflow-hidden">
               {carrusel.imagenes.map((imagen, index) => (
                <img
                key={index}
@@ -234,11 +234,11 @@ const ContenidoPrincipal = () => {
   }
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-1 md:py-16 bg-white">
       <div className="max-w-[1090px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Sección de header */}
-        <div className="grid md:grid-cols-2 gap-8 items-center mb-0">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-8 items-center mb-2 md:mb-0">
           <div className="flex justify-start">
             <img 
               src="/images/culturaaaaaaaaaalaccesssssslogo-04.png" 
@@ -246,7 +246,7 @@ const ContenidoPrincipal = () => {
               className="rounded-lg max-w-xs h-auto"
             />
           </div>
-          <div className="space-y-1 ml-20">
+          <div className="space-y-1 ml-0 md:ml-20">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-semibold text-gray-800">
