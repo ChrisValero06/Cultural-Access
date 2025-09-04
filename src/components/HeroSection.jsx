@@ -3,7 +3,7 @@ import { imagenes } from '../constants/imagenes'
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-[50vh] flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-[50vh] flex items-center justify-center ">
       {/* Fondo de imagen */}
       <div className="absolute inset-0">
         <img 
@@ -12,7 +12,7 @@ const HeroSection = () => {
           className="w-full h-full object-cover"
         />
         {/* Overlay para mejorar legibilidad del texto */}
-        <div className="absolute inset-0 bg-black/30"></div>
+        <div className=""></div>
       </div>
       
       {/* Contenido principal con layout de dos columnas */}
@@ -29,19 +29,19 @@ const HeroSection = () => {
           </div>
           
           {/* Título principal */}
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-8 leading-tight">
+          <h1 className="font-bold text-white mb-8 text-left" style={{ fontSize: '35px' }}>
             ¿Qué es CulturAll Access?
           </h1>
           
           {/* Descripción */}
-          <p className="text-sm sm:text-base lg:text-lg text-white leading-relaxed">
+          <p className="text-white text-left" style={{ fontSize: '18px' }}>
             Este proyecto de la Secretaría de Cultura del Gobierno del Estado reconoce y valora la participación de la ciudadanía en la vida cultural de Nuevo León. A través de él, se ofrecen beneficios y promociones exclusivas para quienes disfrutan de la oferta cultural del estado: productos, eventos, talleres, exposiciones, conciertos y mucho más.
           </p>
         </div>
         
         {/* Columna derecha - Imagen */}
         <div className="lg:w-1/2 flex justify-center lg:justify-end">
-          <div className="relative w-80 h-80 lg:w-96 lg:h-96 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="relative w-96 h-96 lg:w-[28rem] lg:h-[28rem] ">
             <img 
               src="/images/Arco Milarca_Home 2.png" 
               alt="Logo Cultural Access"

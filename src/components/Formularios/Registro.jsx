@@ -6,6 +6,8 @@ import { imagenes } from '../../constants/imagenes'
 const CulturalAccessForm = () => {
   const [curpOption, setCurpOption] = useState("curp")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [tarjetaValidando, setTarjetaValidando] = useState(false)
+  const [tarjetaDisponible, setTarjetaDisponible] = useState(null)
   const [formData, setFormData] = useState({
     nombre: "",
     apellidoPaterno: "",
@@ -53,11 +55,56 @@ const CulturalAccessForm = () => {
         ...prev,
         [field]: paddedValue,
       }));
+
+      // Verificar disponibilidad del número de tarjeta
+      if (paddedValue.length === 5) {
+        verificarDisponibilidadTarjeta(paddedValue);
+      }
+    }
+  };
+
+  // Función para verificar disponibilidad del número de tarjeta
+  const verificarDisponibilidadTarjeta = async (numeroTarjeta) => {
+    if (!numeroTarjeta || numeroTarjeta.length !== 5) return;
+
+    setTarjetaValidando(true);
+    setTarjetaDisponible(null);
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/verificar-tarjeta/${numeroTarjeta}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setTarjetaDisponible(result.disponible);
+      } else {
+        setTarjetaDisponible(false);
+      }
+    } catch (error) {
+      console.error('Error verificando número de tarjeta:', error);
+      setTarjetaDisponible(false);
+    } finally {
+      setTarjetaValidando(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Validar que el número de tarjeta esté disponible
+    if (tarjetaDisponible === false) {
+      alert('El número de tarjeta ingresado ya está registrado. Por favor, elige otro número.')
+      return;
+    }
+
+    // Si no se ha verificado la disponibilidad, verificar ahora
+    if (tarjetaDisponible === null && formData.numeroTarjeta.length === 5) {
+      await verificarDisponibilidadTarjeta(formData.numeroTarjeta);
+      if (tarjetaDisponible === false) {
+        alert('El número de tarjeta ingresado ya está registrado. Por favor, elige otro número.')
+        return;
+      }
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -124,6 +171,7 @@ const CulturalAccessForm = () => {
           aceptaInfo: false,
         })
         setCurpOption("curp")
+        setTarjetaDisponible(null)
       } else {
         // Manejar diferentes tipos de errores
         if (result.errors) {
@@ -505,6 +553,38 @@ const CulturalAccessForm = () => {
                 </div>
               </div>
 
+               {/* Número */}
+            <div className="space-y-2">
+              <label htmlFor="numero" className="block text-white font-medium text-sm">
+                NÚMERO *
+              </label>
+              <input
+                id="numero"
+                type="text"
+                value={formData.numero}
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, ''); // Solo números
+                  
+                  // Formatear automáticamente con guiones
+                  if (value.length > 6) {
+                    value = value.slice(0, 10); // Máximo 10 dígitos
+                    value = value.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+                  } else if (value.length > 3) {
+                    value = value.slice(0, 6);
+                    value = value.replace(/(\d{3})(\d{3})/, '$1-$2');
+                  }
+                  
+                  handleInputChange("numero", value);
+                }}
+                className="w-full px-3 py-2 bg-white border-black border-2 rounded text-black placeholder:text-black focus:border-white focus:outline-none transition-colors"
+                maxLength="12"
+                pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+                required
+                disabled={isSubmitting}
+                placeholder="123-456-7890"
+              />
+            </div>
+
               {/* Edad - Radio buttons verticales */}
               <div>
                 <label className="block text-base font-bold text-gray-800 mb-2">EDAD *</label>
@@ -809,17 +889,50 @@ const CulturalAccessForm = () => {
                 <label htmlFor="numeroTarjeta" className="block text-base font-bold text-gray-800 mb-2">
                   NÚMERO DE TARJETA EN 5 DÍGITOS*
                 </label>
-                <input
-                  type="text"
-                  id="numeroTarjeta"
-                  value={formData.numeroTarjeta}
-                  onChange={(e) => handleInputChange("numeroTarjeta", e.target.value)}
-                  onBlur={(e) => handleBlur("numeroTarjeta", e.target.value)}
-                  placeholder="Ej. 00015"
-                  required
-                  disabled={isSubmitting}
-                  className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="numeroTarjeta"
+                    value={formData.numeroTarjeta}
+                    onChange={(e) => handleInputChange("numeroTarjeta", e.target.value)}
+                    onBlur={(e) => handleBlur("numeroTarjeta", e.target.value)}
+                    placeholder="Ej. 00015"
+                    required
+                    disabled={isSubmitting}
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500 ${
+                      tarjetaDisponible === true 
+                        ? 'border-green-500 focus:ring-green-600' 
+                        : tarjetaDisponible === false 
+                        ? 'border-red-500 focus:ring-red-600' 
+                        : 'border-orange-400 focus:ring-orange-600'
+                    }`}
+                  />
+                  {tarjetaValidando && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-600"></div>
+                    </div>
+                  )}
+                  {!tarjetaValidando && tarjetaDisponible === true && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                  {!tarjetaValidando && tarjetaDisponible === false && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                {tarjetaDisponible === true && (
+                  <p className="text-green-600 text-sm mt-1">✓ Número de tarjeta disponible</p>
+                )}
+                {tarjetaDisponible === false && (
+                  <p className="text-red-600 text-sm mt-1">✗ Este número de tarjeta ya está registrado</p>
+                )}
               </div>
 
               {/* Acepta información - Radio buttons */}

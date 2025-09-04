@@ -106,7 +106,7 @@ async function createTables() {
         dia_nacimiento INT NOT NULL,
         mes_nacimiento INT NOT NULL,
         ano_nacimiento INT NOT NULL,
-        numero_tarjeta VARCHAR(5) NOT NULL,
+        numero_tarjeta VARCHAR(5) NOT NULL UNIQUE,
         acepta_info ENUM('si', 'no') NOT NULL,
         fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         estado_usuario ENUM('activo', 'inactivo') DEFAULT 'activo'
@@ -628,20 +628,41 @@ app.post('/api/culturalaccessform', async (req, res) => {
       });
     }
 
-    // Validar que el email no esté duplicado
+    // Validar que el email y número de tarjeta no estén duplicados
     const connection = await createConnection();
     
     const [existingUsers] = await connection.execute(
-      'SELECT id FROM registro_usuarios WHERE email = ?',
-      [email]
+      'SELECT id FROM registro_usuarios WHERE email = ? OR numero_tarjeta = ?',
+      [email, numero_tarjeta]
     );
 
     if (existingUsers.length > 0) {
+      // Verificar específicamente qué campo está duplicado
+      const [emailExists] = await connection.execute(
+        'SELECT id FROM registro_usuarios WHERE email = ?',
+        [email]
+      );
+      
+      const [tarjetaExists] = await connection.execute(
+        'SELECT id FROM registro_usuarios WHERE numero_tarjeta = ?',
+        [numero_tarjeta]
+      );
+
       await connection.end();
-      return res.status(400).json({
-        success: false,
-        message: 'Ya existe un usuario registrado con este email'
-      });
+
+      if (emailExists.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Ya existe un usuario registrado con este email'
+        });
+      }
+
+      if (tarjetaExists.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Ya existe un usuario registrado con este número de tarjeta'
+        });
+      }
     }
 
     // Insertar nuevo usuario
@@ -680,6 +701,14 @@ app.post('/api/culturalaccessform', async (req, res) => {
       });
     }
 
+    // Si es un error de duplicado de número de tarjeta
+    if (error.code === 'ER_DUP_ENTRY' && error.message.includes('numero_tarjeta')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Ya existe un usuario registrado con este número de tarjeta'
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'
@@ -710,6 +739,44 @@ app.get('/api/usuarios', async (req, res) => {
 
   } catch (error) {
     console.error('Error obteniendo usuarios:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+// Endpoint para verificar disponibilidad de número de tarjeta
+app.get('/api/verificar-tarjeta/:numeroTarjeta', async (req, res) => {
+  try {
+    const { numeroTarjeta } = req.params;
+    
+    if (!numeroTarjeta || numeroTarjeta.length !== 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Número de tarjeta inválido'
+      });
+    }
+
+    const connection = await createConnection();
+    
+    const [rows] = await connection.execute(
+      'SELECT id FROM registro_usuarios WHERE numero_tarjeta = ?',
+      [numeroTarjeta]
+    );
+    
+    await connection.end();
+
+    const disponible = rows.length === 0;
+
+    res.json({
+      success: true,
+      disponible: disponible,
+      message: disponible ? 'Número de tarjeta disponible' : 'Número de tarjeta ya registrado'
+    });
+
+  } catch (error) {
+    console.error('Error verificando número de tarjeta:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'

@@ -4,14 +4,14 @@ import { enlaces } from '../constants/enlaces'
 const Footer = () => {
   return (
     <footer className="bg-orange-500 text-white">
-      <div className="max-w-[1090px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                      {/* Información */}
            <div>
              <h3 className="text-lg font-semibold mb-4 text-white">Información</h3>
              <ul className="space-y-2">
                                <li>
-                  <a href="#faq" className="!text-white hover:!text-white transition-colors duration-200" style={{color: 'white !important'}}>
+                  <a href="/PreguntasFrecuentes" className="!text-white hover:!text-white transition-colors duration-200" style={{color: 'white !important'}}>
                     Preguntas frecuentes
                   </a>
                 </li>
@@ -28,7 +28,7 @@ const Footer = () => {
               <h3 className="text-lg font-semibold mb-4 text-white">Soporte</h3>
               <ul className="space-y-2">
                 <li>
-                  <a href="#contacto" className="!text-white hover:!text-gray-100 transition-colors duration-200" style={{color: 'white !important'}}>
+                  <a href="mailto:culturallaccess@nuevoleon.gob.mx" className="!text-white hover:!text-gray-100 transition-colors duration-200" style={{color: 'white !important'}}>
                     Contáctanos
                   </a>
                 </li>
@@ -41,7 +41,7 @@ const Footer = () => {
             <div className="flex space-x-4">
               {/* Instagram */}
               <a 
-                href="https://instagram.com/culturallaccess"
+                href="https://www.instagram.com/sculturanl"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white hover:text-gray-100 transition-colors duration-200"
@@ -53,7 +53,7 @@ const Footer = () => {
               
               {/* Facebook */}
               <a 
-                href="https://facebook.com/culturallaccess"
+                href="https://www.facebook.com/sculturanl"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white hover:text-gray-100 transition-colors duration-200"

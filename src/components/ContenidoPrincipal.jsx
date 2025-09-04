@@ -238,7 +238,7 @@ const ContenidoPrincipal = () => {
       <div className="max-w-[1090px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Sección de header */}
-        <div className="grid md:grid-cols-2 gap-8 items-center mb-12">
+        <div className="grid md:grid-cols-2 gap-8 items-center mb-0">
           <div className="flex justify-start">
             <img 
               src="/images/culturaaaaaaaaaalaccesssssslogo-04.png" 
