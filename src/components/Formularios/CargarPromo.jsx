@@ -12,7 +12,8 @@ const CargarPromo = () => {
     fechaInicio: '',
     fechaFin: '',
     imagenPrincipal: null,
-    imagenSecundaria: null
+    imagenSecundaria: null,
+    logo: null
   })
 
   const [showInstituciones, setShowInstituciones] = useState(false)
@@ -34,6 +35,7 @@ const CargarPromo = () => {
       
     ]
   })
+  const [logoPreview, setLogoPreview] = useState(null)
 
   // Funciones de navegación del carrusel
   const nextImage = () => {
@@ -196,6 +198,9 @@ const CargarPromo = () => {
         setCarruselEjemplo(prev => ({
           imagenes: [...prev.imagenes.slice(0, 1), imageUrl, ...prev.imagenes.slice(2)]
         }))
+      } else if (name === 'logo' && files[0]) {
+        const logoUrl = URL.createObjectURL(files[0])
+        setLogoPreview(logoUrl)
       }
     } else {
       setFormData(prevState => ({
@@ -252,15 +257,15 @@ const CargarPromo = () => {
       ...prevState,
       institucion: institucion
     }))
-    setShowInstituciones(false)
-    setFilteredInstituciones([])
+    // Mantener el dropdown abierto para permitir cambios
+    setShowInstituciones(true)
+    setFilteredInstituciones(instituciones)
   }
 
   const handleInstitucionFocus = () => {
-    if (formData.institucion.trim() === '') {
-      setFilteredInstituciones(instituciones)
-      setShowInstituciones(true)
-    }
+    // Siempre mostrar el dropdown al hacer focus
+    setFilteredInstituciones(instituciones)
+    setShowInstituciones(true)
   }
 
   const selectTipoPromocion = (tipoPromocion) => {
@@ -268,15 +273,15 @@ const CargarPromo = () => {
       ...prevState,
       tipoPromocion: tipoPromocion
     }))
-    setShowTiposPromocion(false)
-    setFilteredTiposPromocion([])
+    // Mantener el dropdown abierto para permitir cambios
+    setShowTiposPromocion(true)
+    setFilteredTiposPromocion(tiposPromocion)
   }
 
   const handleTipoPromocionFocus = () => {
-    if (formData.tipoPromocion.trim() === '') {
-      setFilteredTiposPromocion(tiposPromocion)
-      setShowTiposPromocion(true)
-    }
+    // Siempre mostrar el dropdown al hacer focus
+    setFilteredTiposPromocion(tiposPromocion)
+    setShowTiposPromocion(true)
   }
 
   const selectDisciplina = (disciplina) => {
@@ -284,15 +289,15 @@ const CargarPromo = () => {
       ...prevState,
       disciplina: disciplina
     }))
-    setShowDisciplina(false)
-    setFilteredDisciplina([])
+    // Mantener el dropdown abierto para permitir cambios
+    setShowDisciplina(true)
+    setFilteredDisciplina(disciplinas)
   }
 
   const handleDisciplinaFocus = () => {
-    if (formData.disciplina.trim() === '') {
-      setFilteredDisciplina(disciplinas)
-      setShowDisciplina(true)
-    }
+    // Siempre mostrar el dropdown al hacer focus
+    setFilteredDisciplina(disciplinas)
+    setShowDisciplina(true)
   }
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -354,8 +359,10 @@ const CargarPromo = () => {
           fechaInicio: '',
           fechaFin: '',
           imagenPrincipal: null,
-          imagenSecundaria: null
+          imagenSecundaria: null,
+          logo: null
         })
+        setLogoPreview(null)
       } else {
         setMessage('Error al crear la promoción: ' + result.mensaje)
       }
@@ -433,9 +440,21 @@ const CargarPromo = () => {
                     onChange={handleChange}
                     onFocus={handleInstitucionFocus}
                     required
-                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
+                    className="w-full px-4 pr-12 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
                     placeholder="Busca o escribe el nombre de la institución"
                   />
+                  
+                  {/* Flecha desplegable */}
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <svg 
+                      className={`w-5 h-5 text-orange-600 transition-transform duration-200 ${showInstituciones ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                   
                   {/* Dropdown de autocomplete */}
                   {showInstituciones && (
@@ -468,9 +487,21 @@ const CargarPromo = () => {
                     onChange={handleChange}
                     onFocus={handleTipoPromocionFocus}
                     required
-                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
+                    className="w-full px-4 pr-12 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
                     placeholder="Busca o escribe el tipo de promoción"
                   />
+                  
+                  {/* Flecha desplegable */}
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <svg 
+                      className={`w-5 h-5 text-orange-600 transition-transform duration-200 ${showTiposPromocion ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                   
                   {/* Dropdown de autocomplete */}
                   {showTiposPromocion && (
@@ -503,9 +534,21 @@ const CargarPromo = () => {
                     onChange={handleChange}
                     onFocus={handleDisciplinaFocus}
                     required
-                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
+                    className="w-full px-4 pr-12 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
                     placeholder="Busca o escribe la disciplina"
                   />
+                  
+                  {/* Flecha desplegable */}
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <svg 
+                      className={`w-5 h-5 text-orange-600 transition-transform duration-200 ${showDisciplina ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                   
                   {/* Dropdown de autocomplete */}
                   {showDisciplina && (
@@ -607,6 +650,29 @@ const CargarPromo = () => {
                 </div>
               </div>
 
+              {/* Campo Logo */}
+              <div>
+                <label htmlFor="logo" className="block text-base font-bold text-gray-800 mb-2">
+                  LOGO DE LA INSTITUCIÓN
+                </label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="logo"
+                    name="logo"
+                    onChange={handleChange}
+                    accept="image/*"
+                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600"
+                  />
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-xs text-orange-100 mt-1">Logo pequeño que aparecerá en la esquina de la imagen</p>
+              </div>
+
               {/* Campos de imagen en fila */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Campo Imagen Principal */}
@@ -704,12 +770,68 @@ const CargarPromo = () => {
                         key={index}
                         src={imagen}
                         alt={`Ejemplo promoción ${index + 1}`}
-                        className={`absolute inset-0 w-full h-full object-contain transition-transform duration-700 ease-in-out ${
+                        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-in-out ${
                           index === currentImage ? 'translate-x-0' : 
                           index < currentImage ? '-translate-x-full' : 'translate-x-full'
                         }`}
                       />
                     ))}
+                    {/* Overlay de texto en tiempo real - primera imagen */}
+                    {currentImage === 0 && (
+                      <>
+                        {/* Logo en esquina inferior derecha */}
+                        {logoPreview && (
+                          <div className="absolute bottom-4 right-4 z-20">
+                            <img 
+                              src={logoPreview} 
+                              alt="Logo institución" 
+                              className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Texto centrado */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-4 sm:p-6 mt-4 sm:mt-0">
+                          {formData.institucion && (
+                            <div className="mb-3 sm:mb-4 mt-2 sm:mt-2">
+                                <span className="inline-block px-2.5 sm:px-3.5 py-0.5 sm:py-1 text-white text-lg sm:text-3xl font-extrabold tracking-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                  {formData.institucion}
+                                </span>
+                            </div>
+                          )}
+                          {formData.tipoPromocion && (
+                            <div>
+                              <span className="inline-block px-8 sm:px-8 py-0.5 sm:py-0.5 text-white text-lg sm:text-3xl font-bold" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                {formData.tipoPromocion}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Overlay de texto en tiempo real - segunda imagen */}
+                    {currentImage === 1 && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-4 sm:p-6">
+                        {/* Beneficios */}
+                        {formData.beneficios && (
+                          <div className="mb-4 sm:mb-6">
+                            <span className="inline-block px-4 sm:px-6 py-2 sm:py-3 text-white text-base sm:text-xl font-bold leading-relaxed" style={{fontFamily: 'Poppins, sans-serif'}}>
+                              {formData.beneficios}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Comentarios/Restricciones */}
+                        {formData.comentariosRestricciones && (
+                          <div>
+                            <span className="inline-block px-4 sm:px-6 py-2 sm:py-3 text-white text-sm sm:text-lg font-medium leading-relaxed" style={{fontFamily: 'Poppins, sans-serif'}}>
+                              {formData.comentariosRestricciones}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 

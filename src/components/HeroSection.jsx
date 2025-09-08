@@ -29,12 +29,12 @@ const HeroSection = () => {
           </div>
           
           {/* Título principal */}
-          <h1 className="font-bold text-white mb-8 text-left" style={{ fontSize: '35px' }}>
+          <h1 className="font_8 wixui-rich-text__text text-white mb-8 text-left" style={{ fontSize: '35px' }}>
             ¿Qué es CulturAll Access?
           </h1>
           
           {/* Descripción */}
-          <p className="text-white text-left" style={{ fontSize: '18px' }}>
+          <p className=" font_8 wixui-rich-text__text  text-left" style={{ fontSize: '16px' }}>
             Este proyecto de la Secretaría de Cultura del Gobierno del Estado reconoce y valora la participación de la ciudadanía en la vida cultural de Nuevo León. A través de él, se ofrecen beneficios y promociones exclusivas para quienes disfrutan de la oferta cultural del estado: productos, eventos, talleres, exposiciones, conciertos y mucho más.
           </p>
         </div>

@@ -138,9 +138,6 @@ async function createTables() {
           ALTER TABLE registro_usuarios 
           ADD COLUMN telefono VARCHAR(15) AFTER email
         `);
-        console.log('Columna de teléfono agregada a la tabla registro_usuarios');
-      } else {
-        console.log('Columna de teléfono ya existe en la tabla registro_usuarios');
       }
     } catch (error) {
       console.error('Error verificando/agregando columna de teléfono:', error);
@@ -244,10 +241,6 @@ app.get('/api/obtener_promociones', async (req, res) => {
     
     const [rows] = await connection.execute('SELECT * FROM promociones ORDER BY fecha_creacion DESC');
     
-    console.log('Promociones obtenidas de la BD:', rows);
-    console.log('Primera promoción:', rows[0]);
-    console.log('Columnas disponibles:', Object.keys(rows[0] || {}));
-    
     await connection.end();
 
     res.json({
@@ -308,16 +301,12 @@ app.get('/api/debug-promociones', async (req, res) => {
   try {
     const connection = await createConnection();
     
-    console.log('🔍 Endpoint debug-promociones llamado');
-    
     const [rows] = await connection.execute(`
       SELECT id, institucion, tipo_promocion, disciplina, estado, 
              fecha_inicio, fecha_fin, imagen_principal
       FROM promociones 
       ORDER BY id
     `);
-    
-    console.log('📊 Todas las promociones en BD:', rows);
     
     await connection.end();
 
@@ -452,9 +441,6 @@ app.put('/api/cambiar-estado-promocion/:id', async (req, res) => {
     const { id } = req.params;
     const { nuevoEstado } = req.body;
     
-    console.log('Cambiando estado - ID:', id, 'Nuevo estado:', nuevoEstado);
-    console.log('Body completo:', req.body);
-    
     if (!['activa', 'inactiva', 'expirada'].includes(nuevoEstado)) {
       return res.status(400).json({
         estado: 'error',
@@ -464,19 +450,11 @@ app.put('/api/cambiar-estado-promocion/:id', async (req, res) => {
     
     const connection = await createConnection();
     
-    // Verificar el estado actual antes de cambiar
-    const [currentRows] = await connection.execute('SELECT estado FROM promociones WHERE id = ?', [id]);
-    console.log('Estado actual de la promoción:', currentRows[0]);
-    
     await connection.execute(`
       UPDATE promociones 
       SET estado = ? 
       WHERE id = ?
     `, [nuevoEstado, id]);
-    
-    // Verificar que se actualizó correctamente
-    const [updatedRows] = await connection.execute('SELECT estado FROM promociones WHERE id = ?', [id]);
-    console.log('Estado después de la actualización:', updatedRows[0]);
     
     await connection.end();
     
@@ -756,12 +734,15 @@ app.get('/api/usuarios', async (req, res) => {
     const connection = await createConnection();
     
     const [rows] = await connection.execute(`
-      SELECT id, nombre, apellido_paterno, apellido_materno, email, 
-             municipio, estado, edad, estado_civil, estudios,
-             fecha_registro
+      SELECT id, nombre, apellido_paterno, apellido_materno, genero, email, 
+             telefono, municipio, estado_direccion as estado, edad, estado_civil, estudios,
+             numero_tarjeta, estado_usuario, fecha_registro
       FROM registro_usuarios 
       ORDER BY fecha_registro DESC
     `);
+    
+    console.log('🔍 Datos de usuarios desde la base de datos:', rows);
+    console.log('🔍 Primer usuario:', rows[0]);
     
     await connection.end();
 

@@ -249,8 +249,8 @@ const ContenidoPrincipal = () => {
           <div className="space-y-1 ml-0 md:ml-20">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-semibold text-gray-800">
-                  PROMOCIONES VIGENTES
+                <h1 className="text-xl font-semibold text-gray-800">
+                  PROMOCIONES VIGENTES-SEPTIEMBRE
                 </h1>
                 <p className="text-gray-600 leading-relaxed">
                   Presentando tarjeta y hasta agotar disponibilidad

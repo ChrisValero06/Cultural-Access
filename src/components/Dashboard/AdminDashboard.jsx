@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../../services/apiService';
 import { useCarrusel } from '../../context/CarruselContext';
+import DashboardHeader from './components/Header/DashboardHeader';
+import DashboardContent from './components/Content/DashboardContent';
+import EditarPromocionModal from './components/Modals/EditarPromocionModal';
+import EditarRegistroModal from './components/Modals/EditarRegistroModal';
+import EditarControlAccesoModal from './components/Modals/EditarControlAccesoModal';
 
 const AdminDashboard = () => {
+  // Estados para promociones
   const [promociones, setPromociones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -10,7 +16,23 @@ const AdminDashboard = () => {
   const [filterInstitucion, setFilterInstitucion] = useState('');
   const [filterDisciplina, setFilterDisciplina] = useState('');
   
-  // Estado para el modal de edición
+  // Estados para registros
+  const [registros, setRegistros] = useState([]);
+  const [loadingRegistros, setLoadingRegistros] = useState(false);
+  const [searchTermRegistros, setSearchTermRegistros] = useState('');
+  const [filterGenero, setFilterGenero] = useState('');
+  const [filterEdad, setFilterEdad] = useState('');
+  
+  // Estados para control de acceso
+  const [controlAcceso, setControlAcceso] = useState([]);
+  const [loadingControlAcceso, setLoadingControlAcceso] = useState(false);
+  const [searchTermControlAcceso, setSearchTermControlAcceso] = useState('');
+  const [filterInstitucionControlAcceso, setFilterInstitucionControlAcceso] = useState('');
+  
+  // Estado para la pestaña activa
+  const [tabActiva, setTabActiva] = useState('promociones');
+  
+  // Estados para modales de edición
   const [modalAbierto, setModalAbierto] = useState(false);
   const [promocionEditando, setPromocionEditando] = useState(null);
   const [editandoForm, setEditandoForm] = useState({
@@ -23,6 +45,33 @@ const AdminDashboard = () => {
     fecha_fin: '',
     imagen_principal: '',
     imagen_secundaria: ''
+  });
+
+  // Estados para modal de registros
+  const [modalRegistroAbierto, setModalRegistroAbierto] = useState(false);
+  const [registroEditando, setRegistroEditando] = useState(null);
+  const [editandoFormRegistro, setEditandoFormRegistro] = useState({
+    nombre: '',
+    apellido_paterno: '',
+    apellido_materno: '',
+    email: '',
+    telefono: '',
+    genero: '',
+    edad: '',
+    numero_tarjeta: '',
+    estado: 'activo'
+  });
+
+  // Estados para modal de control de acceso
+  const [modalControlAccesoAbierto, setModalControlAccesoAbierto] = useState(false);
+  const [controlAccesoEditando, setControlAccesoEditando] = useState(null);
+  const [editandoFormControlAcceso, setEditandoFormControlAcceso] = useState({
+    institucion: '',
+    numero_tarjeta: '',
+    fecha: '',
+    hora: '',
+    estado: 'activo',
+    comentarios: ''
   });
 
   // Usar el contexto para controlar carruseles
@@ -49,6 +98,47 @@ const AdminDashboard = () => {
     }
   };
 
+  const cargarRegistros = async () => {
+    try {
+      setLoadingRegistros(true);
+      const response = await fetch('http://localhost:3001/api/usuarios');
+      const data = await response.json();
+      
+      if (data.success) {
+        // Mapear los datos para que coincidan con la estructura esperada
+        const registrosMapeados = data.usuarios.map(usuario => ({
+          ...usuario,
+          estado: usuario.estado_usuario || 'activo', // Mapear estado_usuario a estado
+          created_at: usuario.fecha_registro // Mapear fecha_registro a created_at
+        }));
+        setRegistros(registrosMapeados);
+      } else {
+        setError('Error al cargar los registros');
+      }
+    } catch (error) {
+      setError('Error de conexión: ' + error.message);
+    } finally {
+      setLoadingRegistros(false);
+    }
+  };
+
+  const cargarControlAcceso = async () => {
+    try {
+      setLoadingControlAcceso(true);
+      const response = await apiService.obtenerControlAcceso();
+      
+      if (response.estado === 'exito') {
+        setControlAcceso(response.datos);
+      } else {
+        setError('Error al cargar el control de acceso');
+      }
+    } catch (error) {
+      setError('Error de conexión: ' + error.message);
+    } finally {
+      setLoadingControlAcceso(false);
+    }
+  };
+
   // Filtrar promociones
   const promocionesFiltradas = promociones.filter(promocion => {
     const matchesSearch = promocion.institucion.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -64,7 +154,49 @@ const AdminDashboard = () => {
     return matchesSearch && matchesInstitucion && matchesDisciplina;
   });
 
+  // Filtrar registros
+  const registrosFiltrados = registros.filter(registro => {
+    const matchesSearch = registro.nombre.toLowerCase().includes(searchTermRegistros.toLowerCase()) ||
+                         registro.apellido_paterno.toLowerCase().includes(searchTermRegistros.toLowerCase()) ||
+                         registro.apellido_materno.toLowerCase().includes(searchTermRegistros.toLowerCase()) ||
+                         registro.email.toLowerCase().includes(searchTermRegistros.toLowerCase()) ||
+                         registro.numero_tarjeta.includes(searchTermRegistros);
+    
+    const matchesGenero = filterGenero === '' || registro.genero === filterGenero;
+    const matchesEdad = filterEdad === '' || registro.edad === filterEdad;
+    
+    return matchesSearch && matchesGenero && matchesEdad;
+  });
+
+  // Filtrar control de acceso
+  const controlAccesoFiltrado = controlAcceso.filter(acceso => {
+    const matchesSearch = acceso.institucion.toLowerCase().includes(searchTermControlAcceso.toLowerCase()) ||
+                         acceso.numero_tarjeta.includes(searchTermControlAcceso);
+    
+    const matchesInstitucion = filterInstitucionControlAcceso === '' || 
+                              acceso.institucion.toLowerCase().includes(filterInstitucionControlAcceso.toLowerCase());
+    
+    return matchesSearch && matchesInstitucion;
+  });
+
   const getStatusBadge = (fechaInicio, fechaFin, estado) => {
+    // Si es solo un estado (para registros y control de acceso)
+    if (fechaInicio === undefined && fechaFin === undefined) {
+      switch (estado) {
+        case 'activo':
+          return <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">🟢 Activo</span>;
+        case 'inactivo':
+          return <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">🟡 Inactivo</span>;
+        case 'suspendido':
+          return <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">🔴 Suspendido</span>;
+        case 'bloqueado':
+          return <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">🚫 Bloqueado</span>;
+        default:
+          return <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">❓ Desconocido</span>;
+      }
+    }
+    
+    // Para promociones (con fechas)
     // Si el estado está definido en la base de datos, usarlo
     if (estado && estado !== 'activa') {
       if (estado === 'inactiva') {
@@ -103,6 +235,36 @@ const AdminDashboard = () => {
       imagen_secundaria: promocion.imagen_secundaria || ''
     });
     setModalAbierto(true);
+  };
+
+  // Función para cambiar de pestaña
+  const handleTabChange = (tab) => {
+    setTabActiva(tab);
+    
+    // Cargar datos según la pestaña seleccionada
+    if (tab === 'registros' && registros.length === 0) {
+      cargarRegistros();
+    } else if (tab === 'control-acceso' && controlAcceso.length === 0) {
+      cargarControlAcceso();
+    }
+  };
+
+  // Funciones para limpiar filtros
+  const handleClearFiltersPromociones = () => {
+    setSearchTerm('');
+    setFilterInstitucion('');
+    setFilterDisciplina('');
+  };
+
+  const handleClearFiltersRegistros = () => {
+    setSearchTermRegistros('');
+    setFilterGenero('');
+    setFilterEdad('');
+  };
+
+  const handleClearFiltersControlAcceso = () => {
+    setSearchTermControlAcceso('');
+    setFilterInstitucionControlAcceso('');
   };
 
   // Función para manejar cambio de estado
@@ -193,6 +355,140 @@ const AdminDashboard = () => {
     }
   };
 
+  // Funciones para manejar CRUD de Registros
+  const handleEditarRegistro = (registro) => {
+    setRegistroEditando(registro);
+    setEditandoFormRegistro({
+      nombre: registro.nombre || '',
+      apellido_paterno: registro.apellido_paterno || '',
+      apellido_materno: registro.apellido_materno || '',
+      email: registro.email || '',
+      telefono: registro.telefono || '',
+      genero: registro.genero || '',
+      edad: registro.edad || '',
+      numero_tarjeta: registro.numero_tarjeta || '',
+      estado: registro.estado || 'activo'
+    });
+    setModalRegistroAbierto(true);
+  };
+
+  const handleCambiarEstadoRegistro = async (registro) => {
+    try {
+      const nuevoEstado = registro.estado === 'activo' ? 'inactivo' : 'activo';
+      
+      // Aquí harías la llamada a la API para cambiar el estado
+      // const response = await apiService.cambiarEstadoRegistro(registro.id, nuevoEstado);
+      
+      // Por ahora, actualizamos solo localmente
+      setRegistros(prev => prev.map(r => 
+        r.id === registro.id ? { ...r, estado: nuevoEstado } : r
+      ));
+      
+      alert(`Registro ${nuevoEstado === 'activo' ? 'activado' : 'desactivado'} exitosamente`);
+    } catch (error) {
+      alert('Error al cambiar el estado del registro: ' + error.message);
+    }
+  };
+
+  const handleEliminarRegistro = async (id) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este registro?')) {
+      try {
+        // Aquí harías la llamada a la API para eliminar
+        // const response = await apiService.eliminarRegistro(id);
+        
+        // Por ahora, eliminamos solo localmente
+        setRegistros(prev => prev.filter(r => r.id !== id));
+        alert('Registro eliminado exitosamente');
+      } catch (error) {
+        alert('Error al eliminar el registro: ' + error.message);
+      }
+    }
+  };
+
+  const handleGuardarCambiosRegistro = async () => {
+    try {
+      // Aquí harías la llamada a la API para actualizar
+      // const response = await apiService.actualizarRegistro(registroEditando.id, editandoFormRegistro);
+      
+      // Por ahora, actualizamos solo localmente
+      setRegistros(prev => prev.map(r => 
+        r.id === registroEditando.id ? { ...r, ...editandoFormRegistro } : r
+      ));
+      
+      setModalRegistroAbierto(false);
+      setRegistroEditando(null);
+      alert('Registro actualizado exitosamente');
+    } catch (error) {
+      alert('Error al actualizar el registro: ' + error.message);
+    }
+  };
+
+  // Funciones para manejar CRUD de Control de Acceso
+  const handleEditarControlAcceso = (acceso) => {
+    setControlAccesoEditando(acceso);
+    setEditandoFormControlAcceso({
+      institucion: acceso.institucion || '',
+      numero_tarjeta: acceso.numero_tarjeta || '',
+      fecha: acceso.fecha || '',
+      hora: acceso.hora || '',
+      estado: acceso.estado || 'activo',
+      comentarios: acceso.comentarios || ''
+    });
+    setModalControlAccesoAbierto(true);
+  };
+
+  const handleCambiarEstadoControlAcceso = async (acceso) => {
+    try {
+      const nuevoEstado = acceso.estado === 'activo' ? 'inactivo' : 'activo';
+      
+      // Aquí harías la llamada a la API para cambiar el estado
+      // const response = await apiService.cambiarEstadoControlAcceso(acceso.id, nuevoEstado);
+      
+      // Por ahora, actualizamos solo localmente
+      setControlAcceso(prev => prev.map(a => 
+        a.id === acceso.id ? { ...a, estado: nuevoEstado } : a
+      ));
+      
+      alert(`Control de acceso ${nuevoEstado === 'activo' ? 'activado' : 'desactivado'} exitosamente`);
+    } catch (error) {
+      alert('Error al cambiar el estado del control de acceso: ' + error.message);
+    }
+  };
+
+  const handleEliminarControlAcceso = async (id) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este registro de control de acceso?')) {
+      try {
+        // Aquí harías la llamada a la API para eliminar
+        // const response = await apiService.eliminarControlAcceso(id);
+        
+        // Por ahora, eliminamos solo localmente
+        setControlAcceso(prev => prev.filter(a => a.id !== id));
+        alert('Registro de control de acceso eliminado exitosamente');
+      } catch (error) {
+        alert('Error al eliminar el registro de control de acceso: ' + error.message);
+      }
+    }
+  };
+
+  const handleGuardarCambiosControlAcceso = async () => {
+    try {
+      // Aquí harías la llamada a la API para actualizar
+      // const response = await apiService.actualizarControlAcceso(controlAccesoEditando.id, editandoFormControlAcceso);
+      
+      // Por ahora, actualizamos solo localmente
+      setControlAcceso(prev => prev.map(a => 
+        a.id === controlAccesoEditando.id ? { ...a, ...editandoFormControlAcceso } : a
+      ));
+      
+      setModalControlAccesoAbierto(false);
+      setControlAccesoEditando(null);
+      alert('Control de acceso actualizado exitosamente');
+    } catch (error) {
+      alert('Error al actualizar el control de acceso: ' + error.message);
+    }
+  };
+
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -224,312 +520,81 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header del Dashboard */}
-      <div className="bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white">🎭 Panel de Control de Promociones</h1>
-              <p className="mt-2 text-orange-100">
-                Gestiona la visibilidad de los carruseles y promociones
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-orange-100">
-                Total: {promociones.length} promociones
-              </span>
-              <button
-                onClick={cargarPromociones}
-                className="bg-white text-orange-600 px-4 py-2 rounded-lg hover:bg-orange-50 transition-colors flex items-center font-medium"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Actualizar
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader
+        tabActiva={tabActiva}
+        onTabChange={handleTabChange}
+        onRefresh={() => {
+          if (tabActiva === 'promociones') cargarPromociones();
+          else if (tabActiva === 'registros') cargarRegistros();
+          else if (tabActiva === 'control-acceso') cargarControlAcceso();
+        }}
+        totalPromociones={promociones.length}
+        totalRegistros={registros.length}
+        totalControlAcceso={controlAcceso.length}
+      />
 
-      {/* Contenido Principal */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Filtros y búsqueda */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6 shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-800 mb-2 md:mb-0">🔍 Filtros de Búsqueda</h3>
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setFilterInstitucion('');
-                setFilterDisciplina('');
-              }}
-              className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm"
-            >
-              Limpiar filtros
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Búsqueda general */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Búsqueda general
-              </label>
-              <input
-                type="text"
-                placeholder="Buscar en todo..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
+      <DashboardContent
+        tabActiva={tabActiva}
+        // Estados de promociones
+        promocionesFiltradas={promocionesFiltradas}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filterInstitucion={filterInstitucion}
+        setFilterInstitucion={setFilterInstitucion}
+        filterDisciplina={filterDisciplina}
+        setFilterDisciplina={setFilterDisciplina}
+        onEditar={handleEditar}
+        onCambiarEstado={handleCambiarEstado}
+        onEliminar={handleEliminar}
+        getStatusBadge={getStatusBadge}
+        onClearFiltersPromociones={handleClearFiltersPromociones}
+        // Estados de registros
+        registrosFiltrados={registrosFiltrados}
+        searchTermRegistros={searchTermRegistros}
+        setSearchTermRegistros={setSearchTermRegistros}
+        filterGenero={filterGenero}
+        setFilterGenero={setFilterGenero}
+        filterEdad={filterEdad}
+        setFilterEdad={setFilterEdad}
+        onClearFiltersRegistros={handleClearFiltersRegistros}
+        onEditarRegistro={handleEditarRegistro}
+        onCambiarEstadoRegistro={handleCambiarEstadoRegistro}
+        onEliminarRegistro={handleEliminarRegistro}
+        // Estados de control de acceso
+        controlAccesoFiltrado={controlAccesoFiltrado}
+        searchTermControlAcceso={searchTermControlAcceso}
+        setSearchTermControlAcceso={setSearchTermControlAcceso}
+        filterInstitucionControlAcceso={filterInstitucionControlAcceso}
+        setFilterInstitucionControlAcceso={setFilterInstitucionControlAcceso}
+        onClearFiltersControlAcceso={handleClearFiltersControlAcceso}
+        onEditarControlAcceso={handleEditarControlAcceso}
+        onCambiarEstadoControlAcceso={handleCambiarEstadoControlAcceso}
+        onEliminarControlAcceso={handleEliminarControlAcceso}
+      />
 
-            {/* Filtro por institución */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Institución
-              </label>
-              <input
-                type="text"
-                placeholder="Filtrar por institución..."
-                value={filterInstitucion}
-                onChange={(e) => setFilterInstitucion(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
+      <EditarPromocionModal
+        modalAbierto={modalAbierto}
+        setModalAbierto={setModalAbierto}
+        editandoForm={editandoForm}
+        setEditandoForm={setEditandoForm}
+        onGuardarCambios={handleGuardarCambios}
+      />
 
-            {/* Filtro por disciplina */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Disciplina
-              </label>
-              <input
-                type="text"
-                placeholder="Filtrar por disciplina..."
-                value={filterDisciplina}
-                onChange={(e) => setFilterDisciplina(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-          </div>
-        </div>
+      <EditarRegistroModal
+        modalAbierto={modalRegistroAbierto}
+        setModalAbierto={setModalRegistroAbierto}
+        editandoForm={editandoFormRegistro}
+        setEditandoForm={setEditandoFormRegistro}
+        onGuardarCambios={handleGuardarCambiosRegistro}
+      />
 
-        {/* Tabla de promociones */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h3 className="text-lg font-medium text-gray-800">
-              Promociones ({promocionesFiltradas.length})
-            </h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    IMAGEN
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    INSTITUCIÓN
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    TIPO
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    DISCIPLINA
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ESTADO
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ACCIONES
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {promocionesFiltradas.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" className="px-6 py-16 text-center text-gray-500">
-                      <div className="text-6xl mb-4">🔍</div>
-                      <p className="text-xl font-medium text-gray-700 mb-2">No se encontraron promociones</p>
-                      <p className="text-gray-500">Intenta ajustar los filtros de búsqueda</p>
-                    </td>
-                  </tr>
-                ) : (
-                  promocionesFiltradas.map((promocion) => (
-                    <tr key={promocion.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <img
-                            className="h-16 w-16 rounded-lg object-cover border-2 border-gray-200"
-                            src={promocion.imagen_principal}
-                            alt={`Imagen de ${promocion.institucion}`}
-                            onError={(e) => {
-                              e.target.src = 'https://via.placeholder.com/64x64?text=Sin+Imagen';
-                            }}
-                          />
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900 max-w-xs truncate">
-                          {promocion.institucion}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                          {promocion.tipo_promocion}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex px-3 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
-                          {promocion.disciplina}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(promocion.fecha_inicio, promocion.fecha_fin, promocion.estado)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <button 
-                            onClick={() => handleEditar(promocion)}
-                            className="bg-orange-500 text-white px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors"
-                          >
-                            Editar
-                          </button>
-                          <button 
-                            onClick={() => handleCambiarEstado(promocion)}
-                            className={`px-3 py-2 rounded-lg text-white transition-colors flex items-center space-x-2 ${
-                              promocion.estado === 'activa' 
-                                ? 'bg-red-500 hover:bg-red-600' 
-                                : 'bg-green-500 hover:bg-green-600'
-                            }`}
-                          >
-                            {promocion.estado === 'activa' ? (
-                              <>
-                                <span>🔴</span>
-                                <span>Desactivar</span>
-                              </>
-                            ) : (
-                              <>
-                                <span>🟢</span>
-                                <span>Activar</span>
-                              </>
-                            )}
-                          </button>
-                          <button 
-                            onClick={() => handleEliminar(promocion.id)}
-                            className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors"
-                          >
-                            Eliminar
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-          
-        
-
-      {/* Modal de Edición */}
-      {modalAbierto && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">✏️ Editar Promoción</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Institución</label>
-                <input
-                  type="text"
-                  value={editandoForm.institucion}
-                  onChange={(e) => setEditandoForm({...editandoForm, institucion: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Promoción</label>
-                <input
-                  type="text"
-                  value={editandoForm.tipo_promocion}
-                  onChange={(e) => setEditandoForm({...editandoForm, tipo_promocion: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Disciplina</label>
-                <input
-                  type="text"
-                  value={editandoForm.disciplina}
-                  onChange={(e) => setEditandoForm({...editandoForm, disciplina: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
-                <input
-                  type="date"
-                  value={editandoForm.fecha_inicio}
-                  onChange={(e) => setEditandoForm({...editandoForm, fecha_inicio: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha Fin</label>
-                <input
-                  type="date"
-                  value={editandoForm.fecha_fin}
-                  onChange={(e) => setEditandoForm({...editandoForm, fecha_fin: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-            </div>
-            
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Beneficios</label>
-              <textarea
-                value={editandoForm.beneficios}
-                onChange={(e) => setEditandoForm({...editandoForm, beneficios: e.target.value})}
-                rows="3"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-            
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Comentarios y Restricciones</label>
-              <textarea
-                value={editandoForm.comentarios_restricciones}
-                onChange={(e) => setEditandoForm({...editandoForm, comentarios_restricciones: e.target.value})}
-                rows="3"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-            
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setModalAbierto(false)}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleGuardarCambios}
-                className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600"
-              >
-                Guardar Cambios
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <EditarControlAccesoModal
+        modalAbierto={modalControlAccesoAbierto}
+        setModalAbierto={setModalControlAccesoAbierto}
+        editandoForm={editandoFormControlAcceso}
+        setEditandoForm={setEditandoFormControlAcceso}
+        onGuardarCambios={handleGuardarCambiosControlAcceso}
+      />
     </div>
   );
 };
