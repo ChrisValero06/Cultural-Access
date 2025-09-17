@@ -8,10 +8,8 @@ const connection = mysql.createConnection(config.database);
 // Probar conexión
 connection.connect((err) => {
   if (err) {
-    console.error('❌ Error al conectar a MySQL:', err);
     return;
   }
-  console.log('✅ Conectado a la base de datos cultural_access');
 });
 
 module.exports = connection;

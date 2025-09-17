@@ -22,7 +22,6 @@ export const apiService = {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error al crear promoción:', error);
       throw error;
     }
   },
@@ -44,7 +43,6 @@ export const apiService = {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error al obtener promociones:', error);
       throw error;
     }
   },
@@ -68,7 +66,6 @@ export const apiService = {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error al subir imagen:', error);
       throw error;
     }
   },
@@ -90,7 +87,6 @@ export const apiService = {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error al buscar promociones:', error);
       throw error;
     }
   },
@@ -112,7 +108,6 @@ export const apiService = {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error al buscar promociones por disciplina:', error);
       throw error;
     }
   },
@@ -134,7 +129,6 @@ export const apiService = {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error al obtener promociones para carrusel:', error);
       throw error;
     }
   },
@@ -181,7 +175,6 @@ export const apiService = {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error al eliminar promoción:', error);
       throw error;
     }
   },
@@ -204,7 +197,6 @@ export const apiService = {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error al actualizar promoción:', error);
       throw error;
     }
   },
@@ -227,7 +219,6 @@ export const apiService = {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error al crear registro de control de acceso:', error);
       throw error;
     }
   },
@@ -249,10 +240,74 @@ export const apiService = {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error al obtener registros de control de acceso:', error);
       throw error;
     }
-  }
+  },
+
+  // Obtener todos los usuarios registrados
+  async obtenerUsuarios() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/usuarios`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Actualizar usuario
+  async actualizarUsuario(id, usuarioData) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/usuarios/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(usuarioData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Eliminar usuario
+  async eliminarUsuario(id) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/usuarios/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
 };
 
 export default apiService;

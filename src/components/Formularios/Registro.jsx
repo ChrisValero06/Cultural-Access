@@ -81,7 +81,6 @@ const CulturalAccessForm = () => {
         setTarjetaDisponible(false);
       }
     } catch (error) {
-      console.error('Error verificando número de tarjeta:', error);
       setTarjetaDisponible(false);
     } finally {
       setTarjetaValidando(false);
@@ -136,7 +135,9 @@ const CulturalAccessForm = () => {
           acepta_info: formData.aceptaInfo,
         }
 
-      console.log("Enviando datos:", dataToSend)
+        // Debug: Mostrar datos que se van a enviar
+        console.log('Datos que se envían al servidor:', dataToSend);
+
 
       const response = await fetch("http://localhost:3001/api/culturalaccessform", {
         method: "POST",
@@ -189,7 +190,6 @@ const CulturalAccessForm = () => {
         }
       }
     } catch (error) {
-      console.error("Error al enviar el formulario:", error)
       alert("Error de conexión. Por favor, intenta de nuevo.")
     } finally {
       setIsSubmitting(false)
@@ -999,7 +999,7 @@ const CulturalAccessForm = () => {
         
       </div>
 
-      <style jsx>{`
+      <style jsx="true">{`
         @keyframes fadeIn {
           from {
             opacity: 0;

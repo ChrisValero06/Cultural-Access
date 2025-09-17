@@ -39,7 +39,6 @@ export const CarruselProvider = ({ children }) => {
       try {
         setCarruseles(JSON.parse(savedState));
       } catch (error) {
-        console.error('Error cargando estado del carrusel:', error);
       }
     }
   }, []);

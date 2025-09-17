@@ -6,7 +6,8 @@ const ControlAcceso = () => {
   const [formData, setFormData] = useState({
     institucion: '',
     numeroTarjeta: '',
-    fecha: ''
+    fecha: '',
+    estado: 'activo'
   })
 
   const [showInstituciones, setShowInstituciones] = useState(false)
@@ -92,6 +93,24 @@ const ControlAcceso = () => {
     }
   }
 
+  // NUEVO: Alternar manualmente el dropdown con flecha
+  const toggleDropdownInstituciones = () => {
+    if (!showInstituciones) {
+      // Mostrar el listado completo para facilitar la selección
+      setFilteredInstituciones(instituciones)
+      setShowInstituciones(true)
+    } else {
+      setShowInstituciones(false)
+    }
+  }
+
+  // NUEVO: Limpiar para poder elegir otra opción rápidamente
+  const handleClearInstitucion = () => {
+    setFormData(prev => ({ ...prev, institucion: '' }))
+    setFilteredInstituciones(instituciones)
+    setShowInstituciones(true)
+  }
+
   const selectInstitucion = (institucion) => {
     setFormData(prevState => ({
       ...prevState,
@@ -119,7 +138,7 @@ const ControlAcceso = () => {
     
     try {
       // Validar que todos los campos estén llenos
-      if (!formData.institucion || !formData.numeroTarjeta || !formData.fecha) {
+      if (!formData.institucion || !formData.numeroTarjeta || !formData.fecha || !formData.estado) {
         alert('Por favor, completa todos los campos')
         return
       }
@@ -128,7 +147,8 @@ const ControlAcceso = () => {
       const response = await apiService.crearControlAcceso({
         institucion: formData.institucion,
         numeroTarjeta: formData.numeroTarjeta,
-        fecha: formData.fecha
+        fecha: formData.fecha,
+        estado: formData.estado
       })
 
       if (response.estado === 'exito') {
@@ -138,14 +158,14 @@ const ControlAcceso = () => {
         setFormData({
           institucion: '',
           numeroTarjeta: '',
-          fecha: ''
+          fecha: '',
+          estado: 'activo'
         })
       } else {
         alert('Error al crear el registro: ' + response.mensaje)
       }
       
     } catch (error) {
-      console.error('Error al enviar formulario:', error)
       
       // Mostrar error más específico
       if (error.message.includes('Failed to fetch')) {
@@ -229,9 +249,33 @@ const ControlAcceso = () => {
                     onChange={handleChange}
                     onFocus={handleInstitucionFocus}
                     required
-                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
+                    className="w-full pr-24 px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
                     placeholder="Busca o escribe el nombre de la institución"
                   />
+
+                  {/* Botones de acción dentro del input */}
+                  <div className="absolute inset-y-0 right-2 flex items-center space-x-2">
+                    {formData.institucion && (
+                      <button
+                        type="button"
+                        onClick={handleClearInstitucion}
+                        className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                        title="Limpiar y elegir otra"
+                      >
+                        Limpiar
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={toggleDropdownInstituciones}
+                      className="p-2 rounded bg-white hover:bg-orange-50 shadow"
+                      title="Mostrar lista"
+                    >
+                      <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
                   
                   {/* Dropdown de autocomplete */}
                   {showInstituciones && (
@@ -288,6 +332,24 @@ const ControlAcceso = () => {
                     </svg>
                   </div>
                 </div>
+              </div>
+
+              {/* Campo Estado */}
+              <div>
+                <label htmlFor="estado" className="block text-base font-bold text-gray-800 mb-2">
+                  ESTADO *
+                </label>
+                <select
+                  id="estado"
+                  name="estado"
+                  value={formData.estado}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base"
+                >
+                  <option value="activo">Activo</option>
+                  <option value="inactivo">Inactivo</option>
+                </select>
               </div>
 
               {/* Botón Enviar */}

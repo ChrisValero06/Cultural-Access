@@ -29,7 +29,7 @@ const HeroSection = () => {
           </div>
           
           {/* Título principal */}
-          <h1 className="font_8 wixui-rich-text__text text-white mb-8 text-left" style={{ fontSize: '35px' }}>
+          <h1 className="font_8 wixui-rich-text__text text-white mb-4 text-left font-bold tracking-tight leading-tight" style={{ fontSize: '28px' }}>
             ¿Qué es CulturAll Access?
           </h1>
           

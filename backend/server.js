@@ -40,12 +40,11 @@ const upload = multer({
 
 // Crear conexión a la base de datos
 async function createConnection() {
+  
   try {
     const connection = await mysql.createConnection(config.database);
-    console.log('Conexión a la base de datos establecida');
     return connection;
   } catch (error) {
-    console.error('Error conectando a la base de datos:', error);
     throw error;
   }
 }
@@ -115,13 +114,10 @@ async function createTables() {
     `;
     
     await connection.execute(createPromocionesQuery);
-    console.log('Tabla de promociones creada/verificada');
     
     await connection.execute(createControlAccesoQuery);
-    console.log('Tabla de control_acceso creada/verificada');
 
     await connection.execute(createRegistroUsuariosQuery);
-    console.log('Tabla de registro_usuarios creada/verificada');
     
     // Verificar y agregar columna de teléfono si no existe
     try {
@@ -140,12 +136,10 @@ async function createTables() {
         `);
       }
     } catch (error) {
-      console.error('Error verificando/agregando columna de teléfono:', error);
     }
     
     await connection.end();
   } catch (error) {
-    console.error('Error creando tablas:', error);
   }
 }
 
@@ -198,7 +192,6 @@ app.post('/api/crear_promocion', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creando promoción:', error);
     res.status(500).json({
       estado: 'error',
       mensaje: 'Error interno del servidor'
@@ -226,7 +219,6 @@ app.post('/api/subir_imagen', upload.single('imagen'), (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error subiendo imagen:', error);
     res.status(500).json({
       estado: 'error',
       mensaje: 'Error subiendo imagen'
@@ -249,7 +241,6 @@ app.get('/api/obtener_promociones', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error obteniendo promociones:', error);
     res.status(500).json({
       estado: 'error',
       mensaje: 'Error obteniendo promociones'
@@ -288,7 +279,6 @@ app.get('/api/buscar_promocion', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error buscando promociones:', error);
     res.status(500).json({
       estado: 'error',
       mensaje: 'Error buscando promociones'
@@ -317,7 +307,6 @@ app.get('/api/debug-promociones', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en debug-promociones:', error);
     res.status(500).json({
       estado: 'error',
       mensaje: 'Error obteniendo promociones para debug'
@@ -392,7 +381,6 @@ app.get('/api/promociones-carrusel', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error obteniendo promociones para carrusel:', error);
     res.status(500).json({
       estado: 'error',
       mensaje: 'Error obteniendo promociones para carrusel'
@@ -427,7 +415,6 @@ app.post('/api/actualizar-estado-promociones', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error actualizando estados:', error);
     res.status(500).json({
       estado: 'error',
       mensaje: 'Error actualizando estados'
@@ -464,7 +451,6 @@ app.put('/api/cambiar-estado-promocion/:id', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error cambiando estado:', error);
     res.status(500).json({
       estado: 'error',
       mensaje: 'Error cambiando estado'
@@ -488,7 +474,6 @@ app.delete('/api/eliminar-promocion/:id', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error eliminando promoción:', error);
     res.status(500).json({
       estado: 'error',
       mensaje: 'Error eliminando promoción'
@@ -537,7 +522,6 @@ app.put('/api/actualizar-promocion/:id', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error actualizando promoción:', error);
     res.status(500).json({
       estado: 'error',
       mensaje: 'Error interno del servidor'
@@ -576,7 +560,6 @@ app.post('/api/control-acceso', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creando registro de control de acceso:', error);
     res.status(500).json({
       estado: 'error',
       mensaje: 'Error interno del servidor'
@@ -611,14 +594,48 @@ app.post('/api/culturalaccessform', async (req, res) => {
       acepta_info
     } = req.body;
 
+    // Construir fecha_nacimiento a partir de los campos individuales
+    const fecha_nacimiento = `${ano_nacimiento}-${mes_nacimiento}-${dia_nacimiento}`;
+
+    // Debug: Log de los datos recibidos
+    console.log('Datos recibidos:', {
+      nombre, apellido_paterno, email, telefono,
+      calle_numero, municipio, estado, colonia, codigo_postal,
+      edad, estado_nacimiento, dia_nacimiento, mes_nacimiento, ano_nacimiento,
+      numero_tarjeta, acepta_info
+    });
+
     // Validar campos requeridos según la estructura de la base de datos
-    if (!nombre || !apellido_paterno || !email || !telefono ||
+    if (!nombre || !apellido_paterno || !apellido_materno || !email || !telefono ||
         !calle_numero || !municipio || !estado || !colonia || !codigo_postal || 
-        !edad || !estado_nacimiento || !dia_nacimiento || 
-        !mes_nacimiento || !ano_nacimiento || !numero_tarjeta || !acepta_info) {
+        !edad || !estado_nacimiento || !dia_nacimiento || !mes_nacimiento || !ano_nacimiento || !numero_tarjeta || !acepta_info) {
+      
+      // Debug: Identificar qué campos faltan
+      const camposFaltantes = [];
+      if (!nombre) camposFaltantes.push('nombre');
+      if (!apellido_paterno) camposFaltantes.push('apellido_paterno');
+      if (!apellido_materno) camposFaltantes.push('apellido_materno');
+      if (!email) camposFaltantes.push('email');
+      if (!telefono) camposFaltantes.push('telefono');
+      if (!calle_numero) camposFaltantes.push('calle_numero');
+      if (!municipio) camposFaltantes.push('municipio');
+      if (!estado) camposFaltantes.push('estado');
+      if (!colonia) camposFaltantes.push('colonia');
+      if (!codigo_postal) camposFaltantes.push('codigo_postal');
+      if (!edad) camposFaltantes.push('edad');
+      if (!estado_nacimiento) camposFaltantes.push('estado_nacimiento');
+      if (!dia_nacimiento) camposFaltantes.push('dia_nacimiento');
+      if (!mes_nacimiento) camposFaltantes.push('mes_nacimiento');
+      if (!ano_nacimiento) camposFaltantes.push('ano_nacimiento');
+      if (!numero_tarjeta) camposFaltantes.push('numero_tarjeta');
+      if (!acepta_info) camposFaltantes.push('acepta_info');
+      
+      console.log('Campos faltantes:', camposFaltantes);
+      
       return res.status(400).json({
         success: false,
-        message: 'Todos los campos obligatorios deben ser completados'
+        message: 'Todos los campos obligatorios deben ser completados',
+        camposFaltantes: camposFaltantes
       });
     }
 
@@ -631,12 +648,12 @@ app.post('/api/culturalaccessform', async (req, res) => {
       });
     }
 
-    // Validar formato de teléfono (solo números, guiones y paréntesis)
-    const telefonoRegex = /^[\d\-\s\(\)]+$/;
-    if (!telefonoRegex.test(telefono)) {
+    // Validar formato de teléfono (más flexible)
+    const telefonoRegex = /^[\d\-\s\(\)\+]+$/;
+    if (!telefonoRegex.test(telefono) || telefono.length < 10) {
       return res.status(400).json({
         success: false,
-        message: 'Formato de teléfono inválido. Solo se permiten números, guiones, espacios y paréntesis'
+        message: 'Formato de teléfono inválido. Debe contener al menos 10 caracteres y solo números, guiones, espacios, paréntesis y el signo +'
       });
     }
 
@@ -683,15 +700,15 @@ app.post('/api/culturalaccessform', async (req, res) => {
         nombre, apellido_paterno, apellido_materno, genero, email, telefono,
         calle_numero, municipio, estado, colonia, codigo_postal,
         edad, estado_civil, estudios, curp, estado_nacimiento,
-        dia_nacimiento, mes_nacimiento, ano_nacimiento, numero_tarjeta, acepta_info
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        fecha_nacimiento, numero_tarjeta, acepta_info
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const [result] = await connection.execute(insertQuery, [
       nombre, apellido_paterno, apellido_materno, genero, email, telefono,
       calle_numero, municipio, estado, colonia, codigo_postal,
       edad, estado_civil, estudios, curp, estado_nacimiento,
-      dia_nacimiento, mes_nacimiento, ano_nacimiento, numero_tarjeta, acepta_info
+      fecha_nacimiento, numero_tarjeta, acepta_info
     ]);
 
     await connection.end();
@@ -703,7 +720,6 @@ app.post('/api/culturalaccessform', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error procesando formulario de registro:', error);
     
     // Si es un error de duplicado de email
     if (error.code === 'ER_DUP_ENTRY' && error.message.includes('email')) {
@@ -728,32 +744,362 @@ app.post('/api/culturalaccessform', async (req, res) => {
   }
 });
 
+// Endpoint de prueba simple
+app.get('/api/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Servidor funcionando correctamente',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Endpoint de prueba simple para usuarios
+app.get('/api/usuarios-test', async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      message: 'Endpoint de prueba funcionando',
+      usuarios: [],
+      total: 0
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error en endpoint de prueba: ' + error.message
+    });
+  }
+});
+
+// Endpoint para agregar columna telefono si no existe
+app.post('/api/agregar-telefono', async (req, res) => {
+  let connection = null;
+  try {
+    connection = await createConnection();
+    
+    // Verificar si la columna telefono ya existe
+    const [columns] = await connection.execute(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+       WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'registro_usuarios' AND COLUMN_NAME = 'telefono'`,
+      [config.database.database]
+    );
+    
+    if (columns.length === 0) {
+      // Agregar la columna telefono
+      await connection.execute(
+        `ALTER TABLE registro_usuarios ADD COLUMN telefono VARCHAR(15) AFTER email`
+      );
+      
+      await connection.end();
+      connection = null;
+      
+      return res.json({ 
+        success: true, 
+        message: 'Columna telefono agregada exitosamente' 
+      });
+    } else {
+      await connection.end();
+      connection = null;
+      
+      return res.json({ 
+        success: true, 
+        message: 'La columna telefono ya existe' 
+      });
+    }
+  } catch (error) {
+    if (connection) {
+      try { await connection.end(); } catch (_) {}
+    }
+    return res.status(500).json({
+      success: false,
+      message: 'Error al agregar columna telefono',
+      error: error.message
+    });
+  }
+});
+
 // Endpoint para obtener todos los usuarios registrados
 app.get('/api/usuarios', async (req, res) => {
+
+  // Dos variantes seguras del SELECT (evitar columnas inexistentes)
+  const SELECT_USUARIOS_ESTADO = `
+    SELECT 
+      id, nombre, apellido_paterno, apellido_materno, genero, email,
+      telefono, calle_numero, municipio,
+      estado,
+      colonia, codigo_postal,
+      edad, estado_civil, estudios, curp, estado_nacimiento,
+      fecha_nacimiento,
+      numero_tarjeta, acepta_info, fecha_registro
+    FROM registro_usuarios
+    ORDER BY fecha_registro DESC
+  `;
+
+  const SELECT_USUARIOS_ESTADO_DIRECCION = `
+    SELECT 
+      id, nombre, apellido_paterno, apellido_materno, genero, email,
+      telefono, calle_numero, municipio,
+      estado,
+      colonia, codigo_postal,
+      edad, estado_civil, estudios, curp, estado_nacimiento,
+      fecha_nacimiento,
+      numero_tarjeta, acepta_info, fecha_registro
+    FROM registro_usuarios
+    ORDER BY fecha_registro DESC
+  `;
+
+  let connection = null;
   try {
+    connection = await createConnection();
+
+    // Verificar existencia de la tabla antes de consultar
+    const [tableCheck] = await connection.execute(
+      `SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'registro_usuarios'`,
+      [config.database.database]
+    );
+    if (tableCheck[0].count === 0) {
+      throw new Error('La tabla registro_usuarios no existe en la base de datos');
+    }
+
+    let rows;
+    try {
+      // Intentar con la columna 'estado'
+      [rows] = await connection.execute(SELECT_USUARIOS_ESTADO);
+    } catch (err) {
+      // Si la columna 'estado' no existe, intentar con 'estado_direccion'
+      if (err && err.code === 'ER_BAD_FIELD_ERROR') {
+        [rows] = await connection.execute(SELECT_USUARIOS_ESTADO_DIRECCION);
+      } else {
+        throw err;
+      }
+    }
+
+    await connection.end();
+    connection = null;
+
+    return res.json({ success: true, usuarios: rows, total: rows.length });
+  } catch (error) {
+    if (connection) {
+      try { await connection.end(); } catch (_) {}
+    }
+    return res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message,
+      code: error.code,
+      errno: error.errno,
+      sqlState: error.sqlState
+    });
+  }
+});
+
+// Endpoint para actualizar usuario
+app.put('/api/usuarios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      nombre,
+      apellido_paterno,
+      apellido_materno,
+      genero,
+      email,
+      telefono,
+      calle_numero,
+      municipio,
+      estado,
+      colonia,
+      codigo_postal,
+      edad,
+      estado_civil,
+      estudios,
+      curp,
+      estado_nacimiento,
+      dia_nacimiento,
+      mes_nacimiento,
+      ano_nacimiento,
+      numero_tarjeta,
+      acepta_info,
+      estado_usuario
+    } = req.body;
+
     const connection = await createConnection();
     
-    const [rows] = await connection.execute(`
-      SELECT id, nombre, apellido_paterno, apellido_materno, genero, email, 
-             telefono, municipio, estado_direccion as estado, edad, estado_civil, estudios,
-             numero_tarjeta, estado_usuario, fecha_registro
-      FROM registro_usuarios 
-      ORDER BY fecha_registro DESC
-    `);
+    // Verificar que el usuario existe
+    const [existingUser] = await connection.execute(
+      'SELECT id FROM registro_usuarios WHERE id = ?',
+      [id]
+    );
+
+    if (existingUser.length === 0) {
+      await connection.end();
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    // Verificar duplicados de email y número de tarjeta (excluyendo el usuario actual)
+    if (email) {
+      const [emailExists] = await connection.execute(
+        'SELECT id FROM registro_usuarios WHERE email = ? AND id != ?',
+        [email, id]
+      );
+      
+      if (emailExists.length > 0) {
+        await connection.end();
+        return res.status(400).json({
+          success: false,
+          message: 'Ya existe un usuario registrado con este email'
+        });
+      }
+    }
+
+    if (numero_tarjeta) {
+      const [tarjetaExists] = await connection.execute(
+        'SELECT id FROM registro_usuarios WHERE numero_tarjeta = ? AND id != ?',
+        [numero_tarjeta, id]
+      );
+      
+      if (tarjetaExists.length > 0) {
+        await connection.end();
+        return res.status(400).json({
+          success: false,
+          message: 'Ya existe un usuario registrado con este número de tarjeta'
+        });
+      }
+    }
+
+    // Construir query de actualización dinámicamente
+    const updateFields = [];
+    const updateValues = [];
+
+    if (nombre !== undefined) { updateFields.push('nombre = ?'); updateValues.push(nombre); }
+    if (apellido_paterno !== undefined) { updateFields.push('apellido_paterno = ?'); updateValues.push(apellido_paterno); }
+    if (apellido_materno !== undefined) { updateFields.push('apellido_materno = ?'); updateValues.push(apellido_materno); }
+    if (genero !== undefined) { updateFields.push('genero = ?'); updateValues.push(genero); }
+    if (email !== undefined) { updateFields.push('email = ?'); updateValues.push(email); }
+    if (telefono !== undefined) { updateFields.push('telefono = ?'); updateValues.push(telefono); }
+    if (calle_numero !== undefined) { updateFields.push('calle_numero = ?'); updateValues.push(calle_numero); }
+    if (municipio !== undefined) { updateFields.push('municipio = ?'); updateValues.push(municipio); }
+    if (estado !== undefined) { updateFields.push('estado = ?'); updateValues.push(estado); }
+    if (colonia !== undefined) { updateFields.push('colonia = ?'); updateValues.push(colonia); }
+    if (codigo_postal !== undefined) { updateFields.push('codigo_postal = ?'); updateValues.push(codigo_postal); }
+    if (edad !== undefined) { updateFields.push('edad = ?'); updateValues.push(edad); }
+    if (estado_civil !== undefined) { updateFields.push('estado_civil = ?'); updateValues.push(estado_civil); }
+    if (estudios !== undefined) { updateFields.push('estudios = ?'); updateValues.push(estudios); }
+    if (curp !== undefined) { updateFields.push('curp = ?'); updateValues.push(curp); }
+    if (estado_nacimiento !== undefined) { updateFields.push('estado_nacimiento = ?'); updateValues.push(estado_nacimiento); }
+    if (dia_nacimiento !== undefined) { updateFields.push('dia_nacimiento = ?'); updateValues.push(dia_nacimiento); }
+    if (mes_nacimiento !== undefined) { updateFields.push('mes_nacimiento = ?'); updateValues.push(mes_nacimiento); }
+    if (ano_nacimiento !== undefined) { updateFields.push('ano_nacimiento = ?'); updateValues.push(ano_nacimiento); }
+    if (numero_tarjeta !== undefined) { updateFields.push('numero_tarjeta = ?'); updateValues.push(numero_tarjeta); }
+    if (acepta_info !== undefined) { updateFields.push('acepta_info = ?'); updateValues.push(acepta_info); }
+    if (estado_usuario !== undefined) { updateFields.push('estado_usuario = ?'); updateValues.push(estado_usuario); }
+
+    if (updateFields.length === 0) {
+      await connection.end();
+      return res.status(400).json({
+        success: false,
+        message: 'No se proporcionaron campos para actualizar'
+      });
+    }
+
+    updateValues.push(id);
+    const updateQuery = `UPDATE registro_usuarios SET ${updateFields.join(', ')} WHERE id = ?`;
+
+    await connection.execute(updateQuery, updateValues);
+    await connection.end();
+
+    res.json({
+      success: true,
+      message: 'Usuario actualizado exitosamente'
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+// Endpoint para eliminar usuario
+app.delete('/api/usuarios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await createConnection();
     
-    console.log('🔍 Datos de usuarios desde la base de datos:', rows);
-    console.log('🔍 Primer usuario:', rows[0]);
+    // Verificar que el usuario existe
+    const [existingUser] = await connection.execute(
+      'SELECT id FROM registro_usuarios WHERE id = ?',
+      [id]
+    );
+
+    if (existingUser.length === 0) {
+      await connection.end();
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    await connection.execute('DELETE FROM registro_usuarios WHERE id = ?', [id]);
+    await connection.end();
+
+    res.json({
+      success: true,
+      message: 'Usuario eliminado exitosamente'
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+// Endpoint para cambiar estado de usuario
+app.put('/api/usuarios/:id/estado', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado } = req.body;
+    
+    if (!['activo', 'inactivo'].includes(estado)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Estado no válido. Debe ser "activo" o "inactivo"'
+      });
+    }
+
+    const connection = await createConnection();
+    
+    // Verificar que el usuario existe
+    const [existingUser] = await connection.execute(
+      'SELECT id FROM registro_usuarios WHERE id = ?',
+      [id]
+    );
+
+    if (existingUser.length === 0) {
+      await connection.end();
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    await connection.execute(
+      'UPDATE registro_usuarios SET estado_usuario = ? WHERE id = ?',
+      [estado, id]
+    );
     
     await connection.end();
 
     res.json({
       success: true,
-      usuarios: rows,
-      total: rows.length
+      message: `Estado del usuario cambiado a ${estado}`
     });
 
   } catch (error) {
-    console.error('Error obteniendo usuarios:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'
@@ -791,7 +1137,6 @@ app.get('/api/verificar-tarjeta/:numeroTarjeta', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error verificando número de tarjeta:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'
@@ -814,7 +1159,6 @@ app.get('/api/control-acceso', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error obteniendo registros de control de acceso:', error);
     res.status(500).json({
       estado: 'error',
       mensaje: 'Error interno del servidor'
@@ -830,11 +1174,10 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Inicializar tablas y arrancar servidor
+
 createTables().then(() => {
   app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
-    console.log('API disponible en /api/*');
+    // Servidor iniciado
   });
 }).catch(error => {
-  console.error('Error inicializando servidor:', error);
 });

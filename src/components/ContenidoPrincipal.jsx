@@ -19,7 +19,6 @@ const ContenidoPrincipal = () => {
 
   // Función para cargar promociones
   const cargarPromociones = async (actualizar = false) => {
-    console.log('🚀 Iniciando carga de promociones...', { actualizar, timestamp: new Date().toISOString() });
     try {
       setLoading(true)
       
@@ -28,8 +27,6 @@ const ContenidoPrincipal = () => {
       const response = await apiService.obtenerPromocionesCarrusel()
       const responseTime = Date.now() - startTime;
       
-      console.log('📊 Respuesta del API:', response);
-      console.log('⏱️ Tiempo de respuesta:', responseTime, 'ms');
       
       if (response.estado === 'exito') {
         // Filtrar solo promociones activas (aunque el backend ya lo hace, es una doble verificación)
@@ -37,7 +34,6 @@ const ContenidoPrincipal = () => {
           carrusel.imagenes && carrusel.imagenes.length > 0
         );
         
-        console.log('✅ Promociones activas filtradas:', promocionesActivas);
         
         setCarruseles(promocionesActivas)
         setUltimaActualizacion(Date.now())
@@ -51,14 +47,11 @@ const ContenidoPrincipal = () => {
         
         // Mostrar mensaje de éxito
         if (actualizar) {
-          console.log('🎉 Carrusel actualizado exitosamente');
         }
       } else {
-        console.error('❌ Error en respuesta del API:', response);
         setError('Error al cargar las promociones')
       }
     } catch (error) {
-      console.error('💥 Error al cargar promociones:', error);
       
       // Verificar si es un error de conectividad
       if (error.message.includes('fetch') || error.message.includes('network')) {
@@ -68,7 +61,6 @@ const ContenidoPrincipal = () => {
       }
     } finally {
       setLoading(false)
-      console.log('🏁 Carga de promociones completada');
     }
   }
 
@@ -79,13 +71,10 @@ const ContenidoPrincipal = () => {
 
   // Escuchar cambios en el localStorage para actualización inmediata
   useEffect(() => {
-    console.log('🔧 Configurando event listeners en ContenidoPrincipal...');
     
     const handleStorageChange = (e) => {
-      console.log('📡 Evento storage detectado:', e.key, e.newValue);
       if (e.key === 'promocionEstadoCambiado') {
         // Actualizar inmediatamente cuando cambie el estado de una promoción
-        console.log('🔄 Estado de promoción cambiado, recargando carruseles...');
         cargarPromociones()
         // Limpiar el flag
         localStorage.removeItem('promocionEstadoCambiado')
@@ -94,18 +83,14 @@ const ContenidoPrincipal = () => {
 
     // Escuchar evento personalizado para actualización más rápida
     const handlePromocionEstadoCambiado = (e) => {
-      console.log('🎯 Evento personalizado recibido:', e.detail);
-      console.log('🔄 Recargando carruseles desde evento personalizado...');
       cargarPromociones()
     }
 
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener('promocionEstadoCambiado', handlePromocionEstadoCambiado)
     
-    console.log('✅ Event listeners configurados correctamente');
     
     return () => {
-      console.log('🧹 Limpiando event listeners...');
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('promocionEstadoCambiado', handlePromocionEstadoCambiado)
     }
@@ -249,10 +234,10 @@ const ContenidoPrincipal = () => {
           <div className="space-y-1 ml-0 md:ml-20">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-xl font-semibold text-gray-800">
+                <h1 className="text-xl font-semibold text-gray-800 text-center">
                   PROMOCIONES VIGENTES-SEPTIEMBRE
                 </h1>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-600 leading-relaxed text-lg font-medium text-center">
                   Presentando tarjeta y hasta agotar disponibilidad
                 </p>
                 
