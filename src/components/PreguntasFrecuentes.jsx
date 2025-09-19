@@ -120,7 +120,7 @@ const PreguntasFrecuentes = () => {
                     7. ¿Dónde puedo consultar los eventos disponibles?
                   </h3>
                   <p className="text-lg leading-relaxed">
-                    En la página oficial de CulturAll Access: <a href="https://www.culturallaccess.com" className="text-black underline hover:text-black">www.culturallaccess.com</a>.
+                    En la página oficial de CulturAll Access: <a href="https://culturallaccess.residente.mx" className="text-black underline hover:text-black">culturallaccess.residente.mx</a>.
                   </p>
                 </div>
 
@@ -140,7 +140,7 @@ const PreguntasFrecuentes = () => {
                     9. ¿Cómo sé si tengo acceso a un beneficio?
                   </h3>
                   <p className="text-lg leading-relaxed">
-                    Todos los beneficios vigentes estarán publicados en la página oficial de CulturAll Access: <a href="https://www.culturallaccess.com" className="text-black underline hover:text-black">www.culturallaccess.com</a>. Te recomendamos visitarla con frecuencia para conocer las promociones, eventos y actividades disponibles.
+                    Todos los beneficios vigentes estarán publicados en la página oficial de CulturAll Access: <a href="https://culturallaccess.residente.mx" className="text-black underline hover:text-black">culturallaccess.residente.mx</a>. Te recomendamos visitarla con frecuencia para conocer las promociones, eventos y actividades disponibles.
                   </p>
                 </div>
 

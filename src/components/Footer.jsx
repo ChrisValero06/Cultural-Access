@@ -41,7 +41,7 @@ const Footer = () => {
             <div className="flex space-x-3 md:space-x-4">
               {/* Instagram */}
               <a 
-                href="https://www.instagram.com/sculturanl"
+                href="https://culturallaccess.residente.mx"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white hover:text-gray-100 transition-colors duration-200"
@@ -53,7 +53,7 @@ const Footer = () => {
               
               {/* Facebook */}
               <a 
-                href="https://www.facebook.com/sculturanl"
+                href="https://culturallaccess.residente.mx"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white hover:text-gray-100 transition-colors duration-200"

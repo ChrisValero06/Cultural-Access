@@ -7,7 +7,7 @@ import { CarruselProvider } from './context/CarruselContext'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/">
       <CarruselProvider>
         <App />
       </CarruselProvider>

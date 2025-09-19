@@ -34,16 +34,28 @@ function App() {
                 <Route path="/Control_Acceso" element={
                   <Formulario />
                 } />
+                <Route path="/control_acceso" element={
+                  <Formulario />
+                } />
                 <Route path="/CargarPromo" element={
                   <CargarPromo />
                 } />
+                <Route path="/cargarpromo" element={
+                  <CargarPromo />
+                } />
                 <Route path="/Registro" element={
+                  <Registro />
+                } />
+                <Route path="/registro" element={
                   <Registro />
                 } />
                 <Route path="/privacidad" element={
                   <AvisoPrivacidad />
                 } />
                 <Route path="/PreguntasFrecuentes" element={
+                  <PreguntasFrecuentes />
+                } />
+                <Route path="/preguntasfrecuentes" element={
                   <PreguntasFrecuentes />
                 } />
               </Routes>

@@ -6,7 +6,7 @@ const DashboardHeader = ({
   onRefresh, 
   totalPromociones
 }) => {
-  const PMA_BASE = 'http://localhost/phpmyadmin';
+  const PMA_BASE = 'https://culturallaccess.residente.mx/phpmyadmin';
 
   const openPhpMyAdmin = () => {
     try {
@@ -39,7 +39,7 @@ const DashboardHeader = ({
 
   const exportPromociones = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/obtener_promociones');
+      const res = await fetch('https://culturallaccess.residente.mx/api/obtener_promociones');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const headers = [
@@ -67,7 +67,7 @@ const DashboardHeader = ({
 
   const exportControlAcceso = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/control-acceso');
+      const res = await fetch('https://culturallaccess.residente.mx/api/control-acceso');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const headers = ['id_institucion','institucion','numero_tarjeta','fecha','estado'];
@@ -86,7 +86,7 @@ const DashboardHeader = ({
 
   const exportUsuarios = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/usuarios');
+      const res = await fetch('https://culturallaccess.residente.mx/api/usuarios');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const headers = [

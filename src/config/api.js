@@ -1,7 +1,7 @@
 // Configuración de la API del backend
 export const API_CONFIG = {
   // URL base del backend Node.js
-  BASE_URL: 'http://localhost:3001/api',
+  BASE_URL: 'https://culturallaccess.residente.mx/api/promociones',
   
   // Endpoints específicos
   ENDPOINTS: {
@@ -9,7 +9,7 @@ export const API_CONFIG = {
     OBTENER_PROMOCIONES: '/obtener_promociones',
     BUSCAR_PROMOCION: '/buscar_promocion',
     SUBIR_IMAGEN: '/subir_imagen',
-    PROMOCIONES_CARRUSEL: '/promociones-carrusel',
+    PROMOCIONES_CARRUSEL: '/carrusel',
     CONTROL_ACCESO: '/control-acceso'
   },
   
@@ -22,7 +22,7 @@ export const API_CONFIG = {
   // Configuración de la base de datos
   DATABASE: {
     NAME: 'cultural_access',
-    HOST: 'localhost',
+    HOST: 'culturallaccess.residente.mx',
     USER: 'root',
     PASSWORD: ''
   }

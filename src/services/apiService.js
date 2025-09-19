@@ -1,7 +1,7 @@
 // Servicio para manejar las llamadas a la API del backend Node.js
 import { API_CONFIG, getApiUrl } from '../config/api.js';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = API_CONFIG.BASE_URL;
 
 export const apiService = {
   // Crear nueva promoción
@@ -115,20 +115,29 @@ export const apiService = {
   // Obtener promociones para el carrusel
   async obtenerPromocionesCarrusel() {
     try {
-      const response = await fetch(`${API_BASE_URL}/promociones-carrusel`, {
+      const url = `${API_CONFIG.BASE_URL}/carrusel?v=${Date.now()}`;
+      console.log('🔗 Intentando conectar a:', url);
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
+      console.log('📡 Respuesta del servidor:', response.status, response.statusText);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Error del servidor:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('✅ Datos recibidos correctamente');
       return data;
     } catch (error) {
+      console.error('💥 Error en obtenerPromocionesCarrusel:', error);
       throw error;
     }
   },

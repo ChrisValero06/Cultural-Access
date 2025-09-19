@@ -9,8 +9,8 @@ export const enlaces = {
   
   // Redes sociales
   redesSociales: [
-    { nombre: "Instagram", url: "https://instagram.com/culturallaccess", icono: "instagram" },
-    { nombre: "Facebook", url: "https://facebook.com/culturallaccess", icono: "facebook" }
+    { nombre: "Instagram", url: "https://culturallaccess.residente.mx", icono: "instagram" },
+    { nombre: "Facebook", url: "https://culturallaccess.residente.mx", icono: "facebook" }
   ],
   
   // Enlaces legales
@@ -20,7 +20,7 @@ export const enlaces = {
   
   // Enlaces externos
   externos: {
-    labnl: "https://labnl.org",
-    secretariaCultura: "https://cultura.nl.gob.mx"
+    labnl: "https://culturallaccess.residente.mx",
+    secretariaCultura: "https://culturallaccess.residente.mx"
   }
 }

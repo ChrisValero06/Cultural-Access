@@ -72,7 +72,7 @@ const CulturalAccessForm = () => {
     setTarjetaDisponible(null);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/verificar-tarjeta/${numeroTarjeta}`);
+      const response = await fetch(`https://culturallaccess.residente.mx/api/verificar-tarjeta/${numeroTarjeta}`);
       const result = await response.json();
 
       if (result.success) {
@@ -139,7 +139,7 @@ const CulturalAccessForm = () => {
         console.log('Datos que se envían al servidor:', dataToSend);
 
 
-      const response = await fetch("http://localhost:3001/api/culturalaccessform", {
+      const response = await fetch("https://culturallaccess.residente.mx/api/culturalaccessform", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
