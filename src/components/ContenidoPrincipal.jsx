@@ -33,10 +33,20 @@ const ContenidoPrincipal = () => {
       console.log(`⏱️ Tiempo de respuesta: ${responseTime}ms`);
       
       if (response.estado === 'exito') {
-        // Filtrar solo promociones activas (aunque el backend ya lo hace, es una doble verificación)
-        const promocionesActivas = response.carruseles.filter(carrusel => 
-          carrusel.imagenes && carrusel.imagenes.length > 0
-        );
+        // Normalizar URLs de imágenes (cuando vienen relativas del backend)
+        const BASE_HOST = 'https://culturallaccess.residente.mx';
+        const normalizeUrl = (url) => {
+          if (!url) return url;
+          return url.startsWith('http') ? url : `${BASE_HOST}${url}`;
+        };
+
+        // Mapear y filtrar solo promociones con imágenes válidas
+        const promocionesActivas = (response.carruseles || [])
+          .map(carrusel => ({
+            ...carrusel,
+            imagenes: (carrusel.imagenes || []).map(normalizeUrl)
+          }))
+          .filter(carrusel => carrusel.imagenes && carrusel.imagenes.length > 0);
         
         console.log(`📊 Promociones activas encontradas: ${promocionesActivas.length}`);
         

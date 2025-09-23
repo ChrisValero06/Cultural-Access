@@ -13,6 +13,7 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterInstitucion, setFilterInstitucion] = useState('');
   const [filterDisciplina, setFilterDisciplina] = useState('');
+  const [lastUpdate, setLastUpdate] = useState(null);
   
   
   // Estado para la pestaña activa
@@ -43,14 +44,32 @@ const AdminDashboard = () => {
   const cargarPromociones = async () => {
     try {
       setLoading(true);
-      const response = await apiService.obtenerPromociones();
+      setError(null);
       
-      if (response.estado === 'exito') {
+      console.log('🔄 Intentando cargar promociones (admin, all=1)...');
+      const response = await apiService.obtenerPromocionesAdmin();
+      console.log('📡 Respuesta recibida:', response);
+      
+      if (response && response.estado === 'exito') {
+        setPromociones(response.promociones || []);
+        setLastUpdate(new Date());
+        console.log('✅ Promociones cargadas exitosamente:', response.promociones?.length || 0);
+      } else if (response && response.success === true && response.data) {
+        // Si la respuesta tiene success: true y data, usar esa estructura
+        setPromociones(response.data || []);
+        setLastUpdate(new Date());
+        console.log('✅ Promociones cargadas (formato success):', response.data?.length || 0);
+      } else if (response && response.promociones) {
+        // Si no hay estado pero sí hay promociones, asumir éxito
         setPromociones(response.promociones);
+        setLastUpdate(new Date());
+        console.log('✅ Promociones cargadas (sin estado):', response.promociones.length);
       } else {
-        setError('Error al cargar las promociones');
+        console.error('❌ Error en respuesta:', response);
+        setError('Error al cargar las promociones: ' + (response?.mensaje || 'Respuesta inválida'));
       }
     } catch (error) {
+      console.error('💥 Error al cargar promociones:', error);
       setError('Error de conexión: ' + error.message);
     } finally {
       setLoading(false);
@@ -224,16 +243,35 @@ const AdminDashboard = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center text-gray-800">
+        <div className="text-center text-gray-800 max-w-2xl mx-4">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold mb-2">Error</h2>
+          <h2 className="text-2xl font-bold mb-2">Error al Cargar el Dashboard</h2>
           <p className="mb-4 text-red-600">{error}</p>
-          <button 
-            onClick={cargarPromociones}
-            className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors"
-          >
-            Reintentar
-          </button>
+          
+          <div className="bg-gray-100 p-4 rounded-lg mb-6 text-left">
+            <h3 className="font-semibold mb-2">Posibles soluciones:</h3>
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li>• Verifica tu conexión a internet</li>
+              <li>• El servidor puede estar temporalmente fuera de servicio</li>
+              <li>• Revisa la consola del navegador (F12) para más detalles</li>
+              <li>• Intenta recargar la página</li>
+            </ul>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button 
+              onClick={cargarPromociones}
+              className="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium"
+            >
+              🔄 Reintentar
+            </button>
+            <button 
+              onClick={() => window.location.reload()}
+              className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors font-medium"
+            >
+              🔄 Recargar Página
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -248,6 +286,8 @@ const AdminDashboard = () => {
           if (tabActiva === 'promociones') cargarPromociones();
         }}
         totalPromociones={promociones.length}
+        lastUpdate={lastUpdate}
+        loading={loading}
       />
 
       <DashboardContent

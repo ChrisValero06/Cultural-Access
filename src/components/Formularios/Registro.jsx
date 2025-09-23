@@ -71,17 +71,37 @@ const CulturalAccessForm = () => {
     setTarjetaValidando(true);
     setTarjetaDisponible(null);
 
+    // Validación habilitada - verificar con el backend
+    console.log('🔍 Verificando disponibilidad de tarjeta:', numeroTarjeta);
+
     try {
-      const response = await fetch(`https://culturallaccess.residente.mx/api/verificar-tarjeta/${numeroTarjeta}`);
+      const url = `https://culturallaccess.residente.mx/api/usuario/verificar-tarjeta/${numeroTarjeta}`;
+      console.log('🔗 URL:', url);
+      
+      const response = await fetch(url);
+      console.log('📡 Respuesta del servidor:', response.status, response.statusText);
+      
+      if (response.status === 404) {
+        console.log('⚠️ Endpoint no existe - asumiendo tarjeta disponible');
+        setTarjetaDisponible(true);
+        return;
+      }
+      
       const result = await response.json();
+      console.log('📊 Resultado:', result);
 
       if (result.success) {
+        console.log('✅ Tarjeta disponible:', result.disponible);
         setTarjetaDisponible(result.disponible);
       } else {
+        console.log('❌ Tarjeta no disponible:', result.message || 'Sin mensaje');
         setTarjetaDisponible(false);
       }
     } catch (error) {
-      setTarjetaDisponible(false);
+      console.error('💥 Error verificando tarjeta:', error);
+      // Si hay error de red, asumir que la tarjeta está disponible
+      console.log('⚠️ Error de red - asumiendo tarjeta disponible');
+      setTarjetaDisponible(true);
     } finally {
       setTarjetaValidando(false);
     }
@@ -90,6 +110,17 @@ const CulturalAccessForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
+    // Validar campos obligatorios
+    if (!formData.nombre || !formData.apellidoPaterno || !formData.apellidoMaterno || 
+        !formData.genero || !formData.email || !formData.calleNumero || 
+        !formData.municipio || !formData.estado || !formData.colonia || 
+        !formData.codigoPostal || !formData.estadoNacimiento || 
+        !formData.diaNacimiento || !formData.mesNacimiento || !formData.anoNacimiento ||
+        !formData.numeroTarjeta || !formData.aceptaInfo) {
+      alert('Por favor, completa todos los campos obligatorios marcados con *')
+      return;
+    }
+
     // Validar que el número de tarjeta esté disponible
     if (tarjetaDisponible === false) {
       alert('El número de tarjeta ingresado ya está registrado. Por favor, elige otro número.')
@@ -108,38 +139,41 @@ const CulturalAccessForm = () => {
     setIsSubmitting(true)
 
     try {
-             // Mapear los campos del frontend al formato del backend
-       const estudiosValue = formData.estudios === "sin-estudios" ? null : formData.estudios;
+      // Mapear los campos del frontend al formato del backend
+      const estudiosValue = formData.estudios === "sin-estudios" ? null : formData.estudios;
+      const aceptaInfoValue = formData.aceptaInfo === "si" ? 1 : 0;
 
-               const dataToSend = {
-          nombre: formData.nombre,
-          apellido_paterno: formData.apellidoPaterno,
-          apellido_materno: formData.apellidoMaterno,
-          genero: formData.genero,
-          email: formData.email,
-          telefono: formData.telefono,
-          calle_numero: formData.calleNumero,
-          municipio: formData.municipio,
-          estado: formData.estado,
-          colonia: formData.colonia,
-          codigo_postal: formData.codigoPostal,
-          edad: formData.edad,
-          estado_civil: formData.estadoCivil,
-          estudios: estudiosValue,
-          curp: curpOption === "curp" ? formData.curp : null,
-          estado_nacimiento: formData.estadoNacimiento,
-          dia_nacimiento: formData.diaNacimiento,
-          mes_nacimiento: formData.mesNacimiento,
-          ano_nacimiento: formData.anoNacimiento,
-          numero_tarjeta: formData.numeroTarjeta,
-          acepta_info: formData.aceptaInfo,
-        }
+      // Validar que los campos de fecha no estén vacíos antes de usar padStart
+      const diaFormateado = formData.diaNacimiento ? formData.diaNacimiento.padStart(2, '0') : '';
+      const mesFormateado = formData.mesNacimiento ? formData.mesNacimiento.padStart(2, '0') : '';
+
+      const dataToSend = {
+        nombre: formData.nombre,
+        apellido_paterno: formData.apellidoPaterno,
+        apellido_materno: formData.apellidoMaterno,
+        genero: formData.genero,
+        email: formData.email,
+        telefono: formData.telefono || null,
+        calle_numero: formData.calleNumero,
+        municipio: formData.municipio,
+        estado: formData.estado,
+        colonia: formData.colonia,
+        codigo_postal: formData.codigoPostal,
+        edad: formData.edad || null,
+        estado_civil: formData.estadoCivil || null,
+        estudios: estudiosValue,
+        curp: curpOption === "curp" ? formData.curp : null,
+        estado_nacimiento: formData.estadoNacimiento,
+        fecha_nacimiento: `${formData.anoNacimiento}-${mesFormateado}-${diaFormateado}`,
+        numero_tarjeta: formData.numeroTarjeta,
+        acepta_info: aceptaInfoValue,
+      }
 
         // Debug: Mostrar datos que se van a enviar
         console.log('Datos que se envían al servidor:', dataToSend);
 
 
-      const response = await fetch("https://culturallaccess.residente.mx/api/culturalaccessform", {
+      const response = await fetch("https://culturallaccess.residente.mx/api/usuario", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -147,7 +181,24 @@ const CulturalAccessForm = () => {
         body: JSON.stringify(dataToSend),
       })
 
+      console.log('Respuesta del servidor:', response.status, response.statusText);
+
+      if (!response.ok) {
+        // Manejar errores HTTP (400, 500, etc.)
+        let errorMessage = `Error del servidor: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.error('Error del servidor:', errorData);
+        } catch (e) {
+          console.error('No se pudo parsear la respuesta de error:', e);
+        }
+        alert(errorMessage);
+        return;
+      }
+
       const result = await response.json()
+      console.log('Resultado del servidor:', result);
 
       if (result.success) {
         alert("¡Formulario enviado correctamente! Gracias por registrarte.")
@@ -172,7 +223,7 @@ const CulturalAccessForm = () => {
           mesNacimiento: "",
           anoNacimiento: "",
           numeroTarjeta: "",
-          aceptaInfo: false,
+          aceptaInfo: "",
         })
         setCurpOption("curp")
         setTarjetaDisponible(null)
@@ -186,10 +237,11 @@ const CulturalAccessForm = () => {
 
           alert(`Errores de validación:\n${errorMessages}`);
         } else {
-          alert(`Error: ${result.message}`);
+          alert(`Error: ${result.message || 'Error desconocido'}`);
         }
       }
     } catch (error) {
+      console.error('Error en el envío:', error);
       alert("Error de conexión. Por favor, intenta de nuevo.")
     } finally {
       setIsSubmitting(false)
@@ -407,13 +459,12 @@ const CulturalAccessForm = () => {
 
               {/* Género - Radio buttons verticales */}
               <div>
-                <label className="block text-base font-bold text-gray-800 mb-2">GÉNERO</label>
+                <label className="block text-base font-bold text-gray-800 mb-2">GÉNERO *</label>
                 <div className="space-y-2">
                   {[
                     { value: "femenino", label: "Femenino" },
                     { value: "masculino", label: "Masculino" },
                     { value: "prefiero-no-decir", label: "Prefiero no decir" },
-                    { value: "otro", label: "Otro" },
                   ].map((option) => (
                     <div key={option.value} className="flex items-center space-x-2">
                       <input
@@ -425,6 +476,7 @@ const CulturalAccessForm = () => {
                         onChange={(e) => handleInputChange("genero", e.target.value)}
                         className="w-4 h-4 text-orange-500 border-orange-400 bg-transparent focus:ring-orange-600 focus:ring-2"
                         disabled={isSubmitting}
+                        required
                       />
                       <label htmlFor={option.value} className="text-gray-800 text-sm">
                         {option.label}
@@ -558,8 +610,8 @@ const CulturalAccessForm = () => {
 
                {/* Teléfono */}
             <div className="space-y-2">
-              <label htmlFor="telefono" className="block text-white font-medium text-sm">
-                TELÉFONO *
+              <label htmlFor="telefono" className="block text-base font-bold text-gray-800 mb-2">
+                TELÉFONO
               </label>
               <input
                 id="telefono"
@@ -579,10 +631,9 @@ const CulturalAccessForm = () => {
                   
                   handleInputChange("telefono", value);
                 }}
-                className="w-full px-3 py-2 bg-white border-black border-2 rounded text-black placeholder:text-black focus:border-white focus:outline-none transition-colors"
+                className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
                 maxLength="12"
                 pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
-                required
                 disabled={isSubmitting}
                 placeholder="123-456-7890"
               />
@@ -590,7 +641,7 @@ const CulturalAccessForm = () => {
 
               {/* Edad - Radio buttons verticales */}
               <div>
-                <label className="block text-base font-bold text-gray-800 mb-2">EDAD *</label>
+                <label className="block text-base font-bold text-gray-800 mb-2">EDAD</label>
                 <div className="space-y-2">
                   {["16-17", "18-29", "30-49", "50-59", "60+"].map((edad) => (
                     <div key={edad} className="flex items-center space-x-2">
@@ -615,14 +666,13 @@ const CulturalAccessForm = () => {
               {/* Estudios - Dropdown */}
               <div>
                 <label htmlFor="estudios" className="block text-base font-bold text-gray-800 mb-2">
-                  ESTUDIOS *
+                  ESTUDIOS
                 </label>
                 <div className="relative">
                   <select
                     id="estudios"
                     value={formData.estudios}
                     onChange={(e) => handleInputChange("estudios", e.target.value)}
-                    required
                     disabled={isSubmitting}
                     className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none text-black"
                   >
@@ -658,14 +708,13 @@ const CulturalAccessForm = () => {
               {/* Estado civil - Dropdown */}
               <div>
                 <label htmlFor="estadoCivil" className="block text-base font-bold text-gray-800 mb-2">
-                  ESTADO CIVIL *
+                  ESTADO CIVIL
                 </label>
                 <div className="relative">
                   <select
                     id="estadoCivil"
                     value={formData.estadoCivil}
                     onChange={e => handleInputChange("estadoCivil", e.target.value)}
-                    required
                     disabled={isSubmitting}
                     className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none text-black"
                   >
@@ -700,7 +749,7 @@ const CulturalAccessForm = () => {
 
               {/* Selección CURP - Radio buttons */}
               <div>
-                <label className="block text-base font-bold text-gray-800 mb-2">Selecciona una opción *</label>
+                <label className="block text-base font-bold text-gray-800 mb-2">Selecciona una opción</label>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <input
@@ -742,7 +791,7 @@ const CulturalAccessForm = () => {
                   style={{ animation: "fadeIn 0.3s ease-in-out forwards" }}
                 >
                   <label htmlFor="curp" className="block text-base font-bold text-gray-800 mb-2">
-                    INGRESA TU CURP *
+                    INGRESA TU CURP
                   </label>
                   <input
                     type="text"
@@ -752,7 +801,6 @@ const CulturalAccessForm = () => {
                     placeholder="Ingresa tu CURP (18 caracteres)"
                     maxLength={18}
                     pattern="[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z][0-9]"
-                    required
                     disabled={isSubmitting}
                     className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
                   />

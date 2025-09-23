@@ -151,7 +151,7 @@ const ControlAcceso = () => {
         estado: formData.estado
       })
 
-      if (response.estado === 'exito') {
+      if (response.success === true) {
         alert('Registro de control de acceso creado exitosamente!')
         
         // Limpiar el formulario
@@ -162,7 +162,7 @@ const ControlAcceso = () => {
           estado: 'activo'
         })
       } else {
-        alert('Error al crear el registro: ' + response.mensaje)
+        alert('Error al crear el registro: ' + (response.message || response.error || 'Error desconocido'))
       }
       
     } catch (error) {

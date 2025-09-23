@@ -347,7 +347,7 @@ const CargarPromo = () => {
       // Crear promoción en la base de datos
       const result = await apiService.crearPromocion(promocionData)
 
-      if (result.estado === 'exito') {
+      if (result?.success || result?.estado === 'exito') {
         setMessage('¡Promoción cargada exitosamente! Será mostrada en el carrusel principal.')
         // Limpiar formulario
         setFormData({
@@ -364,7 +364,8 @@ const CargarPromo = () => {
         })
         setLogoPreview(null)
       } else {
-        setMessage('Error al crear la promoción: ' + result.mensaje)
+        const detalle = result?.message || result?.error || ''
+        setMessage('Error al crear la promoción: ' + detalle)
       }
     } catch (error) {
       setMessage('Error al enviar la promoción. Por favor, intenta nuevamente.')

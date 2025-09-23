@@ -4,7 +4,9 @@ const DashboardHeader = ({
   tabActiva, 
   onTabChange, 
   onRefresh, 
-  totalPromociones
+  totalPromociones,
+  lastUpdate,
+  loading
 }) => {
   const PMA_BASE = 'https://culturallaccess.residente.mx/phpmyadmin';
 
@@ -133,6 +135,17 @@ const DashboardHeader = ({
             <span className="text-sm text-orange-100">
               {tabActiva === 'promociones' && `Total: ${totalPromociones} promociones`}
             </span>
+            {lastUpdate && (
+              <span className="text-xs text-orange-200">
+                Última actualización: {lastUpdate.toLocaleTimeString()}
+              </span>
+            )}
+            {loading && (
+              <span className="text-xs text-orange-200 flex items-center">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-orange-200 mr-1"></div>
+                Cargando...
+              </span>
+            )}
             <button
               onClick={openPhpMyAdmin}
               className="bg-white text-orange-600 px-4 py-2 rounded-lg hover:bg-orange-50 transition-colors flex items-center gap-2 font-medium text-sm whitespace-nowrap"

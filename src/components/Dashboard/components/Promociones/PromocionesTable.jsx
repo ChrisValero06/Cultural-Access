@@ -1,5 +1,20 @@
 import React from 'react';
 
+// Normaliza URLs de imágenes a tu servidor en Plesk y aplica fallback local
+const BASE_HOST = 'https://culturallaccess.residente.mx';
+const UPLOADS_PREFIX = '/images/uploads/';
+const FALLBACK_IMAGE = '/images/LogoDerecho.png';
+
+function normalizeImageUrl(url) {
+  if (!url) return FALLBACK_IMAGE;
+  // Ya es absoluta
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  // Si ya viene con /images/... solo anteponer host
+  if (url.startsWith('/images/')) return `${BASE_HOST}${url}`;
+  // Si es solo el nombre/relativa, asumir que está en uploads
+  return `${BASE_HOST}${UPLOADS_PREFIX}${url}`;
+}
+
 const PromocionesTable = ({ 
   promocionesFiltradas, 
   onEditar, 
@@ -54,10 +69,16 @@ const PromocionesTable = ({
                     <div className="flex items-center">
                       <img
                         className="h-16 w-16 rounded-lg object-cover border-2 border-gray-200"
-                        src={promocion.imagen_principal}
+                        src={normalizeImageUrl(promocion.imagen_principal)}
                         alt={`Imagen de ${promocion.institucion}`}
+                        loading="lazy"
+                        width={64}
+                        height={64}
                         onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/64x64?text=Sin+Imagen';
+                          // Evitar bucles de onError
+                          if (e.currentTarget.dataset.fallback) return;
+                          e.currentTarget.dataset.fallback = '1';
+                          e.currentTarget.src = FALLBACK_IMAGE;
                         }}
                       />
                     </div>
