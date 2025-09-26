@@ -92,21 +92,7 @@ const AdminDashboard = () => {
   });
 
   const getStatusBadge = (fechaInicio, fechaFin, estado) => {
-    // Si es solo un estado (para registros y control de acceso)
-    if (fechaInicio === undefined && fechaFin === undefined) {
-      switch (estado) {
-        case 'activo':
-          return <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">🟢 Activo</span>;
-        case 'inactivo':
-          return <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">🟡 Inactivo</span>;
-        case 'suspendido':
-          return <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">🔴 Suspendido</span>;
-        case 'bloqueado':
-          return <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">🚫 Bloqueado</span>;
-        default:
-          return <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">❓ Desconocido</span>;
-      }
-    }
+    // Solo para promociones (con fechas)
     
     // Para promociones (con fechas)
     // Si el estado está definido en la base de datos, usarlo

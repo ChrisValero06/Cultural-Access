@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { enlaces } from '../constants/enlaces'
 
 const Footer = () => {
@@ -11,12 +12,12 @@ const Footer = () => {
              <h3 className="text-sm md:text-lg font-semibold mb-1 md:mb-4 text-white">Información</h3>
              <ul className="space-y-1 md:space-y-2">
                                <li>
-                  <a href="/PreguntasFrecuentes" className="!text-white hover:!text-white transition-colors duration-200" style={{color: 'white !important'}}>
+                  <a href={`${window.location.origin}/PreguntasFrecuentes`} target="_blank" rel="noopener noreferrer" className="!text-white hover:!text-white transition-colors duration-200" style={{color: 'white !important'}}>
                     Preguntas frecuentes
                   </a>
                 </li>
                 <li>
-                  <a href="/privacidad" className="!text-white hover:!text-white transition-colors duration-200" style={{color: 'white !important'}}>
+                  <a href={`${window.location.origin}/privacidad`} target="_blank" rel="noopener noreferrer" className="!text-white hover:!text-white transition-colors duration-200" style={{color: 'white !important'}}>
                     Aviso de privacidad
                   </a>
                 </li>

@@ -8,7 +8,7 @@ const DashboardHeader = ({
   lastUpdate,
   loading
 }) => {
-  const PMA_BASE = 'https://culturallaccess.residente.mx/phpmyadmin';
+  const PMA_BASE = 'https://69.48.207.88/phpMyAdmin/index.php?route=/database/structure&db=cultural_Access';
 
   const openPhpMyAdmin = () => {
     try {
@@ -28,7 +28,8 @@ const DashboardHeader = ({
 
   const downloadCsv = (rowsArray, filename) => {
     const csvContent = rowsArray.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const BOM = '\ufeff';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -39,15 +40,45 @@ const DashboardHeader = ({
     URL.revokeObjectURL(url);
   };
 
+  // Cargar SheetJS (XLSX) desde CDN una sola vez
+  const loadXLSX = () => new Promise((resolve, reject) => {
+    if (window.XLSX) return resolve(window.XLSX);
+    const existing = document.querySelector('script[data-xlsx]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(window.XLSX));
+      existing.addEventListener('error', reject);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    script.async = true;
+    script.defer = true;
+    script.setAttribute('data-xlsx', '1');
+    script.onload = () => resolve(window.XLSX);
+    script.onerror = reject;
+    document.body.appendChild(script);
+  });
+
+  // Exportar a Excel usando headers (array) y rows (array de arrays)
+  const exportToXlsx = async (headers, rows, filenameBase) => {
+    const XLSX = await loadXLSX();
+    const aoa = [headers, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Datos');
+    XLSX.writeFile(wb, `${filenameBase}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
+
   const exportPromociones = async () => {
     try {
-      const res = await fetch('https://culturallaccess.residente.mx/api/obtener_promociones');
+      const res = await fetch('https://culturallaccess.residente.mx/api/promociones?all=1');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const headers = [
         'id','institucion','tipo_promocion','disciplina','beneficios','comentarios_restricciones','fecha_inicio','fecha_fin','estado','imagen_principal','imagen_secundaria','fecha_creacion'
       ];
-      const rows = (data.promociones || []).map(p => [
+      const list = data.data || data.promociones || data.rows || [];
+      const rows = list.map(p => [
         sanitize(p.id),
         sanitize(p.institucion),
         sanitize(p.tipo_promocion),
@@ -61,7 +92,13 @@ const DashboardHeader = ({
         sanitize(p.imagen_secundaria),
         sanitize(p.fecha_creacion)
       ].join(','));
-      downloadCsv([headers.join(','), ...rows], `promociones_${new Date().toISOString().slice(0,10)}.csv`);
+      // Para Excel: usamos arrays, no CSV
+      const xlsxRows = list.map(p => [
+        p.id, p.institucion, p.tipo_promocion, p.disciplina, p.beneficios,
+        p.comentarios_restricciones, p.fecha_inicio, p.fecha_fin, p.estado,
+        p.imagen_principal, p.imagen_secundaria, p.fecha_creacion
+      ]);
+      await exportToXlsx(headers, xlsxRows, 'promociones');
     } catch (e) {
       alert('No se pudo exportar promociones.');
     }
@@ -72,15 +109,12 @@ const DashboardHeader = ({
       const res = await fetch('https://culturallaccess.residente.mx/api/control-acceso');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-      const headers = ['id_institucion','institucion','numero_tarjeta','fecha','estado'];
-      const rows = (data.datos || []).map(a => [
-        sanitize(a.id_institucion),
-        sanitize(a.institucion),
-        sanitize(a.numero_tarjeta),
-        sanitize(a.fecha),
-        sanitize(a.estado)
-      ].join(','));
-      downloadCsv([headers.join(','), ...rows], `control_acceso_${new Date().toISOString().slice(0,10)}.csv`);
+      const headers = ['id_institucion','institucion','numero_tarjeta','fecha'];
+      const list = data.data || data.datos || data.rows || [];
+      const xlsxRows = list.map(a => [
+        a.id_institucion, a.institucion, a.numero_tarjeta, a.fecha
+      ]);
+      await exportToXlsx(headers, xlsxRows, 'control_acceso');
     } catch (e) {
       alert('No se pudo exportar control de acceso.');
     }
@@ -88,36 +122,20 @@ const DashboardHeader = ({
 
   const exportUsuarios = async () => {
     try {
-      const res = await fetch('https://culturallaccess.residente.mx/api/usuarios');
+      const res = await fetch('https://culturallaccess.residente.mx/api/usuario');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const headers = [
         'id','nombre','apellido_paterno','apellido_materno','genero','email','telefono','calle_numero','municipio','estado','colonia','codigo_postal','edad','estado_civil','estudios','curp','estado_nacimiento','fecha_nacimiento','numero_tarjeta','acepta_info','fecha_registro'
       ];
-      const rows = (data.usuarios || []).map(u => [
-        sanitize(u.id),
-        sanitize(u.nombre),
-        sanitize(u.apellido_paterno),
-        sanitize(u.apellido_materno),
-        sanitize(u.genero),
-        sanitize(u.email),
-        sanitize(u.telefono),
-        sanitize(u.calle_numero),
-        sanitize(u.municipio),
-        sanitize(u.estado),
-        sanitize(u.colonia),
-        sanitize(u.codigo_postal),
-        sanitize(u.edad),
-        sanitize(u.estado_civil),
-        sanitize(u.estudios),
-        sanitize(u.curp),
-        sanitize(u.estado_nacimiento),
-        sanitize(u.fecha_nacimiento),
-        sanitize(u.numero_tarjeta),
-        sanitize(u.acepta_info),
-        sanitize(u.fecha_registro)
-      ].join(','));
-      downloadCsv([headers.join(','), ...rows], `usuarios_${new Date().toISOString().slice(0,10)}.csv`);
+      const list = data.data || data.usuarios || data.rows || [];
+      const xlsxRows = list.map(u => [
+        u.id, u.nombre, u.apellido_paterno, u.apellido_materno, u.genero, u.email,
+        u.telefono, u.calle_numero, u.municipio, u.estado, u.colonia, u.codigo_postal,
+        u.edad, u.estado_civil, u.estudios, u.curp, u.estado_nacimiento, u.fecha_nacimiento,
+        u.numero_tarjeta, u.acepta_info, u.fecha_registro
+      ]);
+      await exportToXlsx(headers, xlsxRows, 'usuarios');
     } catch (e) {
       alert('No se pudo exportar usuarios.');
     }

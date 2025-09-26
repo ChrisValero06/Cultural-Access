@@ -3,9 +3,7 @@ import React from 'react';
 const ControlAccesoTable = ({ 
   controlAccesoFiltrado, 
   onEditar, 
-  onCambiarEstado, 
-  onEliminar, 
-  getStatusBadge 
+  onEliminar
 }) => {
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -46,9 +44,6 @@ const ControlAccesoTable = ({
                 HORA
               </th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ESTADO
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 ACCIONES
               </th>
             </tr>
@@ -56,7 +51,7 @@ const ControlAccesoTable = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {controlAccesoFiltrado.length === 0 ? (
               <tr>
-                <td colSpan="6" className="px-6 py-16 text-center text-gray-500">
+                <td colSpan="5" className="px-6 py-16 text-center text-gray-500">
                   <div className="text-6xl mb-4">🚪</div>
                   <p className="text-xl font-medium text-gray-700 mb-2">No se encontraron registros de acceso</p>
                   <p className="text-gray-500">Intenta ajustar los filtros de búsqueda</p>
@@ -85,9 +80,6 @@ const ControlAccesoTable = ({
                       {formatTime(acceso.created_at)}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(acceso.estado)}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button 
@@ -95,26 +87,6 @@ const ControlAccesoTable = ({
                         className="bg-orange-500 text-white px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors"
                       >
                         Editar
-                      </button>
-                      <button 
-                        onClick={() => onCambiarEstado(acceso)}
-                        className={`px-3 py-2 rounded-lg text-white transition-colors flex items-center space-x-2 ${
-                          acceso.estado === 'activo' 
-                            ? 'bg-red-500 hover:bg-red-600' 
-                            : 'bg-green-500 hover:bg-green-600'
-                        }`}
-                      >
-                        {acceso.estado === 'activo' ? (
-                          <>
-                            <span>🔴</span>
-                            <span>Desactivar</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>🟢</span>
-                            <span>Activar</span>
-                          </>
-                        )}
                       </button>
                       <button 
                         onClick={() => onEliminar(acceso.id)}

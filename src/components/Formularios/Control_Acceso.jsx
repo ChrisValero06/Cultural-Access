@@ -6,8 +6,7 @@ const ControlAcceso = () => {
   const [formData, setFormData] = useState({
     institucion: '',
     numeroTarjeta: '',
-    fecha: '',
-    estado: 'activo'
+    fecha: new Date().toISOString().split('T')[0] // Fecha de hoy en formato YYYY-MM-DD
   })
 
   const [showInstituciones, setShowInstituciones] = useState(false)
@@ -111,6 +110,14 @@ const ControlAcceso = () => {
     setShowInstituciones(true)
   }
 
+  // Función para establecer la fecha de hoy
+  const setTodayDate = () => {
+    setFormData(prev => ({ 
+      ...prev, 
+      fecha: new Date().toISOString().split('T')[0] 
+    }))
+  }
+
   const selectInstitucion = (institucion) => {
     setFormData(prevState => ({
       ...prevState,
@@ -138,7 +145,7 @@ const ControlAcceso = () => {
     
     try {
       // Validar que todos los campos estén llenos
-      if (!formData.institucion || !formData.numeroTarjeta || !formData.fecha || !formData.estado) {
+      if (!formData.institucion || !formData.numeroTarjeta || !formData.fecha) {
         alert('Por favor, completa todos los campos')
         return
       }
@@ -147,8 +154,7 @@ const ControlAcceso = () => {
       const response = await apiService.crearControlAcceso({
         institucion: formData.institucion,
         numeroTarjeta: formData.numeroTarjeta,
-        fecha: formData.fecha,
-        estado: formData.estado
+        fecha: formData.fecha
       })
 
       if (response.success === true) {
@@ -158,8 +164,7 @@ const ControlAcceso = () => {
         setFormData({
           institucion: '',
           numeroTarjeta: '',
-          fecha: '',
-          estado: 'activo'
+          fecha: new Date().toISOString().split('T')[0] // Resetear a fecha de hoy
         })
       } else {
         alert('Error al crear el registro: ' + (response.message || response.error || 'Error desconocido'))
@@ -324,33 +329,22 @@ const ControlAcceso = () => {
                     value={formData.fecha}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base"
+                    className="w-full pr-24 px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base"
                   />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+                  <div className="absolute inset-y-0 right-10 flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={setTodayDate}
+                      className="px-3 py-1 text-xs bg-orange-200 text-orange-800 rounded hover:bg-orange-300 transition-colors font-medium"
+                      title="Establecer fecha de hoy"
+                    >
+                      Hoy
+                    </button>
                   </div>
                 </div>
               </div>
 
-              {/* Campo Estado */}
-              <div>
-                <label htmlFor="estado" className="block text-base font-bold text-gray-800 mb-2">
-                  ESTADO *
-                </label>
-                <select
-                  id="estado"
-                  name="estado"
-                  value={formData.estado}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base"
-                >
-                  <option value="activo">Activo</option>
-                  <option value="inactivo">Inactivo</option>
-                </select>
-              </div>
+              
 
               {/* Botón Enviar */}
               <div className="pt-4">

@@ -1,16 +1,21 @@
 // Configuración de la API del backend
 export const API_CONFIG = {
   // URL base del backend Node.js
-  BASE_URL: 'https://culturallaccess.residente.mx/api/promociones',
+  BASE_URL: 'https://culturallaccess.residente.mx/api',
   
   // Endpoints específicos
   ENDPOINTS: {
-    CREAR_PROMOCION: '/crear_promocion',
-    OBTENER_PROMOCIONES: '/obtener_promociones',
-    BUSCAR_PROMOCION: '/buscar_promocion',
-    SUBIR_IMAGEN: '/subir_imagen',
-    PROMOCIONES_CARRUSEL: '/carrusel',
-    CONTROL_ACCESO: '/control-acceso'
+    // Promociones
+    CREAR_PROMOCION: '/promociones/crear_promocion',
+    OBTENER_PROMOCIONES: '/promociones/obtener_promociones',
+    BUSCAR_PROMOCION: '/promociones/buscar_promocion',
+    SUBIR_IMAGEN: '/promociones/subir_imagen',
+    PROMOCIONES_CARRUSEL: '/promociones/carrusel',
+    CONTROL_ACCESO: '/promociones/control-acceso',
+    
+    // Usuarios
+    CREAR_USUARIO: '/usuario',
+    VERIFICAR_TARJETA: '/usuario/verificar-tarjeta'
   },
   
   // Configuración de subida de archivos
