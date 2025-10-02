@@ -37,7 +37,7 @@ const TextInput = ({ id, name, type = "text", autoComplete, value, onChange, pla
     disabled={disabled}
     maxLength={maxLength}
     pattern={pattern}
-    className={`w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500 ${className}`}
+    className={`w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500 uppercase ${className}`}
   />
 )
 
@@ -52,7 +52,7 @@ const SelectInput = ({ id, name, autoComplete, value, onChange, required = false
       onChange={onChange}
       required={required}
       disabled={disabled}
-      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none text-black"
+      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-base appearance-none text-black uppercase"
     >
       {children}
     </select>
@@ -213,6 +213,10 @@ const CulturalAccessForm = () => {
     setIsSubmitting(true)
 
     try {
+      const toUppercaseStrings = (obj) => Object.fromEntries(
+        Object.entries(obj).map(([key, val]) => [key, typeof val === 'string' ? val.toUpperCase() : val])
+      );
+
       const estudiosValue = formData.estudios === "SIN-ESTUDIOS" ? null : formData.estudios;
       const aceptaInfoValue = formData.aceptaInfo === "SI" ? 1 : 0;
       const diaFormateado = formData.diaNacimiento ? formData.diaNacimiento.padStart(2, '0') : '';
@@ -240,10 +244,12 @@ const CulturalAccessForm = () => {
         acepta_info: aceptaInfoValue,
       }
 
+      const dataUppercased = toUppercaseStrings(dataToSend);
+
       const response = await fetch("https://culturallaccess.residente.mx/api/usuario", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dataToSend),
+        body: JSON.stringify(dataUppercased),
       })
 
       if (!response.ok) {

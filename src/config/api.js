@@ -1,7 +1,7 @@
 // Configuración de la API del backend
 export const API_CONFIG = {
-  // URL base del backend Node.js
-  BASE_URL: 'https://culturallaccess.residente.mx/api',
+  // URL base del backend Node.js - usar proxy local en desarrollo
+  BASE_URL: import.meta.env.DEV ? '/api' : 'https://culturallaccess.residente.mx/api',
   
   // Endpoints específicos
   ENDPOINTS: {

@@ -7,6 +7,8 @@ const PromocionesFilters = ({
   setFilterInstitucion, 
   filterDisciplina, 
   setFilterDisciplina,
+  filterEstado,
+  setFilterEstado,
   onClearFilters 
 }) => {
   return (
@@ -20,7 +22,7 @@ const PromocionesFilters = ({
           Limpiar filtros
         </button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Búsqueda general */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -61,6 +63,23 @@ const PromocionesFilters = ({
             onChange={(e) => setFilterDisciplina(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
+        </div>
+
+        {/* Filtro por estado */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Estado
+          </label>
+          <select
+            value={filterEstado}
+            onChange={(e) => setFilterEstado(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            <option value="">Todos los estados</option>
+            <option value="activa">🟢 Activa</option>
+            <option value="inactiva">🟡 Inactiva</option>
+            <option value="expirada">🔴 Expirada</option>
+          </select>
         </div>
       </div>
     </div>

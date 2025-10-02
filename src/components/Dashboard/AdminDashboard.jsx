@@ -13,6 +13,7 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterInstitucion, setFilterInstitucion] = useState('');
   const [filterDisciplina, setFilterDisciplina] = useState('');
+  const [filterEstado, setFilterEstado] = useState(''); // Nuevo filtro de estado
   const [lastUpdate, setLastUpdate] = useState(null);
   
   
@@ -47,6 +48,9 @@ const AdminDashboard = () => {
       setError(null);
       
       console.log('🔄 Intentando cargar promociones (admin, all=1)...');
+      
+      // Cargar promociones directamente
+      
       const response = await apiService.obtenerPromocionesAdmin();
       console.log('📡 Respuesta recibida:', response);
       
@@ -88,7 +92,23 @@ const AdminDashboard = () => {
     const matchesDisciplina = filterDisciplina === '' || 
                              promocion.disciplina.toLowerCase().includes(filterDisciplina.toLowerCase());
     
-    return matchesSearch && matchesInstitucion && matchesDisciplina;
+    // Filtro por estado
+    const matchesEstado = filterEstado === '' || (() => {
+      if (filterEstado === 'activa') {
+        return promocion.estado === 'activa' || 
+               (promocion.estado !== 'inactiva' && promocion.estado !== 'expirada' && 
+                new Date() >= new Date(promocion.fecha_inicio) && 
+                new Date() <= new Date(promocion.fecha_fin));
+      } else if (filterEstado === 'inactiva') {
+        return promocion.estado === 'inactiva';
+      } else if (filterEstado === 'expirada') {
+        return promocion.estado === 'expirada' || 
+               (promocion.estado !== 'inactiva' && new Date() > new Date(promocion.fecha_fin));
+      }
+      return true;
+    })();
+    
+    return matchesSearch && matchesInstitucion && matchesDisciplina && matchesEstado;
   });
 
   const getStatusBadge = (fechaInicio, fechaFin, estado) => {
@@ -145,6 +165,7 @@ const AdminDashboard = () => {
     setSearchTerm('');
     setFilterInstitucion('');
     setFilterDisciplina('');
+    setFilterEstado('');
   };
 
   // Función para manejar cambio de estado
@@ -286,6 +307,8 @@ const AdminDashboard = () => {
         setFilterInstitucion={setFilterInstitucion}
         filterDisciplina={filterDisciplina}
         setFilterDisciplina={setFilterDisciplina}
+        filterEstado={filterEstado}
+        setFilterEstado={setFilterEstado}
         onEditar={handleEditar}
         onCambiarEstado={handleCambiarEstado}
         onEliminar={handleEliminar}

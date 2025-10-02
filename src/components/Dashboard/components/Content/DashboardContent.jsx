@@ -11,6 +11,8 @@ const DashboardContent = ({
   setFilterInstitucion,
   filterDisciplina,
   setFilterDisciplina,
+  filterEstado,
+  setFilterEstado,
   onEditar,
   onCambiarEstado,
   onEliminar,
@@ -26,6 +28,8 @@ const DashboardContent = ({
         setFilterInstitucion={setFilterInstitucion}
         filterDisciplina={filterDisciplina}
         setFilterDisciplina={setFilterDisciplina}
+        filterEstado={filterEstado}
+        setFilterEstado={setFilterEstado}
         onClearFilters={onClearFiltersPromociones}
       />
       <PromocionesTable

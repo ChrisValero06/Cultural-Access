@@ -2,14 +2,14 @@
 import { API_CONFIG, getApiUrl } from '../config/api.js';
 
 const API_BASE_URL = API_CONFIG.BASE_URL;
-// Algunos endpoints del backend viven bajo /api (no bajo /api/promociones)
-const API_BASE_GENERAL = 'https://culturallaccess.residente.mx/api';
+// Usar la misma URL base para consistencia
+const API_BASE_GENERAL = API_CONFIG.BASE_URL;
 
 export const apiService = {
   // Crear nueva promoción
   async crearPromocion(promocionData) {
     try {
-      const response = await fetch(`${API_BASE_URL}`, {
+      const response = await fetch(`${API_BASE_URL}/promociones/crear_promocion`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,13 +31,14 @@ export const apiService = {
   // Obtener todas las promociones
   async obtenerPromociones() {
     try {
-      console.log('🔗 Conectando a:', `${API_BASE_URL}`);
+      const url = `${API_BASE_URL}/promociones/obtener_promociones`;
+      console.log('🔗 Conectando a:', url);
       
       // Crear un AbortController para timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
       
-      const response = await fetch(`${API_BASE_URL}`, {
+      let response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -48,10 +49,40 @@ export const apiService = {
       clearTimeout(timeoutId);
       console.log('📡 Respuesta del servidor:', response.status, response.statusText);
 
+      // Verificar si la respuesta es HTML en lugar de JSON
+      const contentType = response.headers.get('content-type');
+      console.log('📄 Content-Type:', contentType);
+      
+      if (!contentType || !contentType.includes('application/json')) {
+        console.log('⚠️ Proxy devolvió HTML, esto indica un problema con el servidor');
+        console.log('🔍 Verificando si el servidor está devolviendo una página de error...');
+        
+        // Leer el contenido HTML para diagnosticar
+        const responseText = await response.text();
+        console.log('📄 Contenido HTML recibido (primeros 500 caracteres):', responseText.substring(0, 500));
+        
+        // Si contiene "doctype" es una página HTML completa
+        if (responseText.includes('<!doctype') || responseText.includes('<html')) {
+          throw new Error(`El servidor está devolviendo una página HTML completa en lugar de JSON. Esto puede indicar que el endpoint /api no existe o está mal configurado.`);
+        }
+        
+        // Si no es HTML completo, puede ser un error de API
+        throw new Error(`El servidor devolvió contenido no-JSON. Content-Type: ${contentType}`);
+      }
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Error del servidor:', errorText);
         throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+      }
+
+      // Verificar nuevamente el content-type
+      const finalContentType = response.headers.get('content-type');
+      if (!finalContentType || !finalContentType.includes('application/json')) {
+        const responseText = await response.text();
+        console.error('❌ Respuesta no es JSON. Content-Type:', finalContentType);
+        console.error('❌ Respuesta recibida:', responseText.substring(0, 200) + '...');
+        throw new Error(`El servidor devolvió HTML en lugar de JSON. Content-Type: ${finalContentType}`);
       }
 
       const data = await response.json();
@@ -66,28 +97,51 @@ export const apiService = {
     }
   },
 
-  // Obtener promociones para el dashboard (todas, sin filtrar por estado)
+  // Obtener promociones para el dashboard (todas, incluyendo inactivas)
   async obtenerPromocionesAdmin() {
     try {
-      const url = `${API_BASE_URL}?all=1`;
-      console.log('🔗 Conectando a (admin):', url);
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      console.log('📡 Respuesta del servidor (admin):', response.status, response.statusText);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Error del servidor:', errorText);
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+      // Probar diferentes endpoints para obtener todas las promociones
+      const endpoints = [
+        `${API_BASE_URL}/promociones?all=1`,
+        `${API_BASE_URL}/promociones/obtener_promociones?all=1`,
+        `${API_BASE_URL}/promociones`,
+        `${API_BASE_URL}/promociones/obtener_promociones`
+      ];
+      
+      let response;
+      let lastError;
+      
+      for (const url of endpoints) {
+        try {
+          console.log('🔗 Probando endpoint:', url);
+          response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          console.log('📡 Respuesta del servidor:', response.status, response.statusText);
+          
+          if (response.ok) {
+            console.log('✅ Endpoint funcionando:', url);
+            break;
+          } else {
+            lastError = `HTTP ${response.status}: ${response.statusText}`;
+            console.log('❌ Endpoint falló:', url, lastError);
+          }
+        } catch (error) {
+          lastError = error.message;
+          console.log('❌ Error en endpoint:', url, error.message);
+        }
+      }
+      
+      if (!response || !response.ok) {
+        throw new Error(`Todos los endpoints fallaron. Último error: ${lastError}`);
       }
 
       const data = await response.json();
+      console.log('✅ Promociones cargadas:', data?.length || 0);
       return data;
     } catch (error) {
       console.error('💥 Error en obtenerPromocionesAdmin:', error);
@@ -102,7 +156,7 @@ export const apiService = {
       formData.append('imagen', imagen);
       formData.append('nombre', nombreArchivo);
 
-      const response = await fetch(`${API_BASE_URL}/subir_imagen`, {
+      const response = await fetch(`${API_BASE_URL}/promociones/subir_imagen`, {
         method: 'POST',
         body: formData,
       });
@@ -121,7 +175,7 @@ export const apiService = {
   // Buscar promociones por institución
   async buscarPorInstitucion(institucion) {
     try {
-      const response = await fetch(`${API_BASE_URL}?institucion=${encodeURIComponent(institucion)}`, {
+      const response = await fetch(`${API_BASE_URL}/promociones/obtener_promociones?institucion=${encodeURIComponent(institucion)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +196,7 @@ export const apiService = {
   // Buscar promociones por disciplina
   async buscarPorDisciplina(disciplina) {
     try {
-      const response = await fetch(`${API_BASE_URL}?disciplina=${encodeURIComponent(disciplina)}`, {
+      const response = await fetch(`${API_BASE_URL}/promociones/obtener_promociones?disciplina=${encodeURIComponent(disciplina)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -163,7 +217,7 @@ export const apiService = {
   // Obtener promociones para el carrusel
   async obtenerPromocionesCarrusel() {
     try {
-      const url = `${API_CONFIG.BASE_URL}/carrusel?v=${Date.now()}`;
+      const url = `${API_BASE_URL}/promociones/carrusel?v=${Date.now()}`;
       console.log('🔗 Intentando conectar a:', url);
       
       const response = await fetch(url, {
@@ -195,7 +249,7 @@ export const apiService = {
     try {
       const requestBody = { nuevoEstado };
       
-      const response = await fetch(`${API_BASE_URL}/${id}/estado`, {
+      const response = await fetch(`${API_BASE_URL}/promociones/${id}/estado`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -218,7 +272,7 @@ export const apiService = {
   // Eliminar promoción
   async eliminarPromocion(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/promociones/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -239,7 +293,7 @@ export const apiService = {
   // Actualizar promoción
   async actualizarPromocion(id, promocionData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/promociones/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
