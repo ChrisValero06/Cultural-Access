@@ -5,16 +5,25 @@ const API_BASE_URL = API_CONFIG.BASE_URL;
 // Usar la misma URL base para consistencia
 const API_BASE_GENERAL = API_CONFIG.BASE_URL;
 
+
 export const apiService = {
+  // ===== PROMOCIONES =====
+  
   // Crear nueva promoción
   async crearPromocion(promocionData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/promociones/crear_promocion`, {
+      // Usar URL absoluta para evitar problemas del proxy
+      const url = 'https://culturallaccess.residente.mx/api/promociones/';
+      console.log('🔗 URL de crear promoción:', url);
+      console.log('📋 Datos a enviar:', promocionData);
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(promocionData),
+        mode: 'cors', // Agregar modo CORS explícito
       });
 
       if (!response.ok) {
@@ -280,7 +289,8 @@ export const apiService = {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
@@ -302,7 +312,8 @@ export const apiService = {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();

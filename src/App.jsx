@@ -1,5 +1,6 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { InstitucionesProvider } from './context/InstitucionesContext'
 import Header from './components/Header'
 import HeroSection from './components/HeroSection'
 import BarraNaranja from './components/BarraNaranja'
@@ -14,7 +15,7 @@ import PreguntasFrecuentes from './components/PreguntasFrecuentes'
 
 function App() {
   return (
-    <>
+    <InstitucionesProvider>
       <Routes>
         <Route path="/AdminDashboard" element={
           <AdminDashboard />
@@ -64,7 +65,7 @@ function App() {
           </>
         } />
       </Routes>
-    </>
+    </InstitucionesProvider>
   )
 }
 

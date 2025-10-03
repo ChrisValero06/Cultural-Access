@@ -140,15 +140,17 @@ const AdminDashboard = () => {
 
   // Función para manejar edición
   const handleEditar = (promocion) => {
+    console.log('✏️ Editando promoción:', promocion);
+    
     setPromocionEditando(promocion);
     setEditandoForm({
-      institucion: promocion.institucion,
-      tipo_promocion: promocion.tipo_promocion,
-      disciplina: promocion.disciplina,
-      beneficios: promocion.beneficios,
-      comentarios_restricciones: promocion.comentarios_restricciones,
-      fecha_inicio: promocion.fecha_inicio,
-      fecha_fin: promocion.fecha_fin,
+      institucion: promocion.institucion || '',
+      tipo_promocion: promocion.tipo_promocion || '',
+      disciplina: promocion.disciplina || '',
+      beneficios: promocion.beneficios || '',
+      comentarios_restricciones: promocion.comentarios_restricciones || '',
+      fecha_inicio: promocion.fecha_inicio ? promocion.fecha_inicio.split('T')[0] : '',
+      fecha_fin: promocion.fecha_fin ? promocion.fecha_fin.split('T')[0] : '',
       imagen_principal: promocion.imagen_principal || '',
       imagen_secundaria: promocion.imagen_secundaria || ''
     });
@@ -206,13 +208,18 @@ const AdminDashboard = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta promoción?')) {
       try {
         const response = await apiService.eliminarPromocion(id);
-        
-        if (response.estado === 'exito') {
-          // Actualizar la lista local
+
+        // Aceptar varias formas de éxito (estado: 'exito', success: true o 204 ya manejado por el servicio)
+        if (!response || response.estado === 'exito' || response.success === true) {
           setPromociones(prev => prev.filter(p => p.id !== id));
+          // Forzar sincronización por si hay dependencias
+          cargarPromociones();
+          alert('✅ Promoción eliminada correctamente');
+        } else {
+          alert('❌ No se pudo eliminar la promoción');
         }
       } catch (error) {
-        // Error silencioso al eliminar promoción
+        alert('❌ Error al eliminar la promoción: ' + error.message);
       }
     }
   };
@@ -220,21 +227,47 @@ const AdminDashboard = () => {
   // Función para guardar cambios del modal
   const handleGuardarCambios = async () => {
     try {
+      console.log('🔄 Actualizando promoción:', promocionEditando.id, editandoForm);
+      
       const response = await apiService.actualizarPromocion(promocionEditando.id, editandoForm);
-      if (response.estado === 'exito') {
+      console.log('📡 Respuesta de actualización:', response);
+      
+      if (response.estado === 'exito' || response.success === true) {
+        // Actualizar la lista local de promociones
         setPromociones(prev => prev.map(p => 
           p.id === promocionEditando.id ? { ...p, ...editandoForm } : p
         ));
+        
+        // Cerrar modal y limpiar estado
         setModalAbierto(false);
         setPromocionEditando(null);
-        alert('Promoción actualizada exitosamente');
+        setEditandoForm({
+          institucion: '',
+          tipo_promocion: '',
+          disciplina: '',
+          beneficios: '',
+          comentarios_restricciones: '',
+          fecha_inicio: '',
+          fecha_fin: '',
+          imagen_principal: '',
+          imagen_secundaria: ''
+        });
+        
+        // Mostrar mensaje de éxito
+        alert('✅ Promoción actualizada exitosamente');
+        
+        // Recargar promociones para asegurar sincronización
+        cargarPromociones();
       } else {
-        alert('Error al actualizar la promoción: ' + (response.mensaje || 'Error desconocido'));
+        console.error('❌ Error en respuesta:', response);
+        alert('❌ Error al actualizar la promoción: ' + (response.mensaje || 'Error desconocido'));
       }
     } catch (error) {
-      alert('Error al actualizar la promoción: ' + error.message);
+      console.error('💥 Error al actualizar promoción:', error);
+      alert('❌ Error al actualizar la promoción: ' + error.message);
     }
   };
+
 
   if (loading) {
     return (

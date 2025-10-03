@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { imagenes } from '../../constants/imagenes'
 import { apiService } from '../../services/apiService'
+import { useInstituciones } from '../../context/InstitucionesContext'
 
 const ControlAcceso = () => {
+  const { instituciones, buscarInstituciones } = useInstituciones()
+  
   const [formData, setFormData] = useState({
     institucion: '',
     numeroTarjeta: '',
@@ -13,49 +16,7 @@ const ControlAcceso = () => {
   const [filteredInstituciones, setFilteredInstituciones] = useState([])
   const autocompleteRef = useRef(null)
 
-  // Lista de instituciones culturales
-  const instituciones = [
-    'Ballet de Monterrey',
-    'Bread Coffee Roasters',
-    'Café Belmonte',
-    'Casa Coa',
-    'Casa de la Cultura de Nuevo León',
-    'Casa Motis',
-    'Casa Musa',
-    'Centro Roberto Garza Sada',
-    'Cineteca de Nuevo León',
-    'Constelación Feria de Arte',
-    'Dramático',
-    'El Lingote Restaurante',
-    'Escuela Superior de Música y Danza de Monterrey',
-    'Fondo de Cultura Económica',
-    'Fondo Editorial de Nuevo León',
-    'Fototeca de Nuevo León',
-    'Heart Ego',
-    'Horno 3',
-    'La Gran Audiencia',
-    'La Milarca',
-    'Librería Bruma',
-    'Librería Sentido',
-    'Monstera Coffee Bar',
-    'Museo 31',
-    'Museo del Acero Horno 3',
-    'Museo de Arte Contemporáneo de Monterrey (MARCO)',
-    'Museo de la Batalla',
-    'Museo de Historia Mexicana',
-    'Museo del Noreste',
-    'Museo del Palacio',
-    'Museo del Vidrio (MUVI)',
-    'Museo Estatal de Culturas Populares de Nuevo León',
-    'Museo Regional de Nuevo León El Obispado',
-    'Papalote Museo del Niño Monterrey',
-    'Salón de la Fama de Beisbol Mexicano',
-    'Saxy Jazz Club',
-    'Secretaría de Cultura',
-    'Seabird Coffee',
-    'Teatro de la Ciudad',
-    'Vaso Roto Ediciones'
-  ]
+  // Las instituciones ahora vienen del contexto global
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -70,9 +31,7 @@ const ControlAcceso = () => {
         setFilteredInstituciones([])
         setShowInstituciones(false)
       } else {
-        const filtered = instituciones.filter(inst =>
-          inst.toLowerCase().includes(value.toLowerCase())
-        )
+        const filtered = buscarInstituciones(value)
         setFilteredInstituciones(filtered)
         setShowInstituciones(filtered.length > 0)
       }
@@ -84,9 +43,7 @@ const ControlAcceso = () => {
       setFilteredInstituciones(instituciones)
       setShowInstituciones(true)
     } else {
-      const filtered = instituciones.filter(inst =>
-        inst.toLowerCase().includes(formData.institucion.toLowerCase())
-      )
+      const filtered = buscarInstituciones(formData.institucion)
       setFilteredInstituciones(filtered)
       setShowInstituciones(filtered.length > 0)
     }
@@ -242,8 +199,8 @@ const ControlAcceso = () => {
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Campo Institución */}
               <div>
-                <label htmlFor="institucion" className="block text-base font-bold text-gray-800 mb-2">
-                  INSTITUCIÓN *
+                <label htmlFor="institucion" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                  INSTITUCIÓN*
                 </label>
                 <div className="relative" ref={autocompleteRef}>
                   <input
@@ -301,8 +258,8 @@ const ControlAcceso = () => {
 
               {/* Campo Número de Tarjeta */}
               <div>
-                <label htmlFor="numeroTarjeta" className="block text-base font-bold text-gray-800 mb-2">
-                  NÚMERO DE TARJETA *
+                <label htmlFor="numeroTarjeta" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                  NÚMERO DE TARJETA*
                 </label>
                 <input
                   type="text"
@@ -318,8 +275,8 @@ const ControlAcceso = () => {
 
               {/* Campo Fecha */}
               <div>
-                <label htmlFor="fecha" className="block text-base font-bold text-gray-800 mb-2">
-                  FECHA *
+                <label htmlFor="fecha" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                  FECHA*
                 </label>
                 <div className="relative">
                   <input

@@ -203,9 +203,14 @@ const CargarPromo = () => {
         setLogoPreview(logoUrl)
       }
     } else {
+      // Normalizar en tiempo real solo para textos largos
+      const nextValue =
+        name === 'beneficios' || name === 'comentariosRestricciones'
+          ? normalizeSpanishText(value, false)
+          : value
       setFormData(prevState => ({
         ...prevState,
-        [name]: value
+        [name]: nextValue
       }))
 
       // Filtrar instituciones para el autocomplete
@@ -303,12 +308,71 @@ const CargarPromo = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
 
+  // Límites de caracteres para los campos de texto
+  const BENEFICIOS_LIMIT = 100
+  const COMENTARIOS_LIMIT = 100
+
+  // Normaliza texto en español: espacios, saltos de línea y puntuación
+  // ensureFinalPunctuation: si es true, agrega punto final si falta (para onBlur)
+  const normalizeSpanishText = (rawText, ensureFinalPunctuation = false) => {
+    let text = (rawText || '')
+    // Normalizar fin de línea a \n
+    text = text.replace(/\r\n?/g, '\n')
+    // Colapsar espacios/tabs, preservando saltos de línea
+    text = text.replace(/[ \t]+/g, ' ')
+    // Limitar saltos de línea consecutivos a doble salto (párrafo)
+    text = text.replace(/\n{3,}/g, '\n\n')
+    // Asegurar un espacio después de , ; : (sin tocar \n)
+    text = text.replace(/[ \t]*([,;:])[ \t]*/g, '$1 ')
+    // Normalizar puntos: un espacio después de punto si no hay \n a continuación
+    text = text.replace(/[ \t]*\.[ \t]*/g, '. ')
+    // Quitar espacios antes de signos de puntuación (sin tocar \n)
+    text = text.replace(/[ \t]+([.!?,;:])/g, '$1')
+    // Reducir signos repetidos (e.g., "!!" -> "!")
+    text = text.replace(/([.!?]){2,}/g, '$1')
+    // En tiempo real: NO recortar extremos para no bloquear el espacio que el usuario escribe
+    if (ensureFinalPunctuation) {
+      // Solo en blur, recortar al inicio/fin
+      text = text.replace(/^\s+|\s+$/g, '')
+    }
+    // Capitalizar primera letra
+    if (text.length > 0) {
+      text = text.charAt(0).toUpperCase() + text.slice(1)
+    }
+    // Asegurar punto final solo si se solicita (en blur)
+    if (ensureFinalPunctuation && text && !/[.!?…]$/.test(text.trim())) {
+      text += '.'
+    }
+    return text
+  }
+
+  const handleBlurNormalize = (e) => {
+    const { name } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: normalizeSpanishText(prev[name], true)
+    }))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
     setMessage('')
 
     try {
+      // Verificar límites de caracteres
+      if (formData.beneficios.length > BENEFICIOS_LIMIT) {
+        setMessage(`El campo "Beneficios" excede el límite de ${BENEFICIOS_LIMIT} caracteres`)
+        setIsSubmitting(false)
+        return
+      }
+
+      if (formData.comentariosRestricciones.length > COMENTARIOS_LIMIT) {
+        setMessage(`El campo "Comentarios o Restricciones" excede el límite de ${COMENTARIOS_LIMIT} caracteres`)
+        setIsSubmitting(false)
+        return
+      }
+
       // Verificar que se haya seleccionado la imagen principal
       if (!formData.imagenPrincipal) {
         setMessage('Por favor selecciona una imagen principal para la promoción')
@@ -428,8 +492,8 @@ const CargarPromo = () => {
 
               {/* Campo Institución */}
               <div>
-                <label htmlFor="institucion" className="block text-base font-bold text-gray-800 mb-2">
-                  INSTITUCIÓN *
+                <label htmlFor="institucion" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                  INSTITUCIÓN*
                 </label>
                 <div className="relative" ref={autocompleteRef}>
                   <input
@@ -475,8 +539,8 @@ const CargarPromo = () => {
 
               {/* Campo Tipo de Promoción */}
               <div>
-                <label htmlFor="tipoPromocion" className="block text-base font-bold text-gray-800 mb-2">
-                  TIPO DE PROMOCIÓN *
+                <label htmlFor="tipoPromocion" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                  TIPO DE PROMOCIÓN*
                 </label>
                 <div className="relative" ref={autocompleteRefTiposPromocion}>
                   <input
@@ -522,8 +586,8 @@ const CargarPromo = () => {
 
               {/* Campo Disciplina */}
               <div>
-                <label htmlFor="disciplina" className="block text-base font-bold text-gray-800 mb-2">
-                  DISCIPLINA *
+                <label htmlFor="disciplina" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                  DISCIPLINA*
                 </label>
                 <div className="relative" ref={autocompleteRefDisciplina}>
                   <input
@@ -569,44 +633,84 @@ const CargarPromo = () => {
 
               {/* Campo Beneficios */}
               <div>
-                <label htmlFor="beneficios" className="block text-base font-bold text-gray-800 mb-2">
-                  BENEFICIOS *
+                <label htmlFor="beneficios" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                  BENEFICIOS*
                 </label>
                 <textarea
                   id="beneficios"
                   name="beneficios"
                   value={formData.beneficios}
                   onChange={handleChange}
+                  onBlur={handleBlurNormalize}
                   required
                   rows="3"
-                  className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black resize-none text-base placeholder:text-gray-500"
+                  maxLength={BENEFICIOS_LIMIT}
+                  className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black resize-none text-base placeholder:text-gray-500 ${
+                    formData.beneficios.length > BENEFICIOS_LIMIT 
+                      ? 'border-red-500' 
+                      : formData.beneficios.length > BENEFICIOS_LIMIT * 0.8 
+                        ? 'border-yellow-500' 
+                        : 'border-orange-400'
+                  }`}
                   placeholder="Descripción de la promoción"
                 />
+                <div className="flex justify-between items-center mt-1">
+                  <p className="text-xs text-orange-100">Máximo {BENEFICIOS_LIMIT} caracteres</p>
+                  <span className={`text-xs font-medium ${
+                    formData.beneficios.length > BENEFICIOS_LIMIT 
+                      ? 'text-red-500' 
+                      : formData.beneficios.length > BENEFICIOS_LIMIT * 0.8 
+                        ? 'text-yellow-600' 
+                        : 'text-gray-600'
+                  }`}>
+                    {formData.beneficios.length}/{BENEFICIOS_LIMIT}
+                  </span>
+                </div>
               </div>
 
               {/* Campo Comentarios o Restricciones */}
               <div>
-                <label htmlFor="comentariosRestricciones" className="block text-base font-bold text-gray-800 mb-2">
-                  COMENTARIOS O RESTRICCIONES *
+                <label htmlFor="comentariosRestricciones" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                  COMENTARIOS O RESTRICCIONES*
                 </label>
                 <textarea
                   id="comentariosRestricciones"
                   name="comentariosRestricciones"
                   value={formData.comentariosRestricciones}
                   onChange={handleChange}
+                  onBlur={handleBlurNormalize}
                   required
                   rows="3"
-                  className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black resize-none text-base placeholder:text-gray-500"
+                  maxLength={COMENTARIOS_LIMIT}
+                  className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black resize-none text-base placeholder:text-gray-500 ${
+                    formData.comentariosRestricciones.length > COMENTARIOS_LIMIT 
+                      ? 'border-red-500' 
+                      : formData.comentariosRestricciones.length > COMENTARIOS_LIMIT * 0.8 
+                        ? 'border-yellow-500' 
+                        : 'border-orange-400'
+                  }`}
                   placeholder="Describe las limitantes de tu promoción"
                 />
+                <div className="flex justify-between items-center mt-1">
+                  <p className="text-xs text-orange-100">Máximo {COMENTARIOS_LIMIT} caracteres</p>
+                  <span className={`text-xs font-medium ${
+                    formData.comentariosRestricciones.length > COMENTARIOS_LIMIT 
+                      ? 'text-red-500' 
+                      : formData.comentariosRestricciones.length > COMENTARIOS_LIMIT * 0.8 
+                        ? 'text-yellow-600' 
+                        : 'text-gray-600'
+                  }`}>
+                    {formData.comentariosRestricciones.length}/{COMENTARIOS_LIMIT}
+                  </span>
+                </div>
               </div>
 
               {/* Campos de fecha en fila */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Campo Fecha de Inicio */}
                 <div>
-                  <label htmlFor="fechaInicio" className="block text-base font-bold text-gray-800 mb-2">
-                    INICIO DE LA PROMOCIÓN *
+                  <label htmlFor="fechaInicio" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                    INICIO DE LA PROMOCIÓN*
                   </label>
                   <div className="relative">
                     <input
@@ -616,7 +720,7 @@ const CargarPromo = () => {
                       value={formData.fechaInicio}
                       onChange={handleChange}
                       required
-                      className="w-full px-9 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base"
+                      className="w-full px-9 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]"
                     />
                     <div 
                       className="absolute left-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
@@ -631,8 +735,8 @@ const CargarPromo = () => {
 
                 {/* Campo Fecha de Fin */}
                 <div>
-                  <label htmlFor="fechaFin" className="block text-base font-bold text-gray-800 mb-2">
-                    FIN DE LA PROMOCIÓN *
+                  <label htmlFor="fechaFin" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                    FIN DE LA PROMOCIÓN*
                   </label>
                   <div className="relative">
                     <input
@@ -642,7 +746,7 @@ const CargarPromo = () => {
                       value={formData.fechaFin}
                       onChange={handleChange}
                       required
-                      className="w-full px-9 py-3 border-2 border-orange-400 rounded-lg focus:border-transparent transition duration-200 bg-white text-black text-base"
+                      className="w-full px-9 py-3 border-2 border-orange-400 rounded-lg focus:border-transparent transition duration-200 bg-white text-black text-base [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]"
                     />
                     <div 
                       className="absolute left-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
@@ -658,7 +762,7 @@ const CargarPromo = () => {
 
               {/* Campo Logo */}
               <div>
-                <label htmlFor="logo" className="block text-base font-bold text-gray-800 mb-2">
+                <label htmlFor="logo" className="block text-base font-bold text-gray-800 mb-2 text-white">
                   LOGO DE LA INSTITUCIÓN
                 </label>
                 <div className="relative">
@@ -683,8 +787,8 @@ const CargarPromo = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Campo Imagen Principal */}
                 <div>
-                  <label htmlFor="imagenPrincipal" className="block text-base font-bold text-gray-800 mb-2">
-                    IMAGEN PRINCIPAL *
+                  <label htmlFor="imagenPrincipal" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                    IMAGEN PRINCIPAL*
                   </label>
                   <div className="relative">
                     <input
@@ -707,8 +811,8 @@ const CargarPromo = () => {
 
                 {/* Campo Imagen Secundaria */}
                 <div>
-                  <label htmlFor="imagenSecundaria" className="block text-base font-bold text-gray-800 mb-2">
-                    IMAGEN SECUNDARIA
+                  <label htmlFor="imagenSecundaria" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                    IMAGEN SECUNDARIA*
                   </label>
                   <div className="relative">
                     <input
@@ -822,7 +926,7 @@ const CargarPromo = () => {
                         {/* Beneficios */}
                         {formData.beneficios && (
                           <div className="mb-4 sm:mb-6">
-                            <span className="inline-block px-4 sm:px-6 py-2 sm:py-3 text-white text-base sm:text-xl font-bold leading-relaxed" style={{fontFamily: 'Poppins, sans-serif'}}>
+                            <span className="inline-block px-4 sm:px-6 py-2 sm:py-3 text-white text-base sm:text-xl font-bold leading-relaxed whitespace-pre-line" style={{fontFamily: 'Poppins, sans-serif'}}>
                               {formData.beneficios}
                             </span>
                           </div>
@@ -831,7 +935,7 @@ const CargarPromo = () => {
                         {/* Comentarios/Restricciones */}
                         {formData.comentariosRestricciones && (
                           <div>
-                            <span className="inline-block px-4 sm:px-6 py-2 sm:py-3 text-white text-sm sm:text-lg font-medium leading-relaxed" style={{fontFamily: 'Poppins, sans-serif'}}>
+                            <span className="inline-block px-4 sm:px-6 py-2 sm:py-3 text-white text-sm sm:text-lg font-medium leading-relaxed whitespace-pre-line" style={{fontFamily: 'Poppins, sans-serif'}}>
                               {formData.comentariosRestricciones}
                             </span>
                           </div>
