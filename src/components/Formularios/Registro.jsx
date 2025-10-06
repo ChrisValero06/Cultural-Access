@@ -420,14 +420,7 @@ const CulturalAccessForm = () => {
           </div>
         </div>
 
-        {/* Imagen del header del formulario */}
-        <div className="flex justify-center mb-6">
-          <img 
-            src="/ForRegistrio.png" 
-            alt="Header Registro Cultural Access"
-            className="w-96 h-32 object-contain"
-          />
-        </div>
+        
 
         {/* Formulario centrado */}
         <div className="flex-1 flex items-center justify-center px-6 py-8">
@@ -655,7 +648,7 @@ const CulturalAccessForm = () => {
 
               {/* Edad - Radio buttons verticales */}
               <div>
-                <label className="block text-base font-bold text-gray-800 mb-2 text-white">EDAD</label>
+                <label className="block text-base font-bold text-gray-800 mb-2 text-white">EDAD*</label>
                 <div className="space-y-2">
                   {["16-17", "18-29", "30-49", "50-59", "60+"].map((edad) => (
                     <RadioButton
@@ -675,7 +668,7 @@ const CulturalAccessForm = () => {
               {/* Estudios - Dropdown */}
               <div>
                 <label htmlFor="estudios" className="block text-base font-bold text-gray-800 mb-2 text-white">
-                  ESTUDIOS
+                  ESTUDIOS*
                 </label>
                 <SelectInput
                   id="estudios"
@@ -698,7 +691,7 @@ const CulturalAccessForm = () => {
               {/* Estado civil - Dropdown */}
               <div>
                 <label htmlFor="estadoCivil" className="block text-base font-bold text-gray-800 mb-2 text-white">
-                  ESTADO CIVIL
+                  ESTADO CIVIL*
                 </label>
                 <SelectInput
                   id="estadoCivil"

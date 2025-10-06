@@ -73,7 +73,7 @@ const PromocionesFilters = ({
           <select
             value={filterEstado}
             onChange={(e) => setFilterEstado(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-800"
           >
             <option value="">Todos los estados</option>
             <option value="activa">🟢 Activa</option>

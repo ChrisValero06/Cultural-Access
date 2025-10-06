@@ -1,5 +1,6 @@
 import React from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { apiService } from './services/apiService'
 import { InstitucionesProvider } from './context/InstitucionesContext'
 import Header from './components/Header'
 import HeroSection from './components/HeroSection'
@@ -10,6 +11,7 @@ import Formulario from './components/Formularios/Control_Acceso'
 import CargarPromo from './components/Formularios/CargarPromo'
 import Registro from './components/Formularios/Registro'
 import AdminDashboard from './components/Dashboard/AdminDashboard'
+import Login from './components/Login'
 import AvisoPrivacidad from './components/AvisoPrivacidad'
 import PreguntasFrecuentes from './components/PreguntasFrecuentes'
 
@@ -17,8 +19,9 @@ function App() {
   return (
     <InstitucionesProvider>
       <Routes>
+        <Route path="/login" element={<Login />} />
         <Route path="/AdminDashboard" element={
-          <AdminDashboard />
+          apiService.isAuthenticated() ? <AdminDashboard /> : <Navigate to="/login" replace />
         } />
         <Route path="/*" element={
           <>

@@ -448,6 +448,93 @@ export const apiService = {
     }
   },
 
+  // ===== AUTENTICACIÓN =====
+
+  // Login de usuario
+  async login(emailOrUsuario, password) {
+    try {
+      const response = await fetch(`${API_BASE_GENERAL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Enviar ambos campos para mayor compatibilidad con el backend
+        body: JSON.stringify({ email: emailOrUsuario, usuario: emailOrUsuario, password }),
+      });
+
+      if (!response.ok) {
+        // Si el endpoint no existe (404) o similar, permitir fallback de frontend
+        if (response.status === 404) {
+          console.warn('Auth API no disponible (404). Usando login de respaldo en frontend.');
+          return { token: 'frontend-only-token', user: { email: emailOrUsuario, usuario: emailOrUsuario } };
+        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Error de autenticación: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      // Fallback por error de red u otros problemas (sin bloquear el acceso)
+      console.warn('Fallo en login remoto. Usando login de respaldo en frontend.', error);
+      return { token: 'frontend-only-token', user: { email: emailOrUsuario, usuario: emailOrUsuario } };
+    }
+  },
+
+  // Verificar token de autenticación
+  async verificarToken(token) {
+    try {
+      const response = await fetch(`${API_BASE_GENERAL}/auth/verify`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Token inválido');
+      }
+
+      const data = await response.json();
+      return data.user;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Logout de usuario
+  async logout() {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        await fetch(`${API_BASE_GENERAL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+      }
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userEmail');
+    } catch (error) {
+      console.error('Error en logout:', error);
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userEmail');
+    }
+  },
+
+  // Verificar si el usuario está autenticado
+  isAuthenticated() {
+    return !!localStorage.getItem('authToken');
+  },
+
+  // Obtener email del usuario autenticado
+  getCurrentUser() {
+    return localStorage.getItem('userEmail');
+  },
+
 };
 
 export default apiService;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/apiService';
 import { useCarrusel } from '../../context/CarruselContext';
 import DashboardHeader from './components/Header/DashboardHeader';
@@ -6,6 +7,7 @@ import DashboardContent from './components/Content/DashboardContent';
 import EditarPromocionModal from './components/Modals/EditarPromocionModal';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   // Estados para promociones
   const [promociones, setPromociones] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,8 +41,14 @@ const AdminDashboard = () => {
   const { carruseles, activarCarrusel, desactivarCarrusel } = useCarrusel();
 
   useEffect(() => {
+    // Verificar autenticación antes de cargar datos
+    if (!apiService.isAuthenticated()) {
+      navigate('/login');
+      return;
+    }
+    
     cargarPromociones();
-  }, []);
+  }, [navigate]);
 
   const cargarPromociones = async () => {
     try {
