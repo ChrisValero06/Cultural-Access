@@ -55,33 +55,23 @@ const AdminDashboard = () => {
       setLoading(true);
       setError(null);
       
-      console.log('🔄 Intentando cargar promociones (admin, all=1)...');
-      
-      // Cargar promociones directamente
-      
       const response = await apiService.obtenerPromocionesAdmin();
-      console.log('📡 Respuesta recibida:', response);
       
       if (response && response.estado === 'exito') {
         setPromociones(response.promociones || []);
         setLastUpdate(new Date());
-        console.log('✅ Promociones cargadas exitosamente:', response.promociones?.length || 0);
       } else if (response && response.success === true && response.data) {
         // Si la respuesta tiene success: true y data, usar esa estructura
         setPromociones(response.data || []);
         setLastUpdate(new Date());
-        console.log('✅ Promociones cargadas (formato success):', response.data?.length || 0);
       } else if (response && response.promociones) {
         // Si no hay estado pero sí hay promociones, asumir éxito
         setPromociones(response.promociones);
         setLastUpdate(new Date());
-        console.log('✅ Promociones cargadas (sin estado):', response.promociones.length);
       } else {
-        console.error('❌ Error en respuesta:', response);
         setError('Error al cargar las promociones: ' + (response?.mensaje || 'Respuesta inválida'));
       }
     } catch (error) {
-      console.error('💥 Error al cargar promociones:', error);
       setError('Error de conexión: ' + error.message);
     } finally {
       setLoading(false);
@@ -148,8 +138,6 @@ const AdminDashboard = () => {
 
   // Función para manejar edición
   const handleEditar = (promocion) => {
-    console.log('✏️ Editando promoción:', promocion);
-    
     setPromocionEditando(promocion);
     setEditandoForm({
       institucion: promocion.institucion || '',
@@ -235,10 +223,7 @@ const AdminDashboard = () => {
   // Función para guardar cambios del modal
   const handleGuardarCambios = async () => {
     try {
-      console.log('🔄 Actualizando promoción:', promocionEditando.id, editandoForm);
-      
       const response = await apiService.actualizarPromocion(promocionEditando.id, editandoForm);
-      console.log('📡 Respuesta de actualización:', response);
       
       if (response.estado === 'exito' || response.success === true) {
         // Actualizar la lista local de promociones
@@ -267,11 +252,9 @@ const AdminDashboard = () => {
         // Recargar promociones para asegurar sincronización
         cargarPromociones();
       } else {
-        console.error('❌ Error en respuesta:', response);
         alert('❌ Error al actualizar la promoción: ' + (response.mensaje || 'Error desconocido'));
       }
     } catch (error) {
-      console.error('💥 Error al actualizar promoción:', error);
       alert('❌ Error al actualizar la promoción: ' + error.message);
     }
   };

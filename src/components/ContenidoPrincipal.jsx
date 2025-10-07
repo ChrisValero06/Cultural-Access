@@ -23,14 +23,8 @@ const ContenidoPrincipal = () => {
       setLoading(true)
       setError(null) // Limpiar errores previos
       
-      console.log('🔄 Iniciando carga de promociones...');
-      
       // Verificar conectividad con el backend
-      const startTime = Date.now();
       const response = await apiService.obtenerPromocionesCarrusel()
-      const responseTime = Date.now() - startTime;
-      
-      console.log(`⏱️ Tiempo de respuesta: ${responseTime}ms`);
       
       if (response.estado === 'exito') {
         // Normalizar URLs de imágenes (cuando vienen relativas del backend)
@@ -48,8 +42,6 @@ const ContenidoPrincipal = () => {
           }))
           .filter(carrusel => carrusel.imagenes && carrusel.imagenes.length > 0);
         
-        console.log(`📊 Promociones activas encontradas: ${promocionesActivas.length}`);
-        
         setCarruseles(promocionesActivas)
         setUltimaActualizacion(Date.now())
         
@@ -59,17 +51,10 @@ const ContenidoPrincipal = () => {
           return acc
         }, {})
         setCurrentImages(estadosIniciales)
-        
-        // Mostrar mensaje de éxito
-        if (actualizar) {
-          console.log('✅ Promociones actualizadas correctamente');
-        }
       } else {
-        console.error('❌ Error en la respuesta del servidor:', response);
         setError('Error al cargar las promociones: ' + (response.mensaje || 'Respuesta inválida del servidor'))
       }
     } catch (error) {
-      console.error('💥 Error al cargar promociones:', error);
       
       // Verificar si es un error de conectividad
       if (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('Failed to fetch')) {

@@ -14,8 +14,6 @@ export const apiService = {
     try {
       // Usar URL absoluta para evitar problemas del proxy
       const url = 'https://culturallaccess.residente.mx/api/promociones/';
-      console.log('🔗 URL de crear promoción:', url);
-      console.log('📋 Datos a enviar:', promocionData);
       
       const response = await fetch(url, {
         method: 'POST',
@@ -41,7 +39,6 @@ export const apiService = {
   async obtenerPromociones() {
     try {
       const url = `${API_BASE_URL}/promociones/obtener_promociones`;
-      console.log('🔗 Conectando a:', url);
       
       // Crear un AbortController para timeout
       const controller = new AbortController();
@@ -56,19 +53,13 @@ export const apiService = {
       });
 
       clearTimeout(timeoutId);
-      console.log('📡 Respuesta del servidor:', response.status, response.statusText);
 
       // Verificar si la respuesta es HTML en lugar de JSON
       const contentType = response.headers.get('content-type');
-      console.log('📄 Content-Type:', contentType);
       
       if (!contentType || !contentType.includes('application/json')) {
-        console.log('⚠️ Proxy devolvió HTML, esto indica un problema con el servidor');
-        console.log('🔍 Verificando si el servidor está devolviendo una página de error...');
-        
         // Leer el contenido HTML para diagnosticar
         const responseText = await response.text();
-        console.log('📄 Contenido HTML recibido (primeros 500 caracteres):', responseText.substring(0, 500));
         
         // Si contiene "doctype" es una página HTML completa
         if (responseText.includes('<!doctype') || responseText.includes('<html')) {
@@ -81,7 +72,6 @@ export const apiService = {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Error del servidor:', errorText);
         throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
@@ -89,16 +79,12 @@ export const apiService = {
       const finalContentType = response.headers.get('content-type');
       if (!finalContentType || !finalContentType.includes('application/json')) {
         const responseText = await response.text();
-        console.error('❌ Respuesta no es JSON. Content-Type:', finalContentType);
-        console.error('❌ Respuesta recibida:', responseText.substring(0, 200) + '...');
         throw new Error(`El servidor devolvió HTML en lugar de JSON. Content-Type: ${finalContentType}`);
       }
 
       const data = await response.json();
-      console.log('✅ Datos recibidos correctamente:', data);
       return data;
     } catch (error) {
-      console.error('💥 Error en obtenerPromociones:', error);
       if (error.name === 'AbortError') {
         throw new Error('Timeout: La conexión tardó demasiado tiempo');
       }
@@ -111,10 +97,10 @@ export const apiService = {
     try {
       // Probar diferentes endpoints para obtener todas las promociones
       const endpoints = [
-        `${API_BASE_URL}/promociones?all=1`,
-        `${API_BASE_URL}/promociones/obtener_promociones?all=1`,
-        `${API_BASE_URL}/promociones`,
-        `${API_BASE_URL}/promociones/obtener_promociones`
+        `${API_BASE_URL}/promociones?all=1&_ts=${Date.now()}`,
+        `${API_BASE_URL}/promociones/obtener_promociones?all=1&_ts=${Date.now()}`,
+        `${API_BASE_URL}/promociones?_ts=${Date.now()}`,
+        `${API_BASE_URL}/promociones/obtener_promociones?_ts=${Date.now()}`
       ];
       
       let response;
@@ -122,26 +108,22 @@ export const apiService = {
       
       for (const url of endpoints) {
         try {
-          console.log('🔗 Probando endpoint:', url);
           response = await fetch(url, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache',
             },
+            cache: 'no-store',
           });
           
-          console.log('📡 Respuesta del servidor:', response.status, response.statusText);
-          
           if (response.ok) {
-            console.log('✅ Endpoint funcionando:', url);
             break;
           } else {
             lastError = `HTTP ${response.status}: ${response.statusText}`;
-            console.log('❌ Endpoint falló:', url, lastError);
           }
         } catch (error) {
           lastError = error.message;
-          console.log('❌ Error en endpoint:', url, error.message);
         }
       }
       
@@ -150,10 +132,8 @@ export const apiService = {
       }
 
       const data = await response.json();
-      console.log('✅ Promociones cargadas:', data?.length || 0);
       return data;
     } catch (error) {
-      console.error('💥 Error en obtenerPromocionesAdmin:', error);
       throw error;
     }
   },
@@ -227,7 +207,6 @@ export const apiService = {
   async obtenerPromocionesCarrusel() {
     try {
       const url = `${API_BASE_URL}/promociones/carrusel?v=${Date.now()}`;
-      console.log('🔗 Intentando conectar a:', url);
       
       const response = await fetch(url, {
         method: 'GET',
@@ -236,19 +215,14 @@ export const apiService = {
         },
       });
 
-      console.log('📡 Respuesta del servidor:', response.status, response.statusText);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Error del servidor:', errorText);
         throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('✅ Datos recibidos correctamente');
       return data;
     } catch (error) {
-      console.error('💥 Error en obtenerPromocionesCarrusel:', error);
       throw error;
     }
   },
@@ -293,8 +267,18 @@ export const apiService = {
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      return data;
+      // Algunos backends devuelven 204 No Content al eliminar correctamente
+      if (response.status === 204) {
+        return { estado: 'exito' };
+      }
+
+      // Si hay cuerpo JSON, devolverlo; si no, asumir éxito
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const data = await response.json();
+        return data;
+      }
+      return { estado: 'exito' };
     } catch (error) {
       throw error;
     }
@@ -335,8 +319,6 @@ export const apiService = {
       };
 
       const url = `${API_BASE_GENERAL}/control-acceso`;
-      console.log('🔗 URL de control de acceso:', url);
-      console.log('📋 Payload:', payload);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -346,17 +328,13 @@ export const apiService = {
         body: JSON.stringify(payload),
       });
 
-      console.log('📡 Respuesta del servidor:', response.status, response.statusText);
-      console.log('📡 Headers de respuesta:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Error del servidor:', errorText);
         throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('✅ Datos recibidos correctamente:', data);
       return data;
     } catch (error) {
       throw error;
@@ -519,7 +497,6 @@ export const apiService = {
       localStorage.removeItem('authToken');
       localStorage.removeItem('userEmail');
     } catch (error) {
-      console.error('Error en logout:', error);
       localStorage.removeItem('authToken');
       localStorage.removeItem('userEmail');
     }

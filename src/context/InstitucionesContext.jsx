@@ -59,7 +59,6 @@ export const InstitucionesProvider = ({ children }) => {
         const institucionesCombinadas = [...new Set([...institucionesBase, ...institucionesParseadas])]
         setInstituciones(institucionesCombinadas)
       } catch (error) {
-        console.error('Error al cargar instituciones del localStorage:', error)
         setInstituciones(institucionesBase)
       }
     }

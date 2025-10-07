@@ -141,7 +141,6 @@ const EditarPromocionModal = ({
             formData.imagen_principal = responseImagen.ruta || responseImagen.url;
           }
         } catch (error) {
-          console.error('Error subiendo imagen principal:', error);
           alert('Error al subir la imagen principal. Se guardará sin cambios en la imagen.');
         }
       }
@@ -154,7 +153,6 @@ const EditarPromocionModal = ({
             formData.imagen_secundaria = responseImagen.ruta || responseImagen.url;
           }
         } catch (error) {
-          console.error('Error subiendo imagen secundaria:', error);
           alert('Error al subir la imagen secundaria. Se guardará sin cambios en la imagen.');
         }
       }

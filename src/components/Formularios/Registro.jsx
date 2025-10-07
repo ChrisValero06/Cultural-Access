@@ -258,7 +258,6 @@ const CulturalAccessForm = () => {
           const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
         } catch (e) {
-          console.error('No se pudo parsear la respuesta de error:', e);
         }
         alert(errorMessage);
         return;
@@ -286,7 +285,6 @@ const CulturalAccessForm = () => {
         }
       }
     } catch (error) {
-      console.error('Error en el envío:', error);
       alert("ERROR DE CONEXIÓN. POR FAVOR, INTENTA DE NUEVO.")
     } finally {
       setIsSubmitting(false)
