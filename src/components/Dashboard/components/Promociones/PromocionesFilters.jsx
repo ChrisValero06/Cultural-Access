@@ -33,7 +33,7 @@ const PromocionesFilters = ({
             placeholder="Buscar en todo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-800"
           />
         </div>
 
@@ -47,7 +47,7 @@ const PromocionesFilters = ({
             placeholder="Filtrar por institución..."
             value={filterInstitucion}
             onChange={(e) => setFilterInstitucion(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-800"
           />
         </div>
 
@@ -61,7 +61,7 @@ const PromocionesFilters = ({
             placeholder="Filtrar por disciplina..."
             value={filterDisciplina}
             onChange={(e) => setFilterDisciplina(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-800"
           />
         </div>
 
