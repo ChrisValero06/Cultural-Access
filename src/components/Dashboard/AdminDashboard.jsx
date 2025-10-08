@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../../services/apiService';
+import { apiService } from '../../apis';
 import { useCarrusel } from '../../context/CarruselContext';
 import DashboardHeader from './components/Header/DashboardHeader';
 import DashboardContent from './components/Content/DashboardContent';

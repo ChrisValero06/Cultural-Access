@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../../../../services/apiService';
+import { apiService } from '../../../../apis';
 
 const DashboardHeader = ({ 
   tabActiva, 

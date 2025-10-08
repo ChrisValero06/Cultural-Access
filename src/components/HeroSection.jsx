@@ -34,7 +34,7 @@ const HeroSection = () => {
           </h1>
           
           {/* Descripción */}
-          <p className=" font_8 wixui-rich-text__text  text-left" style={{ fontSize: '16px' }}>
+          <p className=" font_8 wixui-rich-text__text  text-left text-white" style={{ fontSize: '16px' }}>
             Este proyecto de la Secretaría de Cultura del Gobierno del Estado reconoce y valora la participación de la ciudadanía en la vida cultural de Nuevo León. A través de él, se ofrecen beneficios y promociones exclusivas para quienes disfrutan de la oferta cultural del estado: productos, eventos, talleres, exposiciones, conciertos y mucho más.
           </p>
         </div>

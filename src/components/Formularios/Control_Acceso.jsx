@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { imagenes } from '../../constants/imagenes'
-import { apiService } from '../../services/apiService'
+import { apiService } from '../../apis'
 import { useInstituciones } from '../../context/InstitucionesContext'
 
 const ControlAcceso = () => {
@@ -9,7 +9,8 @@ const ControlAcceso = () => {
   const [formData, setFormData] = useState({
     institucion: '',
     numeroTarjeta: '',
-    fecha: new Date().toISOString().split('T')[0] // Fecha de hoy en formato YYYY-MM-DD
+    fecha: new Date().toISOString().split('T')[0], // Fecha de hoy en formato YYYY-MM-DD
+    origenRegistro: ''
   })
 
   const [showInstituciones, setShowInstituciones] = useState(false)
@@ -102,7 +103,7 @@ const ControlAcceso = () => {
     
     try {
       // Validar que todos los campos estén llenos
-      if (!formData.institucion || !formData.numeroTarjeta || !formData.fecha) {
+      if (!formData.institucion || !formData.numeroTarjeta || !formData.fecha || !formData.origenRegistro) {
         alert('Por favor, completa todos los campos')
         return
       }
@@ -111,7 +112,8 @@ const ControlAcceso = () => {
       const response = await apiService.crearControlAcceso({
         institucion: formData.institucion,
         numeroTarjeta: formData.numeroTarjeta,
-        fecha: formData.fecha
+        fecha: formData.fecha,
+        origenRegistro: formData.origenRegistro
       })
 
       if (response.success === true) {
@@ -121,7 +123,8 @@ const ControlAcceso = () => {
         setFormData({
           institucion: '',
           numeroTarjeta: '',
-          fecha: new Date().toISOString().split('T')[0] // Resetear a fecha de hoy
+          fecha: new Date().toISOString().split('T')[0], // Resetear a fecha de hoy
+          origenRegistro: ''
         })
       } else {
         alert('Error al crear el registro: ' + (response.message || response.error || 'Error desconocido'))
@@ -301,7 +304,61 @@ const ControlAcceso = () => {
                 </div>
               </div>
 
-              
+              {/* Campo Origen de Registro */}
+              <div>
+                <label htmlFor="origenRegistro" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                  DESDE QUÉ LUGAR DE NUEVO LEÓN TE ESTÁS REGISTRANDO*
+                </label>
+                <select
+                  id="origenRegistro"
+                  name="origenRegistro"
+                  value={formData.origenRegistro}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base"
+                >
+                  <option value="">Selecciona un lugar</option>
+                  <option value="Centro de Monterrey">Centro de Monterrey</option>
+                  <option value="San Pedro Garza García">San Pedro Garza García</option>
+                  <option value="Santa Catarina">Santa Catarina</option>
+                  <option value="San Nicolás de los Garza">San Nicolás de los Garza</option>
+                  <option value="Guadalupe">Guadalupe</option>
+                  <option value="Apodaca">Apodaca</option>
+                  <option value="Escobedo">Escobedo</option>
+                  <option value="Cadereyta">Cadereyta</option>
+                  <option value="García">García</option>
+                  <option value="Juárez">Juárez</option>
+                  <option value="Salinas Victoria">Salinas Victoria</option>
+                  <option value="Pesquería">Pesquería</option>
+                  <option value="Hidalgo">Hidalgo</option>
+                  <option value="El Carmen">El Carmen</option>
+                  <option value="Abasolo">Abasolo</option>
+                  <option value="Higueras">Higueras</option>
+                  <option value="Marín">Marín</option>
+                  <option value="Doctor González">Doctor González</option>
+                  <option value="Los Ramones">Los Ramones</option>
+                  <option value="Los Herreras">Los Herreras</option>
+                  <option value="Los Aldamas">Los Aldamas</option>
+                  <option value="Anáhuac">Anáhuac</option>
+                  <option value="Parás">Parás</option>
+                  <option value="Vallecillo">Vallecillo</option>
+                  <option value="Villaldama">Villaldama</option>
+                  <option value="Bustamante">Bustamante</option>
+                  <option value="Sabinas Hidalgo">Sabinas Hidalgo</option>
+                  <option value="Salinas Victoria">Salinas Victoria</option>
+                  <option value="Ciénega de Flores">Ciénega de Flores</option>
+                  <option value="Hualahuises">Hualahuises</option>
+                  <option value="Linares">Linares</option>
+                  <option value="Rayones">Rayones</option>
+                  <option value="Iturbide">Iturbide</option>
+                  <option value="Galeana">Galeana</option>
+                  <option value="Doctor Arroyo">Doctor Arroyo</option>
+                  <option value="Aramberri">Aramberri</option>
+                  <option value="General Zaragoza">General Zaragoza</option>
+                  <option value="Mier y Noriega">Mier y Noriega</option>
+                  <option value="Otro">Otro lugar</option>
+                </select>
+              </div>
 
               {/* Botón Enviar */}
               <div className="pt-4">

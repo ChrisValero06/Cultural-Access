@@ -1,6 +1,6 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { apiService } from './services/apiService'
+import { apiService } from './apis'
 import { InstitucionesProvider } from './context/InstitucionesContext'
 import Header from './components/Header'
 import HeroSection from './components/HeroSection'
