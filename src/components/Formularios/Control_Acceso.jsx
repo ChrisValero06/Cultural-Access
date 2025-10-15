@@ -305,7 +305,7 @@ const ControlAcceso = () => {
               </div>
 
               {/* Campo Origen de Registro */}
-              <div>
+              {/*<div>
                 <label htmlFor="origenRegistro" className="block text-base font-bold text-gray-800 mb-2 text-white">
                   DESDE QUÉ LUGAR DE NUEVO LEÓN TE ESTÁS REGISTRANDO*
                 </label>
@@ -358,7 +358,7 @@ const ControlAcceso = () => {
                   <option value="Mier y Noriega">Mier y Noriega</option>
                   <option value="Otro">Otro lugar</option>
                 </select>
-              </div>
+              </div>*/}
 
               {/* Botón Enviar */}
               <div className="pt-4">

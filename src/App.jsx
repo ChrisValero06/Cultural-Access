@@ -10,6 +10,7 @@ import Footer from './components/Footer'
 import Formulario from './components/Formularios/Control_Acceso'
 import CargarPromo from './components/Formularios/CargarPromo'
 import Registro from './components/Formularios/Registro'
+import CargarPromoFunctional from './components/Formularios/CargarPromoFunctional'
 import AdminDashboard from './components/Dashboard/AdminDashboard'
 import Login from './components/Login'
 import AvisoPrivacidad from './components/AvisoPrivacidad'
@@ -46,6 +47,12 @@ function App() {
                 } />
                 <Route path="/cargarpromo" element={
                   <CargarPromo />
+                } />
+                <Route path="/CargarPromoFunctional" element={
+                  <CargarPromoFunctional />
+                } />
+                <Route path="/cargarpromo-functional" element={
+                  <CargarPromoFunctional />
                 } />
                 <Route path="/Registro" element={
                   <Registro />

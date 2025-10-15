@@ -81,26 +81,45 @@ export const promocionesService = {
     }
   },
 
-  // Crear nueva promoción
+  // Crear nueva promoción (con endpoints alternos por compatibilidad)
   async crearPromocion(promocionData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/promociones/crear_promocion`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(promocionData),
-      });
+      const endpoints = [
+        `${API_BASE_URL}/promociones/crear_promocion`,
+        `${API_BASE_URL}/promociones/crear`,
+        `${API_BASE_URL}/promociones`,
+        `${API_BASE_URL}/promocion/crear`,
+        `${API_BASE_URL}/promocion`
+      ]
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      let response
+      let lastError
+
+      for (const endpoint of endpoints) {
+        try {
+          response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(promocionData),
+          })
+
+          if (response.ok) break
+          lastError = new Error(`HTTP ${response.status} al POST ${endpoint}`)
+        } catch (err) {
+          lastError = err
+        }
       }
 
-      const data = await response.json();
-      return data;
+      if (!response || !response.ok) {
+        throw lastError || new Error('No se pudo crear la promoción: todos los endpoints fallaron')
+      }
+
+      const data = await response.json().catch(() => ({}))
+      return data
     } catch (error) {
-      throw error;
+      throw error
     }
   },
 

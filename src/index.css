@@ -188,6 +188,52 @@ select:focus.border-orange-400 {
   box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.1) !important;
 }
 
+/* Forzar colores claros en formularios - especialmente en móviles */
+form input,
+form textarea,
+form select,
+form option {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #fb923c !important;
+}
+
+form input::placeholder,
+form textarea::placeholder {
+  color: #6b7280 !important; /* gray-500 */
+}
+
+form select option {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Asegurar que los labels sean blancos en todos los dispositivos */
+form label {
+  color: #ffffff !important; /* blanco para todos los dispositivos */
+}
+
+/* Forzar colores en dispositivos móviles */
+@media (max-width: 768px) {
+  form input,
+  form textarea,
+  form select,
+  form option {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #fb923c !important;
+  }
+  
+  form label {
+    color: #ffffff !important; /* blanco para móvil también */
+  }
+  
+  /* Fondo naranja fijo para el contenedor del formulario en móvil */
+  .bg-orange-500 {
+    background-color: #f97316 !important;
+  }
+}
+
 /* Layout de Grid para mantener header y footer fijos */
 #root {
   display: grid;

@@ -32,12 +32,27 @@ export const CarruselProvider = ({ children }) => {
     }
   });
 
+  // Estado para el tamaño uniforme de todos los carruseles
+  const [tamanoCarrusel, setTamanoCarrusel] = useState({
+    movil: 'h-[334px]',      // Tamaño para móviles (855x334)
+    desktop: 'md:h-[334px]'  // Tamaño para desktop (855x334)
+  });
+
   // Cargar estado desde localStorage al inicializar
   useEffect(() => {
     const savedState = localStorage.getItem('carruselState');
+    const savedTamano = localStorage.getItem('tamanoCarruselState');
+    
     if (savedState) {
       try {
         setCarruseles(JSON.parse(savedState));
+      } catch (error) {
+      }
+    }
+    
+    if (savedTamano) {
+      try {
+        setTamanoCarrusel(JSON.parse(savedTamano));
       } catch (error) {
       }
     }
@@ -47,6 +62,10 @@ export const CarruselProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('carruselState', JSON.stringify(carruseles));
   }, [carruseles]);
+
+  useEffect(() => {
+    localStorage.setItem('tamanoCarruselState', JSON.stringify(tamanoCarrusel));
+  }, [tamanoCarrusel]);
 
   const toggleCarrusel = (carruselId) => {
     setCarruseles(prev => ({
@@ -86,11 +105,29 @@ export const CarruselProvider = ({ children }) => {
   };
 
   const getCarruselVisible = (carruselId) => {
-    return carruseles[carruselId]?.visible || false;
+    const visible = carruseles[carruselId]?.visible || false;
+    console.log(`🔍 Verificando visibilidad de ${carruselId}:`, { visible, carrusel: carruseles[carruselId] });
+    return visible;
   };
 
   const getAllCarruseles = () => {
     return carruseles;
+  };
+
+  // Funciones para manejar el tamaño de los carruseles
+  const cambiarTamanoCarrusel = (movil, desktop) => {
+    setTamanoCarrusel({
+      movil: movil || tamanoCarrusel.movil,
+      desktop: desktop || tamanoCarrusel.desktop
+    });
+  };
+
+  const getTamanoCarrusel = () => {
+    return tamanoCarrusel;
+  };
+
+  const getClaseTamanoCarrusel = () => {
+    return `${tamanoCarrusel.movil} ${tamanoCarrusel.desktop}`;
   };
 
   const value = { 
@@ -100,7 +137,11 @@ export const CarruselProvider = ({ children }) => {
     desactivarCarrusel, 
     getCarruselActivo, 
     getCarruselVisible,
-    getAllCarruseles 
+    getAllCarruseles,
+    tamanoCarrusel,
+    cambiarTamanoCarrusel,
+    getTamanoCarrusel,
+    getClaseTamanoCarrusel
   };
 
   return (

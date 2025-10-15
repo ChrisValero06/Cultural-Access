@@ -3,8 +3,8 @@ import { apiService } from '../apis'
 import { useCarrusel } from '../context/CarruselContext'
 
 const ContenidoPrincipal = () => {
-  // Usar el contexto para controlar la visibilidad de carruseles
-  const { carruseles: carruselConfig, getCarruselVisible } = useCarrusel();
+  // Usar el contexto para controlar la visibilidad de carruseles y su tamaño
+  const { carruseles: carruselConfig, getCarruselVisible, getClaseTamanoCarrusel } = useCarrusel();
   
   // Estado para las promociones dinámicas
   const [carruseles, setCarruseles] = useState([])
@@ -125,16 +125,16 @@ const ContenidoPrincipal = () => {
     const totalImages = carrusel.imagenes.length
 
     return (
-      <div className="mb-0">
+      <div className="mb-8">
         <div className="relative">
           <div className="overflow-hidden rounded-xl">
-            <div className="relative h-[200px] md:h-[500px] overflow-hidden">
+            <div className={`relative ${getClaseTamanoCarrusel()} w-full max-w-[855px] mx-auto overflow-hidden`}>
               {carrusel.imagenes.map((imagen, index) => (
                <img
                key={index}
                src={imagen}
                alt={`Promoción ${carrusel.institucion} ${index + 1}`}
-               className={`absolute inset-0 w-full h-full object-contain transition-transform duration-700 ease-in-out ${
+               className={`absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 ease-in-out ${
                  index === currentImage ? 'translate-x-0' : 
                  index < currentImage ? '-translate-x-full' : 'translate-x-full'
                }`}
@@ -226,11 +226,11 @@ const ContenidoPrincipal = () => {
   }
 
   return (
-    <section className="py-1 md:py-16 bg-white">
+    <section className="py-8 md:py-16 bg-white">
       <div className="max-w-[1090px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Sección de header */}
-        <div className="grid md:grid-cols-2 gap-4 md:gap-8 items-center mb-2 md:mb-0">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-8 items-center mb-8 md:mb-12">
           <div className="flex justify-start">
             <img 
               src="/images/culturaaaaaaaaaalaccesssssslogo-04.png" 

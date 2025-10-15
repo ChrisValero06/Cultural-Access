@@ -8,7 +8,7 @@ const RadioButton = ({ id, name, value, checked, onChange, label, disabled, requ
     <input type="radio" id={id} name={name} value={value} checked={checked} onChange={onChange}
       className="w-4 h-4 text-orange-500 border-orange-400 bg-transparent focus:ring-orange-600 focus:ring-2"
       disabled={disabled} required={required} />
-    <label htmlFor={id} className="text-gray-800 text-sm text-white">{label}</label>
+    <label htmlFor={id} className="text-white text-sm">{label}</label>
   </div>
 )
 
@@ -232,24 +232,24 @@ const CulturalAccessForm = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label htmlFor="nombre" className="block text-base font-bold text-gray-800 mb-2 text-white">NOMBRE (S)*</label>
+                  <label htmlFor="nombre" className="block text-base font-bold text-gray-800 md:text-white mb-2">NOMBRE (S)*</label>
                   <TextInput id="nombre" name="nombre" autoComplete="given-name" value={formData.nombre}
                     onChange={(e) => handleInputChange("nombre", e.target.value)} placeholder="INGRESA TU NOMBRE" required disabled={isSubmitting} />
                 </div>
                 <div>
-                  <label htmlFor="apellidoPaterno" className="block text-base font-bold text-gray-800 mb-2 text-white">APELLIDO PATERNO*</label>
+                  <label htmlFor="apellidoPaterno" className="block text-base font-bold text-white mb-2">APELLIDO PATERNO*</label>
                   <TextInput id="apellidoPaterno" name="apellidoPaterno" autoComplete="family-name" value={formData.apellidoPaterno}
                     onChange={(e) => handleInputChange("apellidoPaterno", e.target.value)} placeholder="INGRESA TU APELLIDO PATERNO" required disabled={isSubmitting} />
                 </div>
                 <div>
-                  <label htmlFor="apellidoMaterno" className="block text-base font-bold text-gray-800 mb-2 text-white">APELLIDO MATERNO*</label>
+                  <label htmlFor="apellidoMaterno" className="block text-base font-bold text-white mb-2">APELLIDO MATERNO*</label>
                   <TextInput id="apellidoMaterno" name="apellidoMaterno" autoComplete="additional-name" value={formData.apellidoMaterno}
                     onChange={(e) => handleInputChange("apellidoMaterno", e.target.value)} placeholder="INGRESA TU APELLIDO MATERNO" required disabled={isSubmitting} />
                 </div>
               </div>
 
               <div>
-                <label className="block text-base font-bold text-gray-800 mb-2 text-white">GÉNERO*</label>
+                <label className="block text-base font-bold text-white mb-2">GÉNERO*</label>
                 <div className="space-y-2">
                   {[{ value: "FEMENINO", label: "Femenino" }, { value: "MASCULINO", label: "Masculino" }, { value: "OTRO", label: "Otro" }, { value: "PREFIERO-NO-DECIR", label: "Prefiero no decir" }].map((option) => (
                     <RadioButton key={option.value} id={option.value} name="genero" value={option.value}
@@ -260,25 +260,25 @@ const CulturalAccessForm = () => {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-base font-bold text-gray-800 mb-2 text-white">EMAIL*</label>
+                <label htmlFor="email" className="block text-base font-bold text-white mb-2">EMAIL*</label>
                 <TextInput id="email" name="email" type="email" autoComplete="email" value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)} placeholder="INGRESA TU EMAIL" required disabled={isSubmitting} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="calleNumero" className="block text-base font-bold text-gray-800 mb-2 text-white">CALLE Y NÚMERO*</label>
+                  <label htmlFor="calleNumero" className="block text-base font-bold text-white mb-2">CALLE Y NÚMERO*</label>
                   <TextInput id="calleNumero" name="calleNumero" autoComplete="street-address" value={formData.calleNumero}
                     onChange={(e) => handleInputChange("calleNumero", e.target.value)} placeholder="INGRESA CALLE Y NÚMERO" required disabled={isSubmitting} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="colonia" className="block text-base font-bold text-gray-800 mb-2 text-white">COLONIA*</label>
+                    <label htmlFor="colonia" className="block text-base font-bold text-white mb-2">COLONIA*</label>
                     <TextInput id="colonia" name="colonia" autoComplete="address-level2" value={formData.colonia}
                       onChange={(e) => handleInputChange("colonia", e.target.value)} placeholder="INGRESA TU COLONIA" required disabled={isSubmitting} />
                   </div>
                   <div>
-                    <label htmlFor="codigoPostal" className="block text-base font-bold text-gray-800 mb-2 text-white">CÓDIGO POSTAL*</label>
+                    <label htmlFor="codigoPostal" className="block text-base font-bold text-white mb-2">CÓDIGO POSTAL*</label>
                     <TextInput id="codigoPostal" name="codigoPostal" autoComplete="postal-code" value={formData.codigoPostal}
                       onChange={(e) => handleInputChange("codigoPostal", e.target.value)} placeholder="00000" maxLength="5" pattern="[0-9]{5}" required disabled={isSubmitting} />
                   </div>
@@ -287,29 +287,29 @@ const CulturalAccessForm = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="municipio" className="block text-base font-bold text-gray-800 mb-2 text-white">MUNICIPIO*</label>
+                  <label htmlFor="municipio" className="block text-base font-bold text-white mb-2">MUNICIPIO*</label>
                   <SelectInput id="municipio" name="municipio" autoComplete="address-level2" value={formData.municipio}
                     onChange={(e) => handleInputChange("municipio", e.target.value)} required disabled={isSubmitting}>
-                    <option value="" className="text-gray-800">SELECCIONA MUNICIPIO</option>
+                    <option value="" className="text-white">SELECCIONA MUNICIPIO</option>
                     {municipiosNuevoLeon.map((mun) => (
-                      <option key={mun.value} value={mun.value.toUpperCase()} className="text-gray-800">{mun.label}</option>
+                      <option key={mun.value} value={mun.value.toUpperCase()} className="text-white">{mun.label}</option>
                     ))}
                   </SelectInput>
                 </div>
                 <div>
-                  <label htmlFor="estado" className="block text-base font-bold text-gray-800 mb-2 text-white">ESTADO*</label>
+                  <label htmlFor="estado" className="block text-base font-bold text-white mb-2">ESTADO*</label>
                   <SelectInput id="estado" name="estado" autoComplete="address-level1" value={formData.estado}
                     onChange={(e) => handleInputChange("estado", e.target.value)} required disabled={isSubmitting}>
-                    <option value="" className="text-gray-800">SELECCIONA ESTADO</option>
+                    <option value="" className="text-white">SELECCIONA ESTADO</option>
                     {estadosMexico.map((estado) => (
-                      <option key={estado.value} value={estado.value.toUpperCase()} className="text-gray-800">{estado.label}</option>
+                      <option key={estado.value} value={estado.value.toUpperCase()} className="text-white">{estado.label}</option>
                     ))}
                   </SelectInput>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="telefono" className="block text-base font-bold text-gray-800 mb-2 text-white">TELÉFONO</label>
+                <label htmlFor="telefono" className="block text-base font-bold text-white mb-2">TELÉFONO*</label>
                 <TextInput id="telefono" name="telefono" type="tel" autoComplete="tel" value={formData.telefono}
                   onChange={(e) => {
                     let value = e.target.value.replace(/\D/g, '');
@@ -320,7 +320,7 @@ const CulturalAccessForm = () => {
               </div>
 
               <div>
-                <label className="block text-base font-bold text-gray-800 mb-2 text-white">EDAD*</label>
+                <label className="block text-base font-bold text-white mb-2">EDAD*</label>
                 <div className="space-y-2">
                   {["16-17", "18-29", "30-49", "50-59", "60+"].map((edad) => (
                     <RadioButton key={edad} id={edad} name="edad" value={edad} checked={formData.edad === edad}
@@ -330,34 +330,34 @@ const CulturalAccessForm = () => {
               </div>
 
               <div>
-                <label htmlFor="estudios" className="block text-base font-bold text-gray-800 mb-2 text-white">ESTUDIOS*</label>
+                <label htmlFor="estudios" className="block text-base font-bold text-white mb-2">ESTUDIOS*</label>
                 <SelectInput id="estudios" name="estudios" value={formData.estudios} onChange={(e) => handleInputChange("estudios", e.target.value)} disabled={isSubmitting}>
-                  <option value="" className="text-gray-800">ELIGE UNO</option>
-                  <option value="PRIMARIA" className="text-gray-800">Primaria</option>
-                  <option value="SECUNDARIA" className="text-gray-800">Secundaria</option>
-                  <option value="PREPARATORIA" className="text-gray-800">Preparatoria</option>
-                  <option value="LICENCIATURA" className="text-gray-800">Licenciatura</option>
-                  <option value="MAESTRIA" className="text-gray-800">Maestría</option>
-                  <option value="DOCTORADO" className="text-gray-800">Doctorado</option>
-                  <option value="SIN-ESTUDIOS" className="text-gray-800">N/A</option>
+                  <option value="" className="text-white">ELIGE UNO</option>
+                  <option value="PRIMARIA" className="text-white">Primaria</option>
+                  <option value="SECUNDARIA" className="text-white">Secundaria</option>
+                  <option value="PREPARATORIA" className="text-white">Preparatoria</option>
+                  <option value="LICENCIATURA" className="text-white">Licenciatura</option>
+                  <option value="MAESTRIA" className="text-white">Maestría</option>
+                  <option value="DOCTORADO" className="text-white">Doctorado</option>
+                  <option value="SIN-ESTUDIOS" className="text-white">N/A</option>
                 </SelectInput>
               </div>
               <div>
-                <label htmlFor="estadoCivil" className="block text-base font-bold text-gray-800 mb-2 text-white">ESTADO CIVIL*</label>
+                <label htmlFor="estadoCivil" className="block text-base font-bold text-white mb-2">ESTADO CIVIL*</label>
                 <SelectInput id="estadoCivil" name="estadoCivil" value={formData.estadoCivil} onChange={e => handleInputChange("estadoCivil", e.target.value)} disabled={isSubmitting}>
-                  <option value="" className="text-gray-800">SELECCIONA UNA OPCIÓN</option>
-                  <option value="SOLTERO" className="text-gray-800">Soltero (a)</option>
-                  <option value="CASADO" className="text-gray-800">Casado (a)</option>
-                  <option value="VIUDO" className="text-gray-800">Viudo (a)</option>
-                  <option value="DIVORCIADO" className="text-gray-800">Divorciado (a)</option>
-                  <option value="UNION_LIBRE" className="text-gray-800">Unión libre</option>
-                  <option value="SOCIEDAD_CONVIVENCIA" className="text-gray-800">Sociedad de convivencia</option>
-                  <option value="PREFIERO_NO_DECIR" className="text-gray-800">Prefiero no decir</option>
+                  <option value="" className="text-white">SELECCIONA UNA OPCIÓN</option>
+                  <option value="SOLTERO" className="text-white">Soltero (a)</option>
+                  <option value="CASADO" className="text-white">Casado (a)</option>
+                  <option value="VIUDO" className="text-white">Viudo (a)</option>
+                  <option value="DIVORCIADO" className="text-white">Divorciado (a)</option>
+                  <option value="UNION_LIBRE" className="text-white">Unión libre</option>
+                  <option value="SOCIEDAD_CONVIVENCIA" className="text-white">Sociedad de convivencia</option>
+                  <option value="PREFIERO_NO_DECIR" className="text-white">Prefiero no decir</option>
                 </SelectInput>
               </div>
 
               <div>
-                <label className="block text-base font-bold text-gray-800 mb-2 text-white">Selecciona una opción</label>
+                <label className="block text-base font-bold text-white mb-2">Selecciona una opción</label>
                 <div className="space-y-2">
                   <RadioButton id="curp-option" name="curpOption" value="curp" checked={curpOption === "curp"}
                     onChange={(e) => setCurpOption(e.target.value)} label="CURP" disabled={isSubmitting} />
@@ -367,7 +367,7 @@ const CulturalAccessForm = () => {
               </div>
               {curpOption === "curp" && (
                 <div className="opacity-0 animate-fade-in" style={{ animation: "fadeIn 0.3s ease-in-out forwards" }}>
-                  <label htmlFor="curp" className="block text-base font-bold text-gray-800 mb-2 text-white">INGRESA TU CURP</label>
+                  <label htmlFor="curp" className="block text-base font-bold text-white mb-2">INGRESA TU CURP</label>
                   <TextInput id="curp" name="curp" value={formData.curp} onChange={(e) => handleInputChange("curp", e.target.value.toUpperCase())}
                     placeholder="INGRESA TU CURP (18 CARACTERES)" maxLength={18} pattern="[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z][0-9]" disabled={isSubmitting} />
                   <p className="text-xs text-orange-100 mt-1">Formato: AAAA######HAAAAA##</p>
@@ -375,45 +375,45 @@ const CulturalAccessForm = () => {
               )}
 
               <div>
-                <label htmlFor="estadoNacimiento" className="block text-base font-bold text-gray-800 mb-2 text-white">ESTADO DE NACIMIENTO*</label>
+                <label htmlFor="estadoNacimiento" className="block text-base font-bold text-white mb-2">ESTADO DE NACIMIENTO*</label>
                 <SelectInput id="estadoNacimiento" name="estadoNacimiento" value={formData.estadoNacimiento}
                   onChange={(e) => handleInputChange("estadoNacimiento", e.target.value)} required disabled={isSubmitting}>
-                  <option value="" className="text-gray-800">SELECCIONA ESTADO</option>
+                  <option value="" className="text-white">SELECCIONA ESTADO</option>
                   {estadosMexico.map((estado) => (
-                    <option key={estado.value} value={estado.value.toUpperCase()} className="text-gray-800">{estado.label}</option>
+                    <option key={estado.value} value={estado.value.toUpperCase()} className="text-white">{estado.label}</option>
                   ))}
                 </SelectInput>
               </div>
 
               <div>
-                <label className="block text-base font-bold text-gray-800 mb-2 text-white">FECHA DE NACIMIENTO*</label>
+                <label className="block text-base font-bold text-white mb-2">FECHA DE NACIMIENTO*</label>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label htmlFor="dia" className="block text-sm text-gray-600 mb-1 text-white">Día</label>
+                    <label htmlFor="dia" className="block text-sm text-white mb-1">Día</label>
                     <TextInput id="dia" name="dia" type="number" autoComplete="bday-day" min="1" max="31" value={formData.diaNacimiento}
                       onChange={(e) => handleInputChange("diaNacimiento", e.target.value)} placeholder="DD" required disabled={isSubmitting} />
                   </div>
                   <div>
-                    <label htmlFor="mes" className="block text-sm text-gray-600 mb-1 text-white">Mes</label>
+                    <label htmlFor="mes" className="block text-sm text-white mb-1">Mes</label>
                     <SelectInput id="mes" name="mes" autoComplete="bday-month" value={formData.mesNacimiento}
                       onChange={(e) => handleInputChange("mesNacimiento", e.target.value)} required disabled={isSubmitting}>
-                      <option value="" className="text-gray-800">MES</option>
-                      <option value="01" className="text-gray-800">Enero</option>
-                      <option value="02" className="text-gray-800">Febrero</option>
-                      <option value="03" className="text-gray-800">Marzo</option>
-                      <option value="04" className="text-gray-800">Abril</option>
-                      <option value="05" className="text-gray-800">Mayo</option>
-                      <option value="06" className="text-gray-800">Junio</option>
-                      <option value="07" className="text-gray-800">Julio</option>
-                      <option value="08" className="text-gray-800">Agosto</option>
-                      <option value="09" className="text-gray-800">Septiembre</option>
-                      <option value="10" className="text-gray-800">Octubre</option>
-                      <option value="11" className="text-gray-800">Noviembre</option>
-                      <option value="12" className="text-gray-800">Diciembre</option>
+                      <option value="" className="text-white">MES</option>
+                      <option value="01" className="text-white">Enero</option>
+                      <option value="02" className="text-white">Febrero</option>
+                      <option value="03" className="text-white">Marzo</option>
+                      <option value="04" className="text-white">Abril</option>
+                      <option value="05" className="text-white">Mayo</option>
+                      <option value="06" className="text-white">Junio</option>
+                      <option value="07" className="text-white">Julio</option>
+                      <option value="08" className="text-white">Agosto</option>
+                      <option value="09" className="text-white">Septiembre</option>
+                      <option value="10" className="text-white">Octubre</option>
+                      <option value="11" className="text-white">Noviembre</option>
+                      <option value="12" className="text-white">Diciembre</option>
                     </SelectInput>
                   </div>
                   <div>
-                    <label htmlFor="ano" className="block text-sm text-gray-600 mb-1 text-white">Año</label>
+                    <label htmlFor="ano" className="block text-sm text-white mb-1">Año</label>
                     <TextInput id="ano" name="ano" type="number" autoComplete="bday-year" min="1900" max="2024" value={formData.anoNacimiento}
                       onChange={(e) => { const value = e.target.value.slice(0, 4); handleInputChange("anoNacimiento", value); }}
                       placeholder="AAAA" required disabled={isSubmitting} />
@@ -422,7 +422,7 @@ const CulturalAccessForm = () => {
               </div>
 
               <div>
-                <label htmlFor="numeroTarjeta" className="block text-base font-bold text-gray-800 mb-2 text-white">NÚMERO DE TARJETA EN 5 DÍGITOS*</label>
+                <label htmlFor="numeroTarjeta" className="block text-base font-bold text-white mb-2">NÚMERO DE TARJETA EN 5 DÍGITOS*</label>
                 <div className="relative">
                   <TextInput id="numeroTarjeta" name="numeroTarjeta" value={formData.numeroTarjeta}
                     onChange={(e) => handleInputChange("numeroTarjeta", e.target.value)} onBlur={(e) => handleBlur("numeroTarjeta", e.target.value)}
@@ -455,7 +455,7 @@ const CulturalAccessForm = () => {
               </div>
 
               <div>
-                <label className="block text-base font-bold text-gray-800 mb-2 text-white">¿Aceptas recibir información por correo electrónico?*</label>
+                <label className="block text-base font-bold text-white mb-2">¿Aceptas recibir información por correo electrónico?*</label>
                 <div className="space-y-2">
                   <RadioButton id="aceptaInfo-si" name="aceptaInfo" value="SI" checked={formData.aceptaInfo === "SI"}
                     onChange={() => handleInputChange("aceptaInfo", "SI")} label="Sí acepto" disabled={isSubmitting} required />
