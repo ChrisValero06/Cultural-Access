@@ -125,10 +125,10 @@ const ContenidoPrincipal = () => {
     const totalImages = carrusel.imagenes.length
 
     return (
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8 md:mb-10">
         <div className="relative">
           <div className="overflow-hidden rounded-xl">
-            <div className={`relative ${getClaseTamanoCarrusel()} w-full max-w-[855px] mx-auto overflow-hidden`}>
+            <div className={`relative ${getClaseTamanoCarrusel()} w-full max-w-[100%] sm:max-w-[90%] md:max-w-[85%] lg:max-w-[80%] xl:max-w-[855px] mx-auto overflow-hidden`}>
               {carrusel.imagenes.map((imagen, index) => (
                <img
                key={index}
@@ -140,31 +140,31 @@ const ContenidoPrincipal = () => {
                }`}
                />
               ))}
+              
+              {/* Navegación - Botones responsivos sobre las imágenes */}
+              {totalImages > 1 && currentImage > 0 && (
+                <button
+                  onClick={() => prevImage(carrusel.id)}
+                  className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-orange-500 rounded-full p-2 sm:p-3 transition-all duration-200 shadow-lg hover:shadow-xl z-20"
+                >
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )}
+              
+              {totalImages > 1 && currentImage < totalImages - 1 && (
+                <button
+                  onClick={() => nextImage(carrusel.id)}
+                  className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-orange-500 rounded-full p-2 sm:p-3 transition-all duration-200 shadow-lg hover:shadow-xl z-20"
+                >
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
-          
-          {/* Navegación */}
-          {totalImages > 1 && currentImage > 0 && (
-            <button
-              onClick={() => prevImage(carrusel.id)}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-orange-500 rounded-full p-3 transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              <svg className="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-          )}
-          
-          {totalImages > 1 && currentImage < totalImages - 1 && (
-            <button
-              onClick={() => nextImage(carrusel.id)}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-orange-500 rounded-full p-3 transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              <svg className="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          )}
         </div>
         
         {/* Información de la institución - REMOVIDO */}
@@ -226,25 +226,25 @@ const ContenidoPrincipal = () => {
   }
 
   return (
-    <section className="py-8 md:py-16 bg-white">
-      <div className="max-w-[1090px] mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-4 sm:py-8 md:py-12 lg:py-16 bg-white">
+      <div className="max-w-[100%] sm:max-w-[95%] md:max-w-[90%] lg:max-w-[85%] xl:max-w-[1090px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         
         {/* Sección de header */}
-        <div className="grid md:grid-cols-2 gap-4 md:gap-8 items-center mb-8 md:mb-12">
-          <div className="flex justify-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8 items-center mb-6 sm:mb-8 md:mb-10 lg:mb-12">
+          <div className="flex justify-center sm:justify-start">
             <img 
               src="/images/culturaaaaaaaaaalaccesssssslogo-04.png" 
               alt="Logo CULTURALL ACCESS - Nuevo León"
-              className="rounded-lg max-w-xs h-auto"
+              className="rounded-lg max-w-[200px] sm:max-w-[250px] md:max-w-xs h-auto"
             />
           </div>
-          <div className="space-y-1 ml-0 md:ml-20">
-            <div className="flex items-center justify-between">
+          <div className="space-y-2 sm:space-y-1 text-center sm:text-left">
+            <div className="flex items-center justify-center sm:justify-start">
               <div>
-                <h1 className="text-xl font-semibold text-gray-800 text-center">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800">
                   PROMOCIONES VIGENTES-SEPTIEMBRE
                 </h1>
-                <p className="text-gray-600 leading-relaxed text-lg font-medium text-center">
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-base md:text-lg font-medium">
                   Presentando tarjeta y hasta agotar disponibilidad
                 </p>
                 

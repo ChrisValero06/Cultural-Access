@@ -34,8 +34,8 @@ export const CarruselProvider = ({ children }) => {
 
   // Estado para el tamaño uniforme de todos los carruseles
   const [tamanoCarrusel, setTamanoCarrusel] = useState({
-    movil: 'h-[334px]',      // Tamaño para móviles (855x334)
-    desktop: 'md:h-[334px]'  // Tamaño para desktop (855x334)
+    movil: 'h-[200px] sm:h-[250px]',      // Tamaño para móviles (responsivo)
+    desktop: 'md:h-[300px] lg:h-[350px] xl:h-[400px]'  // Tamaño para desktop (responsivo)
   });
 
   // Cargar estado desde localStorage al inicializar
