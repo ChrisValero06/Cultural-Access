@@ -16,19 +16,18 @@ export const authService = {
       });
 
       if (!response.ok) {
-        // Si el endpoint no existe (404) o similar, permitir fallback de frontend
-        if (response.status === 404) {
-          return { token: 'frontend-only-token', user: { email: emailOrUsuario, usuario: emailOrUsuario } };
-        }
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Error de autenticación: ${response.status}`);
       }
 
       const data = await response.json();
+      if (!data?.token) {
+        throw new Error('Credenciales inválidas');
+      }
       return data;
     } catch (error) {
-      // Fallback por error de red u otros problemas (sin bloquear el acceso)
-      return { token: 'frontend-only-token', user: { email: emailOrUsuario, usuario: emailOrUsuario } };
+      // Propagar errores para que el UI decida
+      throw error;
     }
   },
 

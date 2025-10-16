@@ -11,6 +11,12 @@ const Login = () => {
   
   const navigate = useNavigate();
 
+  // Credenciales fijas (puedes editar estas)
+  const FIXED_CREDENTIALS = [
+    { usuario: 'Pepe', password: 'CNL2025*.' },
+    // { usuario: 'admin', password: '123456' },
+  ];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -23,27 +29,17 @@ const Login = () => {
         return;
       }
 
-      // Credenciales fijas para desarrollo
-      if (usuario === 'Pepe' && password === 'Grecia2004') {
-        localStorage.setItem('authToken', 'Pepe-token');
-        localStorage.setItem('userUsuario', 'Pepe');
-        navigate('/AdminDashboard');
-        return;
+      // Validar contra credenciales fijas
+      const match = FIXED_CREDENTIALS.find(c => c.usuario === usuario && c.password === password);
+      if (!match) {
+        throw new Error('Credenciales inválidas');
       }
 
-      const response = await apiService.login(usuario, password);
-      const token = response?.token || 'frontend-only-token';
-      const usuarioToStore = response?.user?.usuario || response?.usuario || usuario;
-      const emailToStore = response?.user?.email || response?.email || '';
-
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('userUsuario', usuarioToStore);
-      if (emailToStore) {
-        localStorage.setItem('userEmail', emailToStore);
-      }
+      localStorage.setItem('authToken', `${usuario}-token`);
+      localStorage.setItem('userUsuario', usuario);
       navigate('/AdminDashboard');
     } catch (err) {
-      setError(err.message || 'Error de autenticación');
+      setError(err.message === 'Failed to fetch' ? 'No se pudo contactar el servidor' : (err.message || 'Error de autenticación'));
     } finally {
       setLoading(false);
     }

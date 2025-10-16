@@ -17,13 +17,15 @@ import AvisoPrivacidad from './components/AvisoPrivacidad'
 import PreguntasFrecuentes from './components/PreguntasFrecuentes'
 
 function App() {
+  const ProtectedRoute = ({ children }) => {
+    const isAuthed = apiService.isAuthenticated()
+    return isAuthed ? children : <Navigate to="/login" replace />
+  }
   return (
     <InstitucionesProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/AdminDashboard" element={
-          apiService.isAuthenticated() ? <AdminDashboard /> : <Navigate to="/login" replace />
-        } />
+        <Route path="/AdminDashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/*" element={
           <>
             <Header />
