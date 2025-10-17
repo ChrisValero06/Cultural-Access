@@ -305,7 +305,7 @@ export const promocionesService = {
     }
   },
 
-  // Actualizar promoción
+  // Actualizar promoción (versión simple sin archivos)
   async actualizarPromocion(id, promocionData) {
     try {
       const response = await fetch(`${API_BASE_URL}/promociones/${id}`, {
@@ -324,6 +324,60 @@ export const promocionesService = {
       const data = await response.json();
       return data;
     } catch (error) {
+      throw error;
+    }
+  },
+
+  // Actualizar promoción con archivos (usando FormData)
+  async actualizarPromocionConArchivos(id, promocionData, imagenPrincipalFile = null, imagenSecundariaFile = null) {
+    try {
+      console.log('🚀 Iniciando actualización con archivos:', {
+        id,
+        promocionData,
+        imagenPrincipal: imagenPrincipalFile?.name,
+        imagenSecundaria: imagenSecundariaFile?.name
+      });
+
+      const formData = new FormData();
+      
+      // Agregar datos de la promoción
+      Object.keys(promocionData).forEach(key => {
+        if (promocionData[key] !== null && promocionData[key] !== undefined) {
+          formData.append(key, promocionData[key]);
+        }
+      });
+
+      // Agregar archivos si existen
+      if (imagenPrincipalFile) {
+        formData.append('imagen_principal', imagenPrincipalFile);
+        console.log('📎 Agregada imagen principal:', imagenPrincipalFile.name);
+      }
+      if (imagenSecundariaFile) {
+        formData.append('imagen_secundaria', imagenSecundariaFile);
+        console.log('📎 Agregada imagen secundaria:', imagenSecundariaFile.name);
+      }
+
+      const url = `${API_BASE_URL}/promociones/${id}`;
+      console.log('🌐 Enviando PUT a:', url);
+
+      const response = await fetch(url, {
+        method: 'PUT',
+        body: formData,
+      });
+
+      console.log('📡 Respuesta HTTP:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Error del servidor:', errorData);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Datos recibidos:', data);
+      return data;
+    } catch (error) {
+      console.error('💥 Error en actualizarPromocionConArchivos:', error);
       throw error;
     }
   }

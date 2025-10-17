@@ -17,9 +17,9 @@ function normalizeImageUrl(url) {
 
 const PromocionesTable = ({ 
   promocionesFiltradas, 
-  onEditar, 
   onCambiarEstado, 
   onEliminar, 
+  onEditar,
   getStatusBadge 
 }) => {
   return (
@@ -105,9 +105,10 @@ const PromocionesTable = ({
                     <div className="flex space-x-2">
                       <button 
                         onClick={() => onEditar(promocion)}
-                        className="bg-orange-500 text-white px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors"
+                        className="bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center space-x-2"
                       >
-                        Editar
+                        <span>✏️</span>
+                        <span>Editar</span>
                       </button>
                       <button 
                         onClick={() => onCambiarEstado(promocion)}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../../../../apis';
 
-const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, setEditandoForm, onGuardarCambios }) => {
+const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, setEditandoForm, onGuardarCambios, onPromocionActualizada }) => {
   const [guardando, setGuardando] = useState(false);
   const [imagenPrincipalFile, setImagenPrincipalFile] = useState(null);
   const [imagenSecundariaFile, setImagenSecundariaFile] = useState(null);
@@ -85,40 +85,112 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
     if (!editandoForm.disciplina.trim()) { alert('La disciplina es requerida'); return; }
     if (!editandoForm.fecha_inicio) { alert('La fecha de inicio es requerida'); return; }
     if (!editandoForm.fecha_fin) { alert('La fecha de fin es requerida'); return; }
-    if (new Date(editandoForm.fecha_inicio) >= new Date(editandoForm.fecha_fin)) {
+    
+    // Validar que las fechas sean válidas
+    const fechaInicio = new Date(editandoForm.fecha_inicio);
+    const fechaFin = new Date(editandoForm.fecha_fin);
+    
+    if (isNaN(fechaInicio.getTime())) {
+      alert('La fecha de inicio no es válida'); return;
+    }
+    if (isNaN(fechaFin.getTime())) {
+      alert('La fecha de fin no es válida'); return;
+    }
+    
+    if (fechaInicio >= fechaFin) {
       alert('La fecha de fin debe ser posterior a la fecha de inicio'); return;
+    }
+    
+    // Validar que la fecha de inicio no sea muy antigua (opcional)
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const diasDiferencia = Math.ceil((hoy - fechaInicio) / (1000 * 60 * 60 * 24));
+    
+    if (diasDiferencia > 365) {
+      if (!confirm('La fecha de inicio es muy antigua (más de 1 año). ¿Estás seguro de continuar?')) {
+        return;
+      }
     }
 
     setGuardando(true);
     try {
-      const formData = { ...editandoForm };
+      // Preparar datos para envío
+      const datosPromocion = { ...editandoForm };
       
-      if (imagenPrincipalFile) {
-        try {
-          const nombreArchivo = `principal_${Date.now()}_${imagenPrincipalFile.name}`;
-          const responseImagen = await apiService.subirImagen(imagenPrincipalFile, nombreArchivo);
-          if (responseImagen.estado === 'exito' || responseImagen.success) {
-            formData.imagen_principal = responseImagen.ruta || responseImagen.url;
+      // Si hay archivos nuevos, subir las imágenes primero
+      if (imagenPrincipalFile || imagenSecundariaFile) {
+        console.log('🔄 Actualizando promoción con archivos:', {
+          id: editandoForm.id,
+          imagenPrincipal: imagenPrincipalFile?.name,
+          imagenSecundaria: imagenSecundariaFile?.name
+        });
+        
+        // Subir imágenes por separado
+        let nuevaImagenPrincipal = datosPromocion.imagen_principal;
+        let nuevaImagenSecundaria = datosPromocion.imagen_secundaria;
+        
+        if (imagenPrincipalFile) {
+          try {
+            const nombreArchivo = `principal_${Date.now()}_${imagenPrincipalFile.name}`;
+            const responseImagen = await apiService.subirImagen(imagenPrincipalFile, nombreArchivo);
+            if (responseImagen.estado === 'exito' || responseImagen.success) {
+              nuevaImagenPrincipal = responseImagen.ruta || responseImagen.url;
+              console.log('✅ Imagen principal subida:', nuevaImagenPrincipal);
+            }
+          } catch (error) {
+            console.error('❌ Error subiendo imagen principal:', error);
+            alert('Error al subir la imagen principal. Se guardará sin cambios en la imagen.');
           }
-        } catch (error) {
-          alert('Error al subir la imagen principal. Se guardará sin cambios en la imagen.');
         }
-      }
-      
-      if (imagenSecundariaFile) {
-        try {
-          const nombreArchivo = `secundaria_${Date.now()}_${imagenSecundariaFile.name}`;
-          const responseImagen = await apiService.subirImagen(imagenSecundariaFile, nombreArchivo);
-          if (responseImagen.estado === 'exito' || responseImagen.success) {
-            formData.imagen_secundaria = responseImagen.ruta || responseImagen.url;
+        
+        if (imagenSecundariaFile) {
+          try {
+            const nombreArchivo = `secundaria_${Date.now()}_${imagenSecundariaFile.name}`;
+            const responseImagen = await apiService.subirImagen(imagenSecundariaFile, nombreArchivo);
+            if (responseImagen.estado === 'exito' || responseImagen.success) {
+              nuevaImagenSecundaria = responseImagen.ruta || responseImagen.url;
+              console.log('✅ Imagen secundaria subida:', nuevaImagenSecundaria);
+            }
+          } catch (error) {
+            console.error('❌ Error subiendo imagen secundaria:', error);
+            alert('Error al subir la imagen secundaria. Se guardará sin cambios en la imagen.');
           }
-        } catch (error) {
-          alert('Error al subir la imagen secundaria. Se guardará sin cambios en la imagen.');
         }
+        
+        // Actualizar los datos con las nuevas rutas de imagen
+        const promocionActualizada = {
+          ...datosPromocion,
+          imagen_principal: nuevaImagenPrincipal,
+          imagen_secundaria: nuevaImagenSecundaria
+        };
+        
+        // Actualizar la promoción con los datos actualizados
+        const response = await apiService.actualizarPromocion(editandoForm.id, promocionActualizada);
+        
+        console.log('📡 Respuesta del servidor:', response);
+        
+        if (response.estado === 'exito' || response.success === true) {
+          // Cerrar el modal
+          setModalAbierto(false);
+          setEditandoForm(null);
+          
+          // Notificar al dashboard que la promoción fue actualizada
+          if (onPromocionActualizada) {
+            onPromocionActualizada(promocionActualizada);
+          }
+          
+          alert('✅ Promoción actualizada correctamente con nuevas imágenes');
+        } else {
+          alert('❌ No se pudo actualizar la promoción: ' + (response.message || 'Error desconocido'));
+        }
+      } else {
+        // Si no hay archivos nuevos, usar la función simple
+        console.log('🔄 Actualizando promoción sin archivos');
+        await onGuardarCambios();
       }
-      
-      setEditandoForm(formData);
-      await onGuardarCambios();
+    } catch (error) {
+      console.error('💥 Error en handleGuardar:', error);
+      alert('❌ Error al actualizar la promoción: ' + error.message);
     } finally {
       setGuardando(false);
     }
@@ -152,19 +224,70 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-black" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
-            <input type="date" value={editandoForm.fecha_inicio}
+            <label className="block text-sm font-medium text-gray-700 mb-2">📅 Fecha Inicio</label>
+            <input 
+              type="date" 
+              value={editandoForm.fecha_inicio || ''}
               onChange={(e) => setEditandoForm({...editandoForm, fecha_inicio: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-black" />
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-black" 
+              required
+            />
+            {editandoForm.fecha_inicio && (
+              <p className="text-xs text-gray-500 mt-1">
+                Fecha actual: {new Date(editandoForm.fecha_inicio).toLocaleDateString('es-ES')}
+              </p>
+            )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Fecha Fin</label>
-            <input type="date" value={editandoForm.fecha_fin}
+            <label className="block text-sm font-medium text-gray-700 mb-2">📅 Fecha Fin</label>
+            <input 
+              type="date" 
+              value={editandoForm.fecha_fin || ''}
               onChange={(e) => setEditandoForm({...editandoForm, fecha_fin: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-black" />
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-black" 
+              required
+            />
+            {editandoForm.fecha_fin && (
+              <p className="text-xs text-gray-500 mt-1">
+                Fecha actual: {new Date(editandoForm.fecha_fin).toLocaleDateString('es-ES')}
+              </p>
+            )}
           </div>
         </div>
         
+        {/* Indicador de estado de la promoción */}
+        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">📊 Estado de la Promoción</h4>
+          <div className="flex items-center space-x-4">
+            {editandoForm.fecha_inicio && editandoForm.fecha_fin && (
+              <>
+                <div className="text-sm">
+                  <span className="font-medium">Inicio:</span> {new Date(editandoForm.fecha_inicio).toLocaleDateString('es-ES')}
+                </div>
+                <div className="text-sm">
+                  <span className="font-medium">Fin:</span> {new Date(editandoForm.fecha_fin).toLocaleDateString('es-ES')}
+                </div>
+                <div className="text-sm">
+                  <span className="font-medium">Estado:</span> 
+                  <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
+                    new Date() > new Date(editandoForm.fecha_fin) 
+                      ? 'bg-red-100 text-red-800' 
+                      : new Date() >= new Date(editandoForm.fecha_inicio) 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    {new Date() > new Date(editandoForm.fecha_fin) 
+                      ? 'Expirada' 
+                      : new Date() >= new Date(editandoForm.fecha_inicio) 
+                        ? 'Activa' 
+                        : 'Próximamente'}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">Beneficios</label>
           <textarea value={editandoForm.beneficios} onChange={(e) => setEditandoForm({...editandoForm, beneficios: e.target.value})}
@@ -185,8 +308,16 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
               <div className="space-y-3">
                 {(previewPrincipal || editandoForm.imagen_principal) && (
                   <div className="relative">
-                    <img src={previewPrincipal || editandoForm.imagen_principal} alt="Preview imagen principal"
-                      className="w-full h-32 object-cover rounded-lg border-2 border-gray-200" />
+                    <img 
+                      src={previewPrincipal || editandoForm.imagen_principal} 
+                      alt="Preview imagen principal"
+                      className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                      onError={(e) => {
+                        if (e.currentTarget.dataset.fallback) return;
+                        e.currentTarget.dataset.fallback = '1';
+                        e.currentTarget.src = '/images/LogoDerecho.png';
+                      }}
+                    />
                     <button type="button" onClick={removeImagenPrincipal}
                       className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600">
                       ×
@@ -209,8 +340,16 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
               <div className="space-y-3">
                 {(previewSecundaria || editandoForm.imagen_secundaria) && (
                   <div className="relative">
-                    <img src={previewSecundaria || editandoForm.imagen_secundaria} alt="Preview imagen secundaria"
-                      className="w-full h-32 object-cover rounded-lg border-2 border-gray-200" />
+                    <img 
+                      src={previewSecundaria || editandoForm.imagen_secundaria} 
+                      alt="Preview imagen secundaria"
+                      className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                      onError={(e) => {
+                        if (e.currentTarget.dataset.fallback) return;
+                        e.currentTarget.dataset.fallback = '1';
+                        e.currentTarget.src = '/images/LogoDerecho.png';
+                      }}
+                    />
                     <button type="button" onClick={removeImagenSecundaria}
                       className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600">
                       ×

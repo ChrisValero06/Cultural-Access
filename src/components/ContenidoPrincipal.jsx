@@ -24,9 +24,10 @@ const ContenidoPrincipal = () => {
       setError(null) // Limpiar errores previos
       
       // Verificar conectividad con el backend
-      const response = await apiService.obtenerPromocionesCarrusel()
+      // Usar el endpoint completo que incluye fechas
+      const response = await apiService.obtenerPromocionesAdmin()
       
-      if (response.estado === 'exito') {
+      if (response.estado === 'exito' || response.success === true) {
         // Normalizar URLs de imágenes (cuando vienen relativas del backend)
         const BASE_HOST = 'https://culturallaccess.residente.mx';
         const normalizeUrl = (url) => {
@@ -34,13 +35,50 @@ const ContenidoPrincipal = () => {
           return url.startsWith('http') ? url : `${BASE_HOST}${url}`;
         };
 
-        // Mapear y filtrar solo promociones con imágenes válidas
-        const promocionesActivas = (response.carruseles || [])
-          .map(carrusel => ({
-            ...carrusel,
-            imagenes: (carrusel.imagenes || []).map(normalizeUrl)
+        // Obtener promociones del endpoint completo
+        const promociones = response.promociones || response.data || [];
+        
+        // Mapear y filtrar solo promociones con imágenes válidas y no expiradas
+        const promocionesActivas = promociones
+          .map(promocion => ({
+            ...promocion,
+            imagenes: [promocion.imagen_principal, promocion.imagen_secundaria]
+              .filter(Boolean)
+              .map(normalizeUrl)
           }))
-          .filter(carrusel => carrusel.imagenes && carrusel.imagenes.length > 0);
+          .filter(carrusel => {
+            // Verificar que tenga imágenes
+            if (!carrusel.imagenes || carrusel.imagenes.length === 0) {
+              return false;
+            }
+            
+            // Verificar estado
+            if (carrusel.estado === 'inactiva' || carrusel.estado === 'expirada') {
+              return false;
+            }
+            
+            // Verificar que no esté expirada por fecha
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            
+            // Buscar fecha de fin en diferentes campos posibles
+            const fechaFinStr = carrusel.fecha_fin || carrusel.fechaFin || carrusel.fecha_final;
+            
+            if (!fechaFinStr) {
+              return true; // Sin fecha de fin, mostrar siempre
+            }
+            
+            const fechaFin = new Date(fechaFinStr);
+            fechaFin.setHours(23, 59, 59, 999);
+            
+            // Si está expirada, no mostrar
+            if (hoy > fechaFin) {
+              console.log(`🚫 Promoción expirada oculta automáticamente: ${carrusel.institucion} (expiró: ${fechaFinStr})`);
+              return false;
+            }
+            
+            return true;
+          });
         
         setCarruseles(promocionesActivas)
         setUltimaActualizacion(Date.now())

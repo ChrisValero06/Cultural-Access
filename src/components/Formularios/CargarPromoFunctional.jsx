@@ -48,22 +48,11 @@ const LargeTextInput = ({ id, name, label, placeholder, value, onChange, onBlur,
 const CargarPromoFunctional = () => {
   const [formData, setFormData] = useState({
     institucion: '', tipoPromocion: '', disciplina: '', beneficios: '',
-    comentariosRestricciones: '', fechaInicio: '', fechaFin: '',
-    imagenPrincipal: null, imagenSecundaria: null, logo: null
+    comentariosRestricciones: '', fechaInicio: '', fechaFin: ''
   })
-  const [currentImage, setCurrentImage] = useState(0)
-  const [carruselEjemplo, setCarruselEjemplo] = useState({ imagenes: [] })
-  const [logoPreview, setLogoPreview] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const LIMITS = { beneficios: 100, comentarios: 100 }
-
-  const nextImage = () => setCurrentImage(prev => (prev + 1) % carruselEjemplo.imagenes.length)
-  const prevImage = () => setCurrentImage(prev => (prev - 1 + carruselEjemplo.imagenes.length) % carruselEjemplo.imagenes.length)
-
-  useEffect(() => {
-    return () => carruselEjemplo.imagenes.forEach(url => url?.startsWith?.('blob:') && URL.revokeObjectURL(url))
-  }, [])
 
   const normalizeSpanishText = (rawText, ensureFinalPunctuation = false) => {
     let text = (rawText || '').replace(/\r\n?/g, '\n').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n')
@@ -75,23 +64,9 @@ const CargarPromoFunctional = () => {
   }
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target
-    if (files) {
-      setFormData(prev => ({ ...prev, [name]: files[0] }))
-      if (name === 'imagenPrincipal' && files[0]) {
-        const imageUrl = URL.createObjectURL(files[0])
-        setCarruselEjemplo(prev => ({ imagenes: [imageUrl, ...prev.imagenes.slice(1)] }))
-        setCurrentImage(0)
-      } else if (name === 'imagenSecundaria' && files[0]) {
-        const imageUrl = URL.createObjectURL(files[0])
-        setCarruselEjemplo(prev => ({ imagenes: [...prev.imagenes.slice(0, 1), imageUrl, ...prev.imagenes.slice(2)] }))
-      } else if (name === 'logo' && files[0]) {
-        setLogoPreview(URL.createObjectURL(files[0]))
-      }
-    } else {
-      const nextValue = ['beneficios', 'comentariosRestricciones'].includes(name) ? normalizeSpanishText(value, false) : value
-      setFormData(prev => ({ ...prev, [name]: nextValue }))
-    }
+    const { name, value } = e.target
+    const nextValue = ['beneficios', 'comentariosRestricciones'].includes(name) ? normalizeSpanishText(value, false) : value
+    setFormData(prev => ({ ...prev, [name]: nextValue }))
   }
 
   const handleBlurNormalize = (e) => {
@@ -113,31 +88,22 @@ const CargarPromoFunctional = () => {
         setMessage(`El campo "Comentarios o Restricciones" excede el límite de ${LIMITS.comentarios} caracteres`)
         return
       }
-      if (!formData.imagenPrincipal) {
-        setMessage('Por favor selecciona una imagen principal para la promoción')
-        return
-      }
-
-      const imagenPrincipalResult = await apiService.subirImagen(formData.imagenPrincipal, `principal_${Date.now()}`)
-      let imagenSecundariaUrl = null
-      if (formData.imagenSecundaria) {
-        const imagenSecundariaResult = await apiService.subirImagen(formData.imagenSecundaria, `secundaria_${Date.now()}`)
-        imagenSecundariaUrl = imagenSecundariaResult.url
-      }
 
       const promocionData = {
-        institucion: formData.institucion, tipo_promocion: formData.tipoPromocion, disciplina: formData.disciplina,
-        beneficios: formData.beneficios, comentarios_restricciones: formData.comentariosRestricciones,
-        fecha_inicio: formData.fechaInicio, fecha_fin: formData.fechaFin,
-        imagen_principal: imagenPrincipalResult.url, imagen_secundaria: imagenSecundariaUrl
+        institucion: formData.institucion, 
+        tipo_promocion: formData.tipoPromocion, 
+        disciplina: formData.disciplina,
+        beneficios: formData.beneficios, 
+        comentarios_restricciones: formData.comentariosRestricciones,
+        fecha_inicio: formData.fechaInicio, 
+        fecha_fin: formData.fechaFin
       }
 
       const result = await apiService.crearPromocion(promocionData)
 
       if (result?.success || result?.estado === 'exito') {
-        setMessage('¡Promoción cargada exitosamente! Será mostrada en el carrusel principal.')
-        setFormData({ institucion: '', tipoPromocion: '', disciplina: '', beneficios: '', comentariosRestricciones: '', fechaInicio: '', fechaFin: '', imagenPrincipal: null, imagenSecundaria: null, logo: null })
-        setLogoPreview(null)
+        setMessage('¡Promoción cargada exitosamente!')
+        setFormData({ institucion: '', tipoPromocion: '', disciplina: '', beneficios: '', comentariosRestricciones: '', fechaInicio: '', fechaFin: '' })
       } else {
         setMessage('Error al crear la promoción: ' + (result?.message || result?.error || ''))
       }
@@ -191,21 +157,6 @@ const CargarPromoFunctional = () => {
     </div>
   )
 
-  const FileField = ({ name, label, value, onChange, accept, required = false, description }) => (
-    <div>
-      <label htmlFor={name} className="block text-base font-bold text-white mb-2">{label}{required ? '*' : ''}</label>
-      <div className="relative">
-        <input type="file" id={name} name={name} onChange={onChange} accept={accept} required={required}
-          className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600" />
-        <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        </div>
-      </div>
-      {description && <p className="text-xs text-orange-100 mt-1">{description}</p>}
-    </div>
-  )
 
   return (
     <div className="relative overflow-hidden h-full">
@@ -228,7 +179,7 @@ const CargarPromoFunctional = () => {
         </div>
 
         <div className="flex-1 flex items-center justify-center px-6 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-[1400px] max-h-full">
+          <div className="w-full max-w-[800px] max-h-full">
             <div className="bg-orange-500 rounded-2xl p-6 shadow-2xl overflow-y-auto">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="text-center mb-4">
@@ -275,12 +226,6 @@ const CargarPromoFunctional = () => {
                   <DateField name="fechaFin" label="FIN DE LA PROMOCIÓN" value={formData.fechaFin} onChange={handleChange} />
                 </div>
 
-                {/*FileField name="logo" label="LOGO DE LA INSTITUCIÓN" value={formData.logo} onChange={handleChange} accept="image/*" description="Logo pequeño que aparecerá en la esquina de la imagen" />*/}
-
-                {<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FileField name="imagenPrincipal" label="IMAGEN PRINCIPAL" value={formData.imagenPrincipal} onChange={handleChange} accept="image/*" required={false} description="Esta imagen se mostrará en el carrusel principal" />
-                  <FileField name="imagenSecundaria" label="IMAGEN SECUNDARIA" value={formData.imagenSecundaria} onChange={handleChange} accept="image/*" required={false} description="Imagen adicional para la promoción (opcional)" />
-                </div>}
 
                 <p className="text-sm text-orange-100 italic">*Campo obligatorio</p>
 
@@ -308,70 +253,6 @@ const CargarPromoFunctional = () => {
                   </button>
                 </div>
               </form>
-            </div>
-
-            <div className="flex flex-col items-center justify-center">
-              <div className="text-center mb-4">
-                <h3 className="text-xl font-bold text-white mb-2">VISTA PREVIA</h3>
-                <p className="text-orange-100 text-sm">Tu promoción se verá así en el carrusel</p>
-              </div>
-              
-              <div className="relative w-[855px] h-[333.993px] mx-auto">
-                <div className="overflow-hidden shadow-2xl">
-                  <div className="relative w-full h-full overflow-hidden">
-                    {carruselEjemplo.imagenes.map((imagen, index) => (
-                      <img
-                        key={index}
-                        src={imagen}
-                        alt={`Ejemplo promoción ${index + 1}`}
-                        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-in-out ${
-                          index === currentImage ? 'translate-x-0' : 
-                          index < currentImage ? '-translate-x-full' : 'translate-x-full'
-                        }`}
-                      />
-                    ))}
-                    
-                    {currentImage === 0 && (
-                      <>
-                        {logoPreview && <div className="absolute bottom-4 right-4 z-20"><img src={logoPreview} alt="Logo institución" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" /></div>}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-4 sm:p-6 mt-4 sm:mt-0">
-                          {formData.institucion && <div className="mb-3 sm:mb-4 mt-2 sm:mt-2"><span className="inline-block px-2.5 sm:px-3.5 py-0.5 sm:py-1 text-white text-lg sm:text-3xl font-extrabold tracking-tight" style={{fontFamily: 'Poppins, sans-serif'}}>{formData.institucion}</span></div>}
-                          {formData.tipoPromocion && <div><span className="inline-block px-8 sm:px-8 py-0.5 sm:py-0.5 text-white text-lg sm:text-3xl font-bold" style={{fontFamily: 'Poppins, sans-serif'}}>{formData.tipoPromocion}</span></div>}
-                        </div>
-                      </>
-                    )}
-
-                    {currentImage === 1 && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-4 sm:p-6">
-                        {formData.beneficios && <div className="mb-4 sm:mb-6"><span className="inline-block px-4 sm:px-6 py-2 sm:py-3 text-white text-base sm:text-xl font-bold leading-relaxed whitespace-pre-line" style={{fontFamily: 'Poppins, sans-serif'}}>{formData.beneficios}</span></div>}
-                        {formData.comentariosRestricciones && <div><span className="inline-block px-4 sm:px-6 py-2 sm:py-3 text-white text-sm sm:text-lg font-medium leading-relaxed whitespace-pre-line" style={{fontFamily: 'Poppins, sans-serif'}}>{formData.comentariosRestricciones}</span></div>}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {currentImage > 0 && (
-                  <button
-                    onClick={prevImage}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-orange-500 rounded-full p-3 transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                )}
-                
-                {currentImage < carruselEjemplo.imagenes.length - 1 && (
-                  <button
-                    onClick={nextImage}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-orange-500 rounded-full p-3 transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                )}
-              </div>
             </div>
           </div>
         </div>

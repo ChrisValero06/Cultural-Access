@@ -18,24 +18,13 @@ const AdminDashboard = () => {
   const [filterEstado, setFilterEstado] = useState(''); // Nuevo filtro de estado
   const [lastUpdate, setLastUpdate] = useState(null);
   
+  // Estados para edición de promociones
+  const [modalEditarAbierto, setModalEditarAbierto] = useState(false);
+  const [editandoForm, setEditandoForm] = useState(null);
   
   // Estado para la pestaña activa
   const [tabActiva, setTabActiva] = useState('promociones');
   
-  // Estados para modales de edición
-  const [modalAbierto, setModalAbierto] = useState(false);
-  const [promocionEditando, setPromocionEditando] = useState(null);
-  const [editandoForm, setEditandoForm] = useState({
-    institucion: '',
-    tipo_promocion: '',
-    disciplina: '',
-    beneficios: '',
-    comentarios_restricciones: '',
-    fecha_inicio: '',
-    fecha_fin: '',
-    imagen_principal: '',
-    imagen_secundaria: ''
-  });
 
   // Usar el contexto para controlar carruseles
   const { carruseles, activarCarrusel, desactivarCarrusel } = useCarrusel();
@@ -136,22 +125,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Función para manejar edición
-  const handleEditar = (promocion) => {
-    setPromocionEditando(promocion);
-    setEditandoForm({
-      institucion: promocion.institucion || '',
-      tipo_promocion: promocion.tipo_promocion || '',
-      disciplina: promocion.disciplina || '',
-      beneficios: promocion.beneficios || '',
-      comentarios_restricciones: promocion.comentarios_restricciones || '',
-      fecha_inicio: promocion.fecha_inicio ? promocion.fecha_inicio.split('T')[0] : '',
-      fecha_fin: promocion.fecha_fin ? promocion.fecha_fin.split('T')[0] : '',
-      imagen_principal: promocion.imagen_principal || '',
-      imagen_secundaria: promocion.imagen_secundaria || ''
-    });
-    setModalAbierto(true);
-  };
 
   // Función para cambiar de pestaña (solo promociones)
   const handleTabChange = (tab) => {
@@ -220,44 +193,49 @@ const AdminDashboard = () => {
     }
   };
 
-  // Función para guardar cambios del modal
+  // Función para manejar edición
+  const handleEditar = (promocion) => {
+    setEditandoForm({ ...promocion });
+    setModalEditarAbierto(true);
+  };
+
+  // Función para guardar cambios de edición
   const handleGuardarCambios = async () => {
     try {
-      const response = await apiService.actualizarPromocion(promocionEditando.id, editandoForm);
+      // Usar la función simple para actualizar solo los datos
+      const response = await apiService.actualizarPromocion(editandoForm.id, editandoForm);
       
       if (response.estado === 'exito' || response.success === true) {
-        // Actualizar la lista local de promociones
+        // Actualizar la lista local
         setPromociones(prev => prev.map(p => 
-          p.id === promocionEditando.id ? { ...p, ...editandoForm } : p
+          p.id === editandoForm.id ? { ...editandoForm } : p
         ));
         
-        // Cerrar modal y limpiar estado
-        setModalAbierto(false);
-        setPromocionEditando(null);
-        setEditandoForm({
-          institucion: '',
-          tipo_promocion: '',
-          disciplina: '',
-          beneficios: '',
-          comentarios_restricciones: '',
-          fecha_inicio: '',
-          fecha_fin: '',
-          imagen_principal: '',
-          imagen_secundaria: ''
-        });
+        setModalEditarAbierto(false);
+        setEditandoForm(null);
+        alert('✅ Promoción actualizada correctamente');
         
-        // Mostrar mensaje de éxito
-        alert('✅ Promoción actualizada exitosamente');
-        
-        // Recargar promociones para asegurar sincronización
+        // Recargar para asegurar sincronización
         cargarPromociones();
       } else {
-        alert('❌ Error al actualizar la promoción: ' + (response.mensaje || 'Error desconocido'));
+        alert('❌ No se pudo actualizar la promoción');
       }
     } catch (error) {
       alert('❌ Error al actualizar la promoción: ' + error.message);
     }
   };
+
+  // Función para manejar cuando una promoción es actualizada con archivos
+  const handlePromocionActualizada = (promocionActualizada) => {
+    // Actualizar la lista local con la promoción actualizada
+    setPromociones(prev => prev.map(p => 
+      p.id === promocionActualizada.id ? promocionActualizada : p
+    ));
+    
+    // Recargar para asegurar sincronización
+    cargarPromociones();
+  };
+
 
 
   if (loading) {
@@ -340,13 +318,18 @@ const AdminDashboard = () => {
         onClearFiltersPromociones={handleClearFiltersPromociones}
       />
 
-      <EditarPromocionModal
-        modalAbierto={modalAbierto}
-        setModalAbierto={setModalAbierto}
-        editandoForm={editandoForm}
-        setEditandoForm={setEditandoForm}
-        onGuardarCambios={handleGuardarCambios}
-      />
+      {/* Modal de edición de promociones */}
+      {editandoForm && (
+        <EditarPromocionModal
+          modalAbierto={modalEditarAbierto}
+          setModalAbierto={setModalEditarAbierto}
+          editandoForm={editandoForm}
+          setEditandoForm={setEditandoForm}
+          onGuardarCambios={handleGuardarCambios}
+          onPromocionActualizada={handlePromocionActualizada}
+        />
+      )}
+
     </div>
   );
 };
