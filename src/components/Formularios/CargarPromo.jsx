@@ -48,22 +48,11 @@ const LargeTextInput = ({ id, name, label, placeholder, value, onChange, onBlur,
 const CargarPromoFunctional = () => {
   const [formData, setFormData] = useState({
     institucion: '', tipoPromocion: '', disciplina: '', beneficios: '',
-    comentariosRestricciones: '', fechaInicio: '', fechaFin: '',
-    imagenPrincipal: null, imagenSecundaria: null, logo: null
+    comentariosRestricciones: '', fechaInicio: '', fechaFin: ''
   })
-  const [currentImage, setCurrentImage] = useState(0)
-  const [carruselEjemplo, setCarruselEjemplo] = useState({ imagenes: [] })
-  const [logoPreview, setLogoPreview] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const LIMITS = { beneficios: 100, comentarios: 100 }
-
-  const nextImage = () => setCurrentImage(prev => (prev + 1) % carruselEjemplo.imagenes.length)
-  const prevImage = () => setCurrentImage(prev => (prev - 1 + carruselEjemplo.imagenes.length) % carruselEjemplo.imagenes.length)
-
-  useEffect(() => {
-    return () => carruselEjemplo.imagenes.forEach(url => url?.startsWith?.('blob:') && URL.revokeObjectURL(url))
-  }, [])
 
   const normalizeSpanishText = (rawText, ensureFinalPunctuation = false) => {
     let text = (rawText || '').replace(/\r\n?/g, '\n').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n')
@@ -75,23 +64,9 @@ const CargarPromoFunctional = () => {
   }
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target
-    if (files) {
-      setFormData(prev => ({ ...prev, [name]: files[0] }))
-      if (name === 'imagenPrincipal' && files[0]) {
-        const imageUrl = URL.createObjectURL(files[0])
-        setCarruselEjemplo(prev => ({ imagenes: [imageUrl, ...prev.imagenes.slice(1)] }))
-        setCurrentImage(0)
-      } else if (name === 'imagenSecundaria' && files[0]) {
-        const imageUrl = URL.createObjectURL(files[0])
-        setCarruselEjemplo(prev => ({ imagenes: [...prev.imagenes.slice(0, 1), imageUrl, ...prev.imagenes.slice(2)] }))
-      } else if (name === 'logo' && files[0]) {
-        setLogoPreview(URL.createObjectURL(files[0]))
-      }
-    } else {
-      const nextValue = ['beneficios', 'comentariosRestricciones'].includes(name) ? normalizeSpanishText(value, false) : value
-      setFormData(prev => ({ ...prev, [name]: nextValue }))
-    }
+    const { name, value } = e.target
+    const nextValue = ['beneficios', 'comentariosRestricciones'].includes(name) ? normalizeSpanishText(value, false) : value
+    setFormData(prev => ({ ...prev, [name]: nextValue }))
   }
 
   const handleBlurNormalize = (e) => {
@@ -113,31 +88,22 @@ const CargarPromoFunctional = () => {
         setMessage(`El campo "Comentarios o Restricciones" excede el límite de ${LIMITS.comentarios} caracteres`)
         return
       }
-      if (!formData.imagenPrincipal) {
-        setMessage('Por favor selecciona una imagen principal para la promoción')
-        return
-      }
-
-      const imagenPrincipalResult = await apiService.subirImagen(formData.imagenPrincipal, `principal_${Date.now()}`)
-      let imagenSecundariaUrl = null
-      if (formData.imagenSecundaria) {
-        const imagenSecundariaResult = await apiService.subirImagen(formData.imagenSecundaria, `secundaria_${Date.now()}`)
-        imagenSecundariaUrl = imagenSecundariaResult.url
-      }
 
       const promocionData = {
-        institucion: formData.institucion, tipo_promocion: formData.tipoPromocion, disciplina: formData.disciplina,
-        beneficios: formData.beneficios, comentarios_restricciones: formData.comentariosRestricciones,
-        fecha_inicio: formData.fechaInicio, fecha_fin: formData.fechaFin,
-        imagen_principal: imagenPrincipalResult.url, imagen_secundaria: imagenSecundariaUrl
+        institucion: formData.institucion, 
+        tipo_promocion: formData.tipoPromocion, 
+        disciplina: formData.disciplina,
+        beneficios: formData.beneficios, 
+        comentarios_restricciones: formData.comentariosRestricciones,
+        fecha_inicio: formData.fechaInicio, 
+        fecha_fin: formData.fechaFin
       }
 
       const result = await apiService.crearPromocion(promocionData)
 
       if (result?.success || result?.estado === 'exito') {
-        setMessage('¡Promoción cargada exitosamente! Será mostrada en el carrusel principal.')
-        setFormData({ institucion: '', tipoPromocion: '', disciplina: '', beneficios: '', comentariosRestricciones: '', fechaInicio: '', fechaFin: '', imagenPrincipal: null, imagenSecundaria: null, logo: null })
-        setLogoPreview(null)
+        setMessage('¡Promoción cargada exitosamente!')
+        setFormData({ institucion: '', tipoPromocion: '', disciplina: '', beneficios: '', comentariosRestricciones: '', fechaInicio: '', fechaFin: '' })
       } else {
         setMessage('Error al crear la promoción: ' + (result?.message || result?.error || ''))
       }
@@ -191,36 +157,6 @@ const CargarPromoFunctional = () => {
     </div>
   )
 
-  const clearSelectedFile = (fieldName) => {
-    const input = document.getElementById(fieldName)
-    if (input) input.value = ''
-    setFormData(prev => ({ ...prev, [fieldName]: null }))
-  }
-
-  const FileField = ({ name, label, value, onChange, accept, required = false, description }) => (
-    <div>
-      <label htmlFor={name} className="block text-base font-bold text-white mb-2">{label}{required ? '*' : ''}</label>
-      <div className="relative">
-        <input type="file" id={name} name={name} onChange={onChange} accept={accept} required={required}
-          className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600" />
-        <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        </div>
-      </div>
-      {description && <p className="text-xs text-orange-100 mt-1">{description}</p>}
-      <div className="mt-2 flex items-center justify-between text-sm">
-        <span className="text-white/90">{value ? value.name : 'Ningún archivo seleccionado'}</span>
-        {value && (
-          <button type="button" onClick={() => clearSelectedFile(name)}
-            className="ml-3 px-3 py-1 rounded-md bg-white/20 text-white hover:bg-white/30">
-            Quitar
-          </button>
-        )}
-      </div>
-    </div>
-  )
 
   return (
     <div className="relative overflow-hidden h-full">
@@ -243,7 +179,7 @@ const CargarPromoFunctional = () => {
         </div>
 
         <div className="flex-1 flex items-center justify-center px-6 py-8">
-          <div className="w-full max-w-[720px]">
+          <div className="w-full max-w-[800px] max-h-full">
             <div className="bg-orange-500 rounded-2xl p-6 shadow-2xl overflow-y-auto">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="text-center mb-4">
@@ -290,12 +226,6 @@ const CargarPromoFunctional = () => {
                   <DateField name="fechaFin" label="FIN DE LA PROMOCIÓN" value={formData.fechaFin} onChange={handleChange} />
                 </div>
 
-                {/*FileField name="logo" label="LOGO DE LA INSTITUCIÓN" value={formData.logo} onChange={handleChange} accept="image/*" description="Logo pequeño que aparecerá en la esquina de la imagen" />*/}
-
-                {<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FileField name="imagenPrincipal" label="IMAGEN PRINCIPAL" value={formData.imagenPrincipal} onChange={handleChange} accept="image/*" required={false} description="Esta imagen se mostrará en el carrusel principal" />
-                  <FileField name="imagenSecundaria" label="IMAGEN SECUNDARIA" value={formData.imagenSecundaria} onChange={handleChange} accept="image/*" required={false} description="Imagen adicional para la promoción (opcional)" />
-                </div>}
 
                 <p className="text-sm text-orange-100 italic">*Campo obligatorio</p>
 

@@ -16,7 +16,7 @@ export default defineConfig({
     }
   },
   server: {
-    port: 5174,
+    port: 5173,
     host: true,
     strictPort: true, // Falla si el puerto está ocupado
     proxy: {
