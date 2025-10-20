@@ -83,7 +83,7 @@ const DashboardHeader = ({
 
   const exportPromociones = async () => {
     try {
-      const res = await fetch('https://culturallaccess.residente.mx/api/promociones?all=1');
+      const res = await fetch('/api/promociones?all=1');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const headers = [
@@ -112,13 +112,14 @@ const DashboardHeader = ({
       ]);
       await exportToXlsx(headers, xlsxRows, 'promociones');
     } catch (e) {
-      alert('No se pudo exportar promociones.');
+      console.error('Error exportando promociones:', e);
+      alert('No se pudo exportar promociones: ' + e.message);
     }
   };
 
   const exportControlAcceso = async () => {
     try {
-      const res = await fetch('https://culturallaccess.residente.mx/api/control-acceso');
+      const res = await fetch('/api/control-acceso');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const headers = ['id_institucion','institucion','numero_tarjeta','fecha'];
@@ -128,13 +129,14 @@ const DashboardHeader = ({
       ]);
       await exportToXlsx(headers, xlsxRows, 'control_acceso');
     } catch (e) {
-      alert('No se pudo exportar control de acceso.');
+      console.error('Error exportando control de acceso:', e);
+      alert('No se pudo exportar control de acceso: ' + e.message);
     }
   };
 
   const exportUsuarios = async () => {
     try {
-      const res = await fetch('https://culturallaccess.residente.mx/api/usuario');
+      const res = await fetch('/api/usuario');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const headers = [
@@ -149,7 +151,8 @@ const DashboardHeader = ({
       ]);
       await exportToXlsx(headers, xlsxRows, 'usuarios');
     } catch (e) {
-      alert('No se pudo exportar usuarios.');
+      console.error('Error exportando usuarios:', e);
+      alert('No se pudo exportar usuarios: ' + e.message);
     }
   };
 

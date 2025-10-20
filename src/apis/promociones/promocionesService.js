@@ -81,42 +81,34 @@ export const promocionesService = {
     }
   },
 
-  // Crear nueva promoción (con endpoints alternos por compatibilidad)
+  // Crear nueva promoción (usando form-data para compatibilidad con backend)
   async crearPromocion(promocionData) {
     try {
-      const endpoints = [
-        `${API_BASE_URL}/promociones/crear_promocion`,
-        `${API_BASE_URL}/promociones/crear`,
-        `${API_BASE_URL}/promociones`,
-        `${API_BASE_URL}/promocion/crear`,
-        `${API_BASE_URL}/promocion`
-      ]
+      const formData = new FormData();
+      
+      // Agregar todos los campos como texto (sin archivos)
+      formData.append('institucion', promocionData.institucion);
+      formData.append('tipo_promocion', promocionData.tipo_promocion);
+      formData.append('disciplina', promocionData.disciplina);
+      formData.append('beneficios', promocionData.beneficios);
+      formData.append('comentarios_restricciones', promocionData.comentarios_restricciones);
+      formData.append('fecha_inicio', promocionData.fecha_inicio);
+      formData.append('fecha_fin', promocionData.fecha_fin);
+      formData.append('estado', 'activa'); // Estado por defecto
+      
+      // NO agregar archivos - las imágenes se agregan después en editar
 
-      let response
-      let lastError
+      const response = await fetch(`${API_BASE_URL}/promociones`, {
+        method: 'POST',
+        body: formData, // Sin Content-Type, el navegador lo establece automáticamente
+      })
 
-      for (const endpoint of endpoints) {
-        try {
-          response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(promocionData),
-          })
-
-          if (response.ok) break
-          lastError = new Error(`HTTP ${response.status} al POST ${endpoint}`)
-        } catch (err) {
-          lastError = err
-        }
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
       }
 
-      if (!response || !response.ok) {
-        throw lastError || new Error('No se pudo crear la promoción: todos los endpoints fallaron')
-      }
-
-      const data = await response.json().catch(() => ({}))
+      const data = await response.json()
       return data
     } catch (error) {
       throw error
