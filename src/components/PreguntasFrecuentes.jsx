@@ -120,7 +120,7 @@ const PreguntasFrecuentes = () => {
                     7. ¿Dónde puedo consultar los eventos disponibles?
                   </h3>
                   <p className="text-lg leading-relaxed">
-                    En la página oficial de CulturAll Access: <a href="https://culturallaccess.residente.mx" className="text-black underline hover:text-black">culturallaccess.residente.mx</a>.
+                    En la página oficial de CulturAll Access: <a href="https://culturallaccess.com" className="text-black underline hover:text-black">culturallaccess.com</a>.
                   </p>
                 </div>
 
@@ -140,7 +140,7 @@ const PreguntasFrecuentes = () => {
                     9. ¿Cómo sé si tengo acceso a un beneficio?
                   </h3>
                   <p className="text-lg leading-relaxed">
-                    Todos los beneficios vigentes estarán publicados en la página oficial de CulturAll Access: <a href="https://culturallaccess.residente.mx" className="text-black underline hover:text-black">culturallaccess.residente.mx</a>. Te recomendamos visitarla con frecuencia para conocer las promociones, eventos y actividades disponibles.
+                    Todos los beneficios vigentes estarán publicados en la página oficial de CulturAll Access: <a href="https://culturallaccess.com" className="text-black underline hover:text-black">culturallaccess.com</a>. Te recomendamos visitarla con frecuencia para conocer las promociones, eventos y actividades disponibles.
                   </p>
                 </div>
 
@@ -151,6 +151,16 @@ const PreguntasFrecuentes = () => {
                   </h3>
                   <p className="text-lg leading-relaxed">
                     CulturAll Access está pensado para cubrir toda la oferta cultural del estado de Nuevo León y pronto se irán sumando más instituciones.
+                  </p>
+                </div>
+
+                {/* Pregunta 11 */}
+                <div className="">
+                  <h3 className="text-2xl font-bold text-black mb-4">
+                    11. ¿Qué hago en caso de extraviar mi tarjeta?
+                  </h3>
+                  <p className="text-lg leading-relaxed">
+                    Dirígete a la sección "Contáctanos", al final de la página, y envíanos un correo con el nombre completo del titular de la tarjeta. Te responderemos lo antes posible con los pasos a seguir.
                   </p>
                 </div>
               </div>

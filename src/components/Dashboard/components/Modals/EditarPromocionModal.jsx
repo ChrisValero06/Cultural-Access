@@ -9,7 +9,7 @@ const OPCIONES_DROPDOWN = {
 };
 
 // Normaliza URLs de imágenes a tu servidor en Plesk y aplica fallback local
-const BASE_HOST = 'https://culturallaccess.residente.mx';
+const BASE_HOST = 'https://culturallaccess.com';
 const UPLOADS_PREFIX = '/images/uploads/';
 const FALLBACK_IMAGE = '/images/LogoDerecho.png';
 
@@ -71,13 +71,13 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
 
   const validarImagen = (file) => {
     const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-    const tamañoMaximo = 5 * 1024 * 1024;
+    const tamañoMaximo = 30 * 1024 * 1024; // 30MB
     if (!tiposPermitidos.includes(file.type)) {
       alert('Tipo de archivo no permitido. Use JPG, PNG o GIF.');
       return false;
     }
     if (file.size > tamañoMaximo) {
-      alert('El archivo es demasiado grande. Máximo 5MB.');
+      alert('El archivo es demasiado grande. Máximo 30MB.');
       return false;
     }
     return true;
@@ -380,7 +380,7 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
 
         <div className="mt-6 border-t pt-6">
           <h4 className="text-lg font-medium text-gray-800 mb-2">🖼️ Imágenes de la Promoción</h4>
-          <p className="text-sm text-gray-600 mb-4">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB por imagen.</p>
+          <p className="text-sm text-gray-600 mb-4">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 30MB por imagen.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Imagen Principal</label>
@@ -420,7 +420,7 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
                     {previewPrincipal || editandoForm.imagen_principal ? '🔄 Cambiar Imagen' : '📁 Seleccionar Imagen'}
                   </label>
                 </div>
-                <p className="text-xs text-gray-500 text-center">JPG, PNG, GIF - Máx. 5MB</p>
+                <p className="text-xs text-gray-500 text-center">JPG, PNG, GIF - Máx. 30MB</p>
               </div>
             </div>
             <div>
@@ -461,7 +461,7 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
                     {previewSecundaria || editandoForm.imagen_secundaria ? '🔄 Cambiar Imagen' : '📁 Seleccionar Imagen'}
                   </label>
                 </div>
-                <p className="text-xs text-gray-500 text-center">JPG, PNG, GIF - Máx. 5MB</p>
+                <p className="text-xs text-gray-500 text-center">JPG, PNG, GIF - Máx. 30MB</p>
               </div>
             </div>
           </div>

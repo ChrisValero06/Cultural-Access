@@ -21,7 +21,7 @@ export default defineConfig({
     strictPort: true, // Falla si el puerto está ocupado
     proxy: {
       '/api': {
-        target: 'https://culturallaccess.residente.mx',
+        target: 'https://culturallaccess.com',
         changeOrigin: true,
         secure: true,
         rewrite: (path) => path.replace(/^\/api/, '/api')

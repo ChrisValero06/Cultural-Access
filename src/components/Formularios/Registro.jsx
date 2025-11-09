@@ -73,7 +73,7 @@ const CulturalAccessForm = () => {
     setTarjetaDisponible(null);
     await new Promise(resolve => setTimeout(resolve, 1000));
     try {
-      const response = await fetch(`https://culturallaccess.residente.mx/api/usuario/verificar-tarjeta/${numeroTarjeta}`, {
+      const response = await fetch(`https://culturallaccess.com/api/usuario/verificar-tarjeta/${numeroTarjeta}`, {
         method: 'GET', headers: { 'Content-Type': 'application/json' }
       });
       if (response.status === 404) setTarjetaDisponible(true);
@@ -130,7 +130,7 @@ const CulturalAccessForm = () => {
         numero_tarjeta: formData.numeroTarjeta, acepta_info: aceptaInfoValue,
       }
 
-      const response = await fetch("https://culturallaccess.residente.mx/api/usuario", {
+      const response = await fetch("https://culturallaccess.com/api/usuario", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(toUppercaseStrings(dataToSend))
       })
 

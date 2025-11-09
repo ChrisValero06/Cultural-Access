@@ -1,7 +1,7 @@
 import React from 'react';
 
 // Normaliza URLs de imágenes a tu servidor en Plesk y aplica fallback local
-const BASE_HOST = 'https://culturallaccess.residente.mx';
+const BASE_HOST = 'https://culturallaccess.com';
 const UPLOADS_PREFIX = '/images/uploads/';
 const FALLBACK_IMAGE = '/images/LogoDerecho.png';
 

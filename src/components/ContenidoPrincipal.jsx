@@ -29,7 +29,7 @@ const ContenidoPrincipal = () => {
       
       if (response.estado === 'exito' || response.success === true) {
         // Normalizar URLs de imágenes (cuando vienen relativas del backend)
-        const BASE_HOST = 'https://culturallaccess.residente.mx';
+        const BASE_HOST = 'https://culturallaccess.com';
         const normalizeUrl = (url) => {
           if (!url) return url;
           return url.startsWith('http') ? url : `${BASE_HOST}${url}`;
@@ -80,6 +80,15 @@ const ContenidoPrincipal = () => {
             return true;
           });
         
+        console.log('📊 Promociones activas encontradas:', promocionesActivas.length)
+        console.log('📋 Detalles de promociones:', promocionesActivas.map(p => ({
+          id: p.id,
+          institucion: p.institucion,
+          estado: p.estado,
+          tieneImagenes: p.imagenes?.length > 0,
+          imagenesCount: p.imagenes?.length || 0
+        })))
+        
         setCarruseles(promocionesActivas)
         setUltimaActualizacion(Date.now())
         
@@ -96,7 +105,7 @@ const ContenidoPrincipal = () => {
       
       // Verificar si es un error de conectividad
       if (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('Failed to fetch')) {
-        setError('❌ No se puede conectar con el servidor. Verifica que el backend esté corriendo en https://culturallaccess.residente.mx')
+        setError('❌ No se puede conectar con el servidor. Verifica que el backend esté corriendo en https://culturallaccess.com')
       } else if (error.message.includes('404')) {
         setError('❌ El endpoint no existe. Verifica que el backend tenga configurado el endpoint /promociones-carrusel')
       } else if (error.message.includes('500')) {
@@ -160,13 +169,13 @@ const ContenidoPrincipal = () => {
   // Componente de carrusel reutilizable
   const Carrusel = ({ carrusel }) => {
     const currentImage = currentImages[carrusel.id] || 0
-    const totalImages = carrusel.imagenes.length
+    const totalImages = carrusel.imagenes?.length || 0
 
     return (
       <div className="mb-6 sm:mb-8 md:mb-10">
         <div className="relative">
           <div className="overflow-hidden rounded-xl">
-            <div className={`relative ${getClaseTamanoCarrusel()} w-full max-w-[100%] sm:max-w-[90%] md:max-w-[85%] lg:max-w-[80%] xl:max-w-[855px] mx-auto overflow-hidden`}>
+            <div className={`relative ${getClaseTamanoCarrusel()} w-full max-w-[855px] mx-auto overflow-hidden`}>
               {carrusel.imagenes.map((imagen, index) => (
                <img
                key={index}
@@ -280,10 +289,10 @@ const ContenidoPrincipal = () => {
             <div className="flex items-center justify-center sm:justify-start">
               <div>
                 <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800">
-                  PROMOCIONES VIGENTES-SEPTIEMBRE
+                  PROMOCIONES VIGENTES-NOVIEMBRE
                 </h1>
                 <p className="text-gray-600 leading-relaxed text-sm sm:text-base md:text-lg font-medium">
-                  Presentando tarjeta y hasta agotar disponibilidad
+                  Presentando tarjeta y sujeta a disponibilidad
                 </p>
                 
               
@@ -295,17 +304,41 @@ const ContenidoPrincipal = () => {
 
         {/* Carruseles dinámicos desde la base de datos */}
         {carruseles.map(carrusel => {
-          // Solo mostrar el carrusel si está configurado como visible Y tiene promociones
-          const carruselId = carrusel.institucion.toLowerCase().includes('ballet') ? 'principal' : 
-                            carrusel.institucion.toLowerCase().includes('teatro') ? 'secundario' : 'destacados';
+          // Clasificar cada promoción en su carrusel correspondiente
+          // Si el carrusel asignado no está visible, usar 'destacados' como fallback
+          let carruselId = carrusel.institucion.toLowerCase().includes('ballet') ? 'principal' : 
+                          carrusel.institucion.toLowerCase().includes('teatro') ? 'secundario' : 'destacados';
+          
+          // Verificar si el carrusel asignado está visible, si no, usar 'destacados'
+          const carruselAsignadoVisible = getCarruselVisible(carruselId);
+          if (!carruselAsignadoVisible && carruselId !== 'destacados') {
+            // Si el carrusel asignado no está visible, usar 'destacados' como fallback
+            carruselId = 'destacados';
+          }
           
           const isVisible = getCarruselVisible(carruselId);
           const hasPromociones = carrusel.imagenes && carrusel.imagenes.length > 0;
           
-          // Solo mostrar si está visible Y tiene promociones activas
-          if (!isVisible || !hasPromociones) {
+          console.log(`🔍 Promoción ${carrusel.id} (${carrusel.institucion}):`, {
+            carruselId,
+            isVisible,
+            hasPromociones,
+            imagenesCount: carrusel.imagenes?.length || 0
+          });
+          
+          // Mostrar TODAS las promociones que pertenecen a carruseles visibles
+          if (!hasPromociones) {
+            console.log(`❌ Omitida: ${carrusel.institucion} - No tiene imágenes`);
             return null;
           }
+          
+          // Si el carrusel al que pertenece NO está visible, no mostrarlo
+          if (!isVisible) {
+            console.log(`❌ Omitida: ${carrusel.institucion} - Carrusel ${carruselId} no está visible`);
+            return null;
+          }
+          
+          console.log(`✅ Mostrando: ${carrusel.institucion} en carrusel ${carruselId}`);
           
           // Los carruseles se muestran en el orden que vienen del backend:
           // - Los más antiguos aparecen primero (arriba)

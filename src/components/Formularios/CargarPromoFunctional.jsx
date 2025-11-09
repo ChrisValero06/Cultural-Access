@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { imagenes } from '../../constants/imagenes'
 import { apiService } from '../../apis'
+import { API_CONFIG } from '../../config/api.js'
 
 const DATA = {
   institucion: ['Ballet de Monterrey', 'Bread Coffee Roasters', 'Café Belmonte', 'Casa Coa', 'Casa de la Cultura de Nuevo León', 'Casa Motis', 'Casa Musa', 'Centro Roberto Garza Sada', 'Cineteca de Nuevo León', 'Constelación Feria de Arte', 'Dramático', 'El Lingote Restaurante', 'Escuela Superior de Música y Danza de Monterrey', 'Fondo de Cultura Económica', 'Fondo Editorial de Nuevo León', 'Fototeca de Nuevo León', 'Heart Ego', 'Horno 3', 'La Gran Audiencia', 'La Milarca', 'Librería Bruma', 'Librería Sentido', 'Monstera Coffee Bar', 'Museo 31', 'Museo del Acero Horno 3', 'Museo de Arte Contemporáneo de Monterrey (MARCO)', 'Museo de la Batalla', 'Museo de Historia Mexicana', 'Museo del Noreste', 'Museo del Palacio', 'Museo del Vidrio (MUVI)', 'Museo Estatal de Culturas Populares de Nuevo León', 'Museo Regional de Nuevo León El Obispado', 'Papalote Museo del Niño Monterrey', 'Salón de la Fama de Beisbol Mexicano', 'Saxy Jazz Club', 'Secretaría de Cultura', 'Seabird Coffee', 'Teatro de la Ciudad', 'Vaso Roto Ediciones'],
@@ -48,8 +49,11 @@ const LargeTextInput = ({ id, name, label, placeholder, value, onChange, onBlur,
 const CargarPromoFunctional = () => {
   const [formData, setFormData] = useState({
     institucion: '', tipoPromocion: '', disciplina: '', beneficios: '',
-    comentariosRestricciones: '', fechaInicio: '', fechaFin: ''
+    comentariosRestricciones: '', fechaInicio: '', fechaFin: '',
+    imagenPrincipal: null, imagenSecundaria: null
   })
+  const [previewPrincipal, setPreviewPrincipal] = useState(null)
+  const [previewSecundaria, setPreviewSecundaria] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const LIMITS = { beneficios: 100, comentarios: 100 }
@@ -64,9 +68,47 @@ const CargarPromoFunctional = () => {
   }
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    const nextValue = ['beneficios', 'comentariosRestricciones'].includes(name) ? normalizeSpanishText(value, false) : value
-    setFormData(prev => ({ ...prev, [name]: nextValue }))
+    const { name, value, files } = e.target
+    
+    if (files && files[0]) {
+      const file = files[0]
+      
+      // Validar tamaño del archivo
+      const maxSize = API_CONFIG.UPLOAD.MAX_FILE_SIZE
+      if (file.size > maxSize) {
+        const maxSizeMB = maxSize / (1024 * 1024)
+        setMessage(`El archivo es demasiado grande. Tamaño máximo: ${maxSizeMB}MB.`)
+        e.target.value = '' // Limpiar el input
+        return
+      }
+      
+      setFormData(prev => ({ ...prev, [name]: file }))
+      setMessage('') // Limpiar mensaje de error anterior
+      
+      // Crear preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        if (name === 'imagenPrincipal') {
+          setPreviewPrincipal(reader.result)
+        } else if (name === 'imagenSecundaria') {
+          setPreviewSecundaria(reader.result)
+        }
+      }
+      reader.readAsDataURL(file)
+    } else {
+      const nextValue = ['beneficios', 'comentariosRestricciones'].includes(name) ? normalizeSpanishText(value, false) : value
+      setFormData(prev => ({ ...prev, [name]: nextValue }))
+    }
+  }
+  
+  const handleRemoveImage = (type) => {
+    if (type === 'principal') {
+      setFormData(prev => ({ ...prev, imagenPrincipal: null }))
+      setPreviewPrincipal(null)
+    } else if (type === 'secundaria') {
+      setFormData(prev => ({ ...prev, imagenSecundaria: null }))
+      setPreviewSecundaria(null)
+    }
   }
 
   const handleBlurNormalize = (e) => {
@@ -82,13 +124,44 @@ const CargarPromoFunctional = () => {
     try {
       if (formData.beneficios.length > LIMITS.beneficios) {
         setMessage(`El campo "Beneficios" excede el límite de ${LIMITS.beneficios} caracteres`)
+        setIsSubmitting(false)
         return
       }
       if (formData.comentariosRestricciones.length > LIMITS.comentarios) {
         setMessage(`El campo "Comentarios o Restricciones" excede el límite de ${LIMITS.comentarios} caracteres`)
+        setIsSubmitting(false)
         return
       }
 
+      // Subir imágenes si existen
+      let imagenPrincipalUrl = null
+      let imagenSecundariaUrl = null
+
+      try {
+        // Subir imagen principal si existe
+        if (formData.imagenPrincipal) {
+          const principalResult = await apiService.subirImagen(
+            formData.imagenPrincipal, 
+            `principal_${Date.now()}`
+          )
+          imagenPrincipalUrl = principalResult.url
+        }
+
+        // Subir imagen secundaria si existe
+        if (formData.imagenSecundaria) {
+          const secundariaResult = await apiService.subirImagen(
+            formData.imagenSecundaria, 
+            `secundaria_${Date.now()}`
+          )
+          imagenSecundariaUrl = secundariaResult.url
+        }
+      } catch (imageError) {
+        setMessage('Error al subir las imágenes: ' + (imageError.message || 'Error desconocido'))
+        setIsSubmitting(false)
+        return
+      }
+
+      // Crear promoción con las URLs de las imágenes
       const promocionData = {
         institucion: formData.institucion, 
         tipo_promocion: formData.tipoPromocion, 
@@ -96,19 +169,27 @@ const CargarPromoFunctional = () => {
         beneficios: formData.beneficios, 
         comentarios_restricciones: formData.comentariosRestricciones,
         fecha_inicio: formData.fechaInicio, 
-        fecha_fin: formData.fechaFin
+        fecha_fin: formData.fechaFin,
+        imagen_principal: imagenPrincipalUrl,
+        imagen_secundaria: imagenSecundariaUrl
       }
 
       const result = await apiService.crearPromocion(promocionData)
 
       if (result?.success || result?.estado === 'exito') {
         setMessage('¡Promoción cargada exitosamente!')
-        setFormData({ institucion: '', tipoPromocion: '', disciplina: '', beneficios: '', comentariosRestricciones: '', fechaInicio: '', fechaFin: '' })
+        setFormData({ 
+          institucion: '', tipoPromocion: '', disciplina: '', beneficios: '', 
+          comentariosRestricciones: '', fechaInicio: '', fechaFin: '',
+          imagenPrincipal: null, imagenSecundaria: null
+        })
+        setPreviewPrincipal(null)
+        setPreviewSecundaria(null)
       } else {
         setMessage('Error al crear la promoción: ' + (result?.message || result?.error || ''))
       }
     } catch (error) {
-      setMessage('Error al enviar la promoción. Por favor, intenta nuevamente.')
+      setMessage('Error al enviar la promoción: ' + (error.message || 'Por favor, intenta nuevamente.'))
     } finally {
       setIsSubmitting(false)
     }
@@ -154,6 +235,46 @@ const CargarPromoFunctional = () => {
           </svg>
         </div>
       </div>
+    </div>
+  )
+
+  const FileField = ({ name, label, value, onChange, accept, required = false, description, preview, onRemove }) => (
+    <div>
+      <label htmlFor={name} className="block text-base font-bold text-white mb-2">{label}{required ? '*' : ''}</label>
+      <div className="relative">
+        <input 
+          type="file" 
+          id={name} 
+          name={name} 
+          onChange={onChange} 
+          accept={accept} 
+          required={required}
+          className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600"
+        />
+        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+      </div>
+      {description && <p className="text-xs text-orange-100 mt-1">{description}</p>}
+      {preview && (
+        <div className="mt-3 relative">
+          <img src={preview} alt="Preview" className="w-full h-48 object-cover rounded-lg border-2 border-orange-400" />
+          {onRemove && (
+            <button
+              type="button"
+              onClick={onRemove}
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
+              title="Eliminar imagen"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 
@@ -226,6 +347,30 @@ const CargarPromoFunctional = () => {
                   <DateField name="fechaFin" label="FIN DE LA PROMOCIÓN" value={formData.fechaFin} onChange={handleChange} />
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FileField 
+                    name="imagenPrincipal" 
+                    label="IMAGEN PRINCIPAL" 
+                    value={formData.imagenPrincipal} 
+                    onChange={handleChange} 
+                    accept="image/*" 
+                    required={false} 
+                    description="Esta imagen se mostrará en el carrusel principal (opcional). Máx. 30MB"
+                    preview={previewPrincipal}
+                    onRemove={() => handleRemoveImage('principal')}
+                  />
+                  <FileField 
+                    name="imagenSecundaria" 
+                    label="IMAGEN SECUNDARIA" 
+                    value={formData.imagenSecundaria} 
+                    onChange={handleChange} 
+                    accept="image/*" 
+                    required={false} 
+                    description="Imagen adicional para la promoción (opcional). Máx. 30MB"
+                    preview={previewSecundaria}
+                    onRemove={() => handleRemoveImage('secundaria')}
+                  />
+                </div>
 
                 <p className="text-sm text-orange-100 italic">*Campo obligatorio</p>
 

@@ -1,9 +1,9 @@
 export const imagenes = {
   // Imágenes principales
-  fondoHome: "https://culturallaccess.residente.mx/images/Fondo_Home%201.jpg",
-  arcoMilarca: "https://culturallaccess.residente.mx/images/Arco%20Milarca_Home%202.png",
-  bannerLAB: "https://culturallaccess.residente.mx/images/Banner%20LAB.png",
-  logoPrincipal: "https://culturallaccess.residente.mx/images/culturaaaaaaaaaalaccesssssslogo-04.png",
+  fondoHome: "https://culturallaccess.com/images/Fondo_Home%201.jpg",
+  arcoMilarca: "https://culturallaccess.com/images/Arco%20Milarca_Home%202.png",
+  bannerLAB: "https://culturallaccess.com/images/Banner%20LAB.png",
+  logoPrincipal: "https://culturallaccess.com/images/culturaaaaaaaaaalaccesssssslogo-04.png",
   
   // Logos del header
   logoIzquierdo: "/images/LogoIzquiero.png",

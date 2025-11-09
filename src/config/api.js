@@ -1,7 +1,7 @@
 // Configuración de la API del backend
 export const API_CONFIG = {
   // URL base del backend Node.js - usar proxy local en desarrollo
-  BASE_URL: import.meta.env.DEV ? '/api' : 'https://culturallaccess.residente.mx/api',
+  BASE_URL: import.meta.env.DEV ? '/api' : 'https://culturallaccess.com/api',
   
   // Endpoints específicos
   ENDPOINTS: {
@@ -20,14 +20,14 @@ export const API_CONFIG = {
   
   // Configuración de subida de archivos
   UPLOAD: {
-    MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB en bytes
+    MAX_FILE_SIZE: 30 * 1024 * 1024, // 30MB en bytes
     ALLOWED_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
   },
   
   // Configuración de la base de datos
   DATABASE: {
     NAME: 'cultural_access',
-    HOST: 'culturallaccess.residente.mx',
+    HOST: 'culturallaccess.com',
     USER: 'root',
     PASSWORD: ''
   }

@@ -86,7 +86,7 @@ export const promocionesService = {
     try {
       const formData = new FormData();
       
-      // Agregar todos los campos como texto (sin archivos)
+      // Agregar todos los campos como texto
       formData.append('institucion', promocionData.institucion);
       formData.append('tipo_promocion', promocionData.tipo_promocion);
       formData.append('disciplina', promocionData.disciplina);
@@ -96,7 +96,13 @@ export const promocionesService = {
       formData.append('fecha_fin', promocionData.fecha_fin);
       formData.append('estado', 'activa'); // Estado por defecto
       
-      // NO agregar archivos - las imágenes se agregan después en editar
+      // Agregar URLs de imágenes si existen
+      if (promocionData.imagen_principal) {
+        formData.append('imagen_principal', promocionData.imagen_principal);
+      }
+      if (promocionData.imagen_secundaria) {
+        formData.append('imagen_secundaria', promocionData.imagen_secundaria);
+      }
 
       const response = await fetch(`${API_BASE_URL}/promociones`, {
         method: 'POST',

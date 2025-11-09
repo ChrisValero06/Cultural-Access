@@ -80,7 +80,7 @@ const AvisoPrivacidad = () => {
                      Datos Personales que serán sometidos a tratamiento
                    </h3>
                    <p className="text-lg leading-relaxed">
-                     La Secretaría de Cultura, en cumplimiento a los principios y deberes que deben observar los sujetos obligados, a fin de cumplir con lo dispuesto en la Ley Protección de Datos Personales en Posesión de Sujetos Obligados del Estado de Nuevo León y la Ley General de Protección de Datos Personales en Posesión de Sujetos Obligados, le informa que los datos personales que nos proporcione son aquellos categorizados como de Identificación, estadístico y contacto, mismos que se describen a continuación: Nombre, correo electrónico, domicilio, rango de edad, nivel de estudios, CURP o en su defecto lugar y fecha de nacimiento.
+                     La Secretaría de Cultura, en cumplimiento a los principios y deberes que deben observar los sujetos obligados, a fin de cumplir con lo dispuesto en la Ley Protección de Datos Personales en Posesión de Sujetos Obligados del Estado de Nuevo León y la Ley General de Protección de Datos Personales en Posesión de Sujetos Obligados, le informa que los datos personales que nos proporcione son aquellos categorizados como de Identificación, estadístico y contacto, mismos que se describen a continuación: nombre, correo electrónico, domicilio, rango de edad, número de teléfono, nivel de estudios, estado civil, CURP o en su defecto lugar y fecha de nacimiento.
                    </p>
                    <p className="text-lg leading-relaxed mt-4">
                      De igual manera, se le hace de su conocimiento que se solicitaran los siguientes datos personales sensibles: Dato personal identificado como: género.
