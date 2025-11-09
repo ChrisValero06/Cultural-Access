@@ -175,7 +175,7 @@ const ContenidoPrincipal = () => {
       <div className="mb-6 sm:mb-8 md:mb-10">
         <div className="relative">
           <div className="overflow-hidden rounded-xl">
-            <div className={`relative ${getClaseTamanoCarrusel()} w-full max-w-[855px] mx-auto overflow-hidden`}>
+            <div className={`relative ${getClaseTamanoCarrusel()} w-full max-w-[855px] mx-auto overflow-hidden aspect-[855/334]`}>
               {carrusel.imagenes.map((imagen, index) => (
                <img
                key={index}
