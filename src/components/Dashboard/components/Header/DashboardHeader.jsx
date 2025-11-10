@@ -178,9 +178,15 @@ const DashboardHeader = ({
         const estudios = u.estudios ? String(u.estudios).toUpperCase() : '';
         const estadoNacimiento = u.estado_nacimiento ? String(u.estado_nacimiento).toUpperCase() : '';
         
+        // Convertir nombre, apellidos y estado a mayúsculas
+        const nombre = u.nombre ? String(u.nombre).toUpperCase() : '';
+        const apellidoPaterno = u.apellido_paterno ? String(u.apellido_paterno).toUpperCase() : '';
+        const apellidoMaterno = u.apellido_materno ? String(u.apellido_materno).toUpperCase() : '';
+        const estado = u.estado ? String(u.estado).toUpperCase() : '';
+        
         return [
-          u.id, u.nombre, u.apellido_paterno, u.apellido_materno, genero, u.email,
-          u.telefono, u.calle_numero, u.municipio, u.estado, u.colonia, u.codigo_postal,
+          u.id, nombre, apellidoPaterno, apellidoMaterno, genero, u.email,
+          u.telefono, u.calle_numero, u.municipio, estado, u.colonia, u.codigo_postal,
           u.edad, estadoCivil, estudios, u.curp, estadoNacimiento, u.fecha_nacimiento,
           u.numero_tarjeta, u.acepta_info, u.fecha_registro
         ];
