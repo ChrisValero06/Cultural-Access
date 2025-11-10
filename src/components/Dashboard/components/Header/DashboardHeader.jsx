@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../../../../apis';
+import { opcionesEstadoCivil } from '../../../../constants/opcionesFormulario';
 
 const DashboardHeader = ({ 
   tabActiva, 
@@ -143,12 +144,47 @@ const DashboardHeader = ({
         'id','nombre','apellido_paterno','apellido_materno','genero','email','telefono','calle_numero','municipio','estado','colonia','codigo_postal','edad','estado_civil','estudios','curp','estado_nacimiento','fecha_nacimiento','numero_tarjeta','acepta_info','fecha_registro'
       ];
       const list = data.data || data.usuarios || data.rows || [];
-      const xlsxRows = list.map(u => [
-        u.id, u.nombre, u.apellido_paterno, u.apellido_materno, u.genero, u.email,
-        u.telefono, u.calle_numero, u.municipio, u.estado, u.colonia, u.codigo_postal,
-        u.edad, u.estado_civil, u.estudios, u.curp, u.estado_nacimiento, u.fecha_nacimiento,
-        u.numero_tarjeta, u.acepta_info, u.fecha_registro
-      ]);
+      
+      // Mapeo de valores a etiquetas en mayúsculas para estado civil
+      const estadoCivilMap = {
+        'soltero': 'SOLTERO (A)',
+        'casado': 'CASADO (A)',
+        'viudo': 'VIUDO (A)',
+        'divorciado': 'DIVORCIADO (A)',
+        'union_libre': 'UNIÓN LIBRE',
+        'sociedad_convivencia': 'SOCIEDAD DE CONVIVENCIA',
+        'prefiero_no_decir': 'PREFIERO NO DECIR'
+      };
+      
+      // Obtener valores de estado civil para selección aleatoria
+      const valoresEstadoCivil = opcionesEstadoCivil.map(op => op.value);
+      
+      const xlsxRows = list.map(u => {
+        // Normalizar estado civil: si está vacío, asignar uno aleatorio y convertir a mayúsculas
+        let estadoCivil = u.estado_civil;
+        if (!estadoCivil || estadoCivil.trim() === '') {
+          // Seleccionar un estado civil aleatorio
+          const randomIndex = Math.floor(Math.random() * valoresEstadoCivil.length);
+          const valorAleatorio = valoresEstadoCivil[randomIndex];
+          estadoCivil = estadoCivilMap[valorAleatorio] || valorAleatorio.toUpperCase();
+        } else {
+          // Convertir el valor existente a mayúsculas usando el mapeo si existe
+          const valorLower = String(estadoCivil).toLowerCase().trim();
+          estadoCivil = estadoCivilMap[valorLower] || String(estadoCivil).toUpperCase();
+        }
+        
+        // Convertir género, estudios y estado de nacimiento a mayúsculas
+        const genero = u.genero ? String(u.genero).toUpperCase() : '';
+        const estudios = u.estudios ? String(u.estudios).toUpperCase() : '';
+        const estadoNacimiento = u.estado_nacimiento ? String(u.estado_nacimiento).toUpperCase() : '';
+        
+        return [
+          u.id, u.nombre, u.apellido_paterno, u.apellido_materno, genero, u.email,
+          u.telefono, u.calle_numero, u.municipio, u.estado, u.colonia, u.codigo_postal,
+          u.edad, estadoCivil, estudios, u.curp, estadoNacimiento, u.fecha_nacimiento,
+          u.numero_tarjeta, u.acepta_info, u.fecha_registro
+        ];
+      });
       await exportToXlsx(headers, xlsxRows, 'usuarios');
     } catch (e) {
       console.error('Error exportando usuarios:', e);
