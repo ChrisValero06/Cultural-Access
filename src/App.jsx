@@ -21,6 +21,19 @@ function App() {
     const isAuthed = apiService.isAuthenticated()
     return isAuthed ? children : <Navigate to="/login" replace />
   }
+  
+  const ProtectedRegistroRoute = ({ children }) => {
+    const isAuthed = apiService.isAuthenticated()
+    if (!isAuthed) {
+      return <Navigate to="/login" replace />
+    }
+    // Si es Pepe, redirigir al AdminDashboard
+    const perfilId = localStorage.getItem('perfilId')
+    if (perfilId === 'pepe') {
+      return <Navigate to="/AdminDashboard" replace />
+    }
+    return children
+  }
   return (
     <InstitucionesProvider>
       <Routes>
@@ -63,10 +76,10 @@ function App() {
                   <CargarPromoFunctional />
                 } />
                 <Route path="/Registro" element={
-                  <Registro />
+                  <ProtectedRegistroRoute><Registro /></ProtectedRegistroRoute>
                 } />
                 <Route path="/registro" element={
-                  <Registro />
+                  <ProtectedRegistroRoute><Registro /></ProtectedRegistroRoute>
                 } />
                 <Route path="/privacidad" element={
                   <AvisoPrivacidad />

@@ -106,7 +106,6 @@ export const CarruselProvider = ({ children }) => {
 
   const getCarruselVisible = (carruselId) => {
     const visible = carruseles[carruselId]?.visible || false;
-    console.log(`🔍 Verificando visibilidad de ${carruselId}:`, { visible, carrusel: carruseles[carruselId] });
     return visible;
   };
 

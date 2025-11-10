@@ -1,6 +1,8 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { apiService } from '../../apis'
 import { imagenes } from '../../constants/imagenes'
 
 const RadioButton = ({ id, name, value, checked, onChange, label, disabled, required = false }) => (
@@ -32,10 +34,60 @@ const SelectInput = ({ id, name, autoComplete, value, onChange, required = false
 )
 
 const CulturalAccessForm = () => {
+  const navigate = useNavigate()
   const [curpOption, setCurpOption] = useState("curp")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [tarjetaValidando, setTarjetaValidando] = useState(false)
   const [tarjetaDisponible, setTarjetaDisponible] = useState(null)
+
+  // Proteger el formulario - solo usuarios autenticados pueden acceder
+  useEffect(() => {
+    // Verificar autenticación
+    if (!apiService.isAuthenticated()) {
+      navigate('/login')
+      return
+    }
+    
+    // Si es Pepe, redirigir al AdminDashboard
+    const perfilId = localStorage.getItem('perfilId')
+    if (perfilId === 'pepe') {
+      navigate('/AdminDashboard')
+      return
+    }
+  }, [navigate])
+
+  // Limpiar sesión cuando el usuario sale de la página o presiona atrás
+  useEffect(() => {
+    const limpiarSesion = () => {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userUsuario');
+      localStorage.removeItem('perfilId');
+      localStorage.removeItem('perfilNombre');
+    }
+
+    // Detectar cuando el usuario sale de la página (cierra pestaña, navega a otro sitio)
+    const handleBeforeUnload = () => {
+      limpiarSesion();
+    }
+
+    // Detectar cuando presionan el botón de atrás
+    const handlePopState = () => {
+      // Si van al login, limpiar sesión
+      if (window.location.pathname === '/login') {
+        limpiarSesion();
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [])
+  
   const [formData, setFormData] = useState({
     nombre: "", apellidoPaterno: "", apellidoMaterno: "", genero: "", email: "", telefono: "",
     calleNumero: "", municipio: "", estado: "", colonia: "", codigoPostal: "", estadoCivil: "",
@@ -91,7 +143,7 @@ const CulturalAccessForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const camposObligatorios = ['nombre', 'apellidoPaterno', 'apellidoMaterno', 'genero', 'email', 'calleNumero', 'municipio', 'estado', 'colonia', 'codigoPostal', 'estadoNacimiento', 'diaNacimiento', 'mesNacimiento', 'anoNacimiento', 'numeroTarjeta', 'aceptaInfo'];
+    const camposObligatorios = ['nombre', 'apellidoPaterno', 'apellidoMaterno', 'genero', 'email', 'telefono', 'calleNumero', 'municipio', 'estado', 'colonia', 'codigoPostal', 'estadoNacimiento', 'diaNacimiento', 'mesNacimiento', 'anoNacimiento', 'numeroTarjeta', 'aceptaInfo'];
     
     if (camposObligatorios.some(campo => !formData[campo])) {
       alert('POR FAVOR, COMPLETA TODOS LOS CAMPOS OBLIGATORIOS MARCADOS CON *')
@@ -129,8 +181,8 @@ const CulturalAccessForm = () => {
       }
 
       const toUppercaseStrings = (obj) => Object.fromEntries(Object.entries(obj).map(([key, val]) => {
-        // No convertir email a mayúsculas
-        if (key === 'email') return [key, val]
+        // No convertir email, teléfono ni registrado_por a mayúsculas
+        if (key === 'email' || key === 'telefono' || key === 'registrado_por') return [key, val]
         return [key, typeof val === 'string' && val.trim() !== '' ? val.toUpperCase() : val]
       }));
       
@@ -161,7 +213,7 @@ const CulturalAccessForm = () => {
         apellido_materno: formData.apellidoMaterno.trim(),
         genero: formData.genero, 
         email: formData.email.trim().toLowerCase(), // Email en minúsculas
-        telefono: formData.telefono && formData.telefono.trim() !== '' ? formData.telefono.trim() : null,
+        telefono: formData.telefono && formData.telefono.trim() !== '' ? formData.telefono.replace(/\D/g, '') : null, // Remover guiones y caracteres no numéricos
         calle_numero: formData.calleNumero.trim(), 
         municipio: formData.municipio.trim(), 
         estado: formData.estado.trim(),
@@ -175,12 +227,15 @@ const CulturalAccessForm = () => {
         fecha_nacimiento: fechaNacimiento,
         numero_tarjeta: formData.numeroTarjeta.padStart(5, '0'), 
         acepta_info: aceptaInfoValue,
+        registrado_por: localStorage.getItem('perfilId') || null, // Guardar qué perfil registró este usuario (obtener en el momento del submit)
       }
+
+      const dataFinal = toUppercaseStrings(dataToSend);
 
       const response = await fetch("https://culturallaccess.com/api/usuario", {
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify(toUppercaseStrings(dataToSend))
+        body: JSON.stringify(dataFinal)
       })
 
       let responseData;
@@ -432,7 +487,7 @@ const CulturalAccessForm = () => {
                     if (value.length > 6) { value = value.slice(0, 10).replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3'); }
                     else if (value.length > 3) { value = value.slice(0, 6).replace(/(\d{3})(\d{3})/, '$1-$2'); }
                     handleInputChange("telefono", value);
-                  }} placeholder="123-456-7890" maxLength="12" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" disabled={isSubmitting} />
+                  }} placeholder="123-456-7890" maxLength="12" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" required disabled={isSubmitting} />
               </div>
 
               <div>

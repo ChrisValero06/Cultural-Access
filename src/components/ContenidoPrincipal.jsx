@@ -73,21 +73,11 @@ const ContenidoPrincipal = () => {
             
             // Si está expirada, no mostrar
             if (hoy > fechaFin) {
-              console.log(`🚫 Promoción expirada oculta automáticamente: ${carrusel.institucion} (expiró: ${fechaFinStr})`);
               return false;
             }
             
             return true;
           });
-        
-        console.log('📊 Promociones activas encontradas:', promocionesActivas.length)
-        console.log('📋 Detalles de promociones:', promocionesActivas.map(p => ({
-          id: p.id,
-          institucion: p.institucion,
-          estado: p.estado,
-          tieneImagenes: p.imagenes?.length > 0,
-          imagenesCount: p.imagenes?.length || 0
-        })))
         
         setCarruseles(promocionesActivas)
         setUltimaActualizacion(Date.now())
@@ -320,26 +310,15 @@ const ContenidoPrincipal = () => {
           const isVisible = getCarruselVisible(carruselId);
           const hasPromociones = carrusel.imagenes && carrusel.imagenes.length > 0;
           
-          console.log(`🔍 Promoción ${carrusel.id} (${carrusel.institucion}):`, {
-            carruselId,
-            isVisible,
-            hasPromociones,
-            imagenesCount: carrusel.imagenes?.length || 0
-          });
-          
           // Mostrar TODAS las promociones que pertenecen a carruseles visibles
           if (!hasPromociones) {
-            console.log(`❌ Omitida: ${carrusel.institucion} - No tiene imágenes`);
             return null;
           }
           
           // Si el carrusel al que pertenece NO está visible, no mostrarlo
           if (!isVisible) {
-            console.log(`❌ Omitida: ${carrusel.institucion} - Carrusel ${carruselId} no está visible`);
             return null;
           }
-          
-          console.log(`✅ Mostrando: ${carrusel.institucion} en carrusel ${carruselId}`);
           
           // Los carruseles se muestran en el orden que vienen del backend:
           // - Los más antiguos aparecen primero (arriba)

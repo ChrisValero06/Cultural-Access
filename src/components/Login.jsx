@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { apiService } from '../apis';
 
 const Login = () => {
@@ -10,14 +10,46 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Credenciales fijas (puedes editar estas)
+  // Limpiar sesión cuando se carga el login (por si llegaron aquí desde atrás o saliendo)
+  useEffect(() => {
+    const limpiarSesion = () => {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userUsuario');
+      localStorage.removeItem('perfilId');
+      localStorage.removeItem('perfilNombre');
+    }
+
+    // Limpiar sesión al cargar la página de login
+    limpiarSesion();
+
+    // También limpiar cuando detectan navegación hacia atrás
+    const handlePopState = () => {
+      if (window.location.pathname === '/login') {
+        limpiarSesion();
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  // Credenciales fijas con perfiles
   const FIXED_CREDENTIALS = [
-    { usuario: 'Pepe', password: 'CNL2025*.' },
-    // { usuario: 'admin', password: '123456' },
+    { usuario: 'franciscomurga', password: 'francisco2025', perfilId: 'francisco_murga', nombre: 'Francisco Murga' },
+    { usuario: 'alejandrolachea', password: 'alejandro2025', perfilId: 'alejandro_olachea', nombre: 'Alejandro Olachea' },
+    { usuario: 'raymundoibarra', password: 'raymundo2025', perfilId: 'raymundo_ibarra', nombre: 'Raymundo Ibarra' },
+    { usuario: 'karlaacevedo', password: 'karla2025', perfilId: 'karla_acevedo', nombre: 'Karla Acevedo' },
+    { usuario: 'pepe', password: 'CNL2025*.', perfilId: 'pepe', nombre: 'Pepe' },
+    { usuario: 'labnl', password: 'labnl2025', perfilId: 'labnl', nombre: 'LABNL' },
   ];
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => { 
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -37,7 +69,15 @@ const Login = () => {
 
       localStorage.setItem('authToken', `${usuario}-token`);
       localStorage.setItem('userUsuario', usuario);
-      navigate('/AdminDashboard');
+      localStorage.setItem('perfilId', match.perfilId);
+      localStorage.setItem('perfilNombre', match.nombre);
+      
+      // Solo Pepe accede al AdminDashboard, los demás van al Registro
+      if (match.perfilId === 'pepe') {
+        navigate('/AdminDashboard');
+      } else {
+        navigate('/Registro');
+      }
     } catch (err) {
       setError(err.message === 'Failed to fetch' ? 'No se pudo contactar el servidor' : (err.message || 'Error de autenticación'));
     } finally {

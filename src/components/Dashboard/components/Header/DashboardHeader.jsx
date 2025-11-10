@@ -15,11 +15,15 @@ const DashboardHeader = ({
 
   const handleLogout = async () => {
     try {
-      // Logout en frontend únicamente
+      // Limpiar todos los datos de sesión
       localStorage.removeItem('authToken');
       localStorage.removeItem('userEmail');
+      localStorage.removeItem('userUsuario');
+      localStorage.removeItem('perfilId');
+      localStorage.removeItem('perfilNombre');
     } catch (e) {}
-    navigate('/login');
+    // Redirigir al login
+    navigate('/login', { replace: true });
   };
   const PMA_BASE = 'https://69.48.207.88/phpMyAdmin/index.php?route=/database/structure&db=cultural_Access';
 
@@ -141,8 +145,19 @@ const DashboardHeader = ({
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const headers = [
-        'id','nombre','apellido_paterno','apellido_materno','genero','email','telefono','calle_numero','municipio','estado','colonia','codigo_postal','edad','estado_civil','estudios','curp','estado_nacimiento','fecha_nacimiento','numero_tarjeta','acepta_info','fecha_registro'
+        'id','nombre','apellido_paterno','apellido_materno','genero','email','telefono','calle_numero','municipio','estado','colonia','codigo_postal','edad','estado_civil','estudios','curp','estado_nacimiento','fecha_nacimiento','numero_tarjeta','acepta_info','registrado_por','fecha_registro'
       ];
+      
+      // Mapeo de IDs de perfil a nombres legibles
+      const perfilMap = {
+        'francisco_murga': 'Francisco Murga',
+        'alejandro_olachea': 'Alejandro Olachea',
+        'raymundo_ibarra': 'Raymundo Ibarra',
+        'karla_acevedo': 'Karla Acevedo',
+        'pepe': 'Pepe',
+        'labnl': 'LABNL',
+        'admin': 'Pepe' // Compatibilidad con registros antiguos
+      };
       const list = data.data || data.usuarios || data.rows || [];
       
       // Mapeo de valores a etiquetas en mayúsculas para estado civil
@@ -195,11 +210,16 @@ const DashboardHeader = ({
         const numeroTarjeta = toUpper(u.numero_tarjeta);
         const aceptaInfo = toUpper(u.acepta_info);
         
+        // Obtener nombre del perfil que registró
+        const registradoPor = u.registrado_por 
+          ? (perfilMap[u.registrado_por] || u.registrado_por.toUpperCase())
+          : 'SIN PERFIL';
+        
         return [
           u.id, nombre, apellidoPaterno, apellidoMaterno, genero, email,
           telefono, calleNumero, municipio, estado, colonia, codigoPostal,
           edad, estadoCivil, estudios, curp, estadoNacimiento, u.fecha_nacimiento,
-          numeroTarjeta, aceptaInfo, u.fecha_registro
+          numeroTarjeta, aceptaInfo, registradoPor, u.fecha_registro
         ];
       });
       await exportToXlsx(headers, xlsxRows, 'usuarios');
@@ -293,6 +313,16 @@ const DashboardHeader = ({
               }`}
             >
               🎭 Promociones
+            </button>
+            <button
+              onClick={() => onTabChange('estadisticas')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                tabActiva === 'estadisticas'
+                  ? 'bg-white text-orange-600 shadow-sm'
+                  : 'text-orange-100 hover:text-white hover:bg-orange-500'
+              }`}
+            >
+              📊 Estadísticas
             </button>
           </div>
         </div>

@@ -36,8 +36,50 @@ const AdminDashboard = () => {
       return;
     }
     
+    // Solo Pepe puede acceder al AdminDashboard
+    const perfilId = localStorage.getItem('perfilId');
+    if (perfilId !== 'pepe') {
+      // Si no es Pepe, redirigir al Registro
+      navigate('/Registro');
+      return;
+    }
+    
     cargarPromociones();
   }, [navigate]);
+
+  // Limpiar sesión cuando el usuario sale de la página o presiona atrás
+  useEffect(() => {
+    const limpiarSesion = () => {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userUsuario');
+      localStorage.removeItem('perfilId');
+      localStorage.removeItem('perfilNombre');
+    }
+
+    // Detectar cuando el usuario sale de la página (cierra pestaña, navega a otro sitio)
+    const handleBeforeUnload = () => {
+      limpiarSesion();
+    }
+
+    // Detectar cuando presionan el botón de atrás
+    const handlePopState = () => {
+      // Si van al login, limpiar sesión
+      setTimeout(() => {
+        if (window.location.pathname === '/login') {
+          limpiarSesion();
+        }
+      }, 100);
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   const cargarPromociones = async () => {
     try {
@@ -126,9 +168,9 @@ const AdminDashboard = () => {
   };
 
 
-  // Función para cambiar de pestaña (solo promociones)
+  // Función para cambiar de pestaña
   const handleTabChange = (tab) => {
-    setTabActiva('promociones');
+    setTabActiva(tab);
   };
 
   // Funciones para limpiar filtros
