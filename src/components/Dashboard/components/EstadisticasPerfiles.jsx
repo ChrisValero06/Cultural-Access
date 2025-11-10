@@ -6,7 +6,6 @@ const EstadisticasPerfiles = () => {
     alejandro_olachea: 0,
     raymundo_ibarra: 0,
     karla_acevedo: 0,
-    pepe: 0,
     jose: 0,
     labnl: 0,
     sinPerfil: 0,
@@ -40,7 +39,6 @@ const EstadisticasPerfiles = () => {
         alejandro_olachea: usuarios.filter(u => u.registrado_por === 'alejandro_olachea').length,
         raymundo_ibarra: usuarios.filter(u => u.registrado_por === 'raymundo_ibarra').length,
         karla_acevedo: usuarios.filter(u => u.registrado_por === 'karla_acevedo').length,
-        pepe: usuarios.filter(u => u.registrado_por === 'pepe' || u.registrado_por === 'admin').length, // Incluir 'admin' para compatibilidad
         jose: usuarios.filter(u => u.registrado_por === 'jose').length,
         labnl: usuarios.filter(u => u.registrado_por === 'labnl').length,
         sinPerfil: usuarios.filter(u => !u.registrado_por || u.registrado_por === null).length,
@@ -91,7 +89,7 @@ const EstadisticasPerfiles = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         {/* Tarjeta Francisco Murga */}
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white shadow-lg">
           <div className="flex items-center justify-between mb-4">
@@ -146,20 +144,6 @@ const EstadisticasPerfiles = () => {
           </div>
           <div className="text-4xl font-bold mb-2">{estadisticas.karla_acevedo}</div>
           <p className="text-pink-100 text-sm">usuarios registrados</p>
-        </div>
-
-        {/* Tarjeta Pepe */}
-        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg p-6 text-white shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold">Pepe</h3>
-            <div className="bg-white/20 rounded-full p-3">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-          </div>
-          <div className="text-4xl font-bold mb-2">{estadisticas.pepe}</div>
-          <p className="text-indigo-100 text-sm">usuarios registrados</p>
         </div>
 
         {/* Tarjeta Jose */}
@@ -226,10 +210,6 @@ const EstadisticasPerfiles = () => {
           <div className="flex justify-between items-center py-2 border-b">
             <span className="text-gray-700">Karla Acevedo</span>
             <span className="font-bold text-pink-600">{estadisticas.karla_acevedo} usuarios</span>
-          </div>
-          <div className="flex justify-between items-center py-2 border-b">
-            <span className="text-gray-700">Pepe</span>
-            <span className="font-bold text-indigo-600">{estadisticas.pepe} usuarios</span>
           </div>
           <div className="flex justify-between items-center py-2 border-b">
             <span className="text-gray-700">Jose</span>
