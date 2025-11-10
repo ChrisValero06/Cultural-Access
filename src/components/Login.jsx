@@ -45,7 +45,8 @@ const Login = () => {
     { usuario: 'alejandrolachea', password: 'alejandro2025', perfilId: 'alejandro_olachea', nombre: 'Alejandro Olachea' },
     { usuario: 'raymundoibarra', password: 'raymundo2025', perfilId: 'raymundo_ibarra', nombre: 'Raymundo Ibarra' },
     { usuario: 'karlaacevedo', password: 'karla2025', perfilId: 'karla_acevedo', nombre: 'Karla Acevedo' },
-    { usuario: 'pepe', password: 'CNL2025*.', perfilId: 'pepe', nombre: 'Pepe' },
+    { usuario: 'pepe', password: '7373', perfilId: 'pepe', nombre: 'Pepe' },
+    { usuario: 'jose', password: '7373', perfilId: 'jose', nombre: 'Jose' },
     { usuario: 'labnl', password: 'labnl2025', perfilId: 'labnl', nombre: 'LABNL' },
   ];
 
@@ -72,7 +73,7 @@ const Login = () => {
       localStorage.setItem('perfilId', match.perfilId);
       localStorage.setItem('perfilNombre', match.nombre);
       
-      // Solo Pepe accede al AdminDashboard, los demás van al Registro
+      // Solo Pepe accede al AdminDashboard, los demás (incluyendo Jose) van al Registro
       if (match.perfilId === 'pepe') {
         navigate('/AdminDashboard');
       } else {

@@ -155,6 +155,7 @@ const DashboardHeader = ({
         'raymundo_ibarra': 'Raymundo Ibarra',
         'karla_acevedo': 'Karla Acevedo',
         'pepe': 'Pepe',
+        'jose': 'Jose',
         'labnl': 'LABNL',
         'admin': 'Pepe' // Compatibilidad con registros antiguos
       };

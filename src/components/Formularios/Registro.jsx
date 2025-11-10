@@ -48,7 +48,7 @@ const CulturalAccessForm = () => {
       return
     }
     
-    // Si es Pepe, redirigir al AdminDashboard
+    // Si es Pepe, redirigir al AdminDashboard (Jose puede registrar)
     const perfilId = localStorage.getItem('perfilId')
     if (perfilId === 'pepe') {
       navigate('/AdminDashboard')

@@ -27,7 +27,7 @@ function App() {
     if (!isAuthed) {
       return <Navigate to="/login" replace />
     }
-    // Si es Pepe, redirigir al AdminDashboard
+    // Si es Pepe, redirigir al AdminDashboard (Jose puede registrar)
     const perfilId = localStorage.getItem('perfilId')
     if (perfilId === 'pepe') {
       return <Navigate to="/AdminDashboard" replace />
