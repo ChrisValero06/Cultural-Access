@@ -3,18 +3,44 @@ import { imagenes } from '../../constants/imagenes'
 import { apiService } from '../../apis'
 import { useInstituciones } from '../../context/InstitucionesContext'
 
-const ControlAcceso = () => {
+const Redencion = () => {
   const { instituciones, buscarInstituciones } = useInstituciones()
   
   const [formData, setFormData] = useState({
     institucion: '',
     numeroTarjeta: '',
-    fecha: new Date().toISOString().split('T')[0] // Fecha de hoy en formato YYYY-MM-DD
+    fecha: new Date().toISOString().split('T')[0], // Fecha de hoy en formato YYYY-MM-DD
+    tipoPromocion: ''
   })
 
   const [showInstituciones, setShowInstituciones] = useState(false)
   const [filteredInstituciones, setFilteredInstituciones] = useState([])
   const autocompleteRef = useRef(null)
+
+  // Instituciones que requieren tipo de promoción
+  const institucionesConPromocion = [
+    'Museo de Arte Contemporáneo de Monterrey (MARCO)',
+    'Museo de Historia Mexicana',
+    'Amigos de la Historia Mexicana'
+  ]
+
+  // Verificar si se debe mostrar el campo de tipo de promoción
+  // Solo para las instituciones específicas: MARCO, Museo de Historia Mexicana y Amigos de la Historia Mexicana
+  const mostrarTipoPromocion = (() => {
+    const institucionLower = formData.institucion.toLowerCase().trim()
+    
+    // Verificar MARCO (debe contener "marco" y "arte contemporáneo")
+    const esMarco = institucionLower.includes('marco') && 
+                    institucionLower.includes('arte contemporáneo')
+    
+    // Verificar Museo de Historia Mexicana (debe contener "museo de historia mexicana")
+    const esHistoriaMexicana = institucionLower.includes('museo de historia mexicana')
+    
+    // Verificar Amigos de la Historia Mexicana
+    const esAmigosHistoriaMexicana = institucionLower.includes('amigos de la historia mexicana')
+    
+    return esMarco || esHistoriaMexicana || esAmigosHistoriaMexicana
+  })()
 
   // Las instituciones ahora vienen del contexto global
 
@@ -62,7 +88,7 @@ const ControlAcceso = () => {
 
   // NUEVO: Limpiar para poder elegir otra opción rápidamente
   const handleClearInstitucion = () => {
-    setFormData(prev => ({ ...prev, institucion: '' }))
+    setFormData(prev => ({ ...prev, institucion: '', tipoPromocion: '' }))
     setFilteredInstituciones(instituciones)
     setShowInstituciones(true)
   }
@@ -78,7 +104,8 @@ const ControlAcceso = () => {
   const selectInstitucion = (institucion) => {
     setFormData(prevState => ({
       ...prevState,
-      institucion: institucion
+      institucion: institucion,
+      tipoPromocion: '' // Limpiar tipo de promoción al cambiar institución
     }))
     setShowInstituciones(false)
   }
@@ -104,6 +131,12 @@ const ControlAcceso = () => {
       // Validar que todos los campos estén llenos
       if (!formData.institucion || !formData.numeroTarjeta || !formData.fecha) {
         alert('Por favor, completa todos los campos')
+        return
+      }
+
+      // Validar tipo de promoción si es requerido
+      if (mostrarTipoPromocion && !formData.tipoPromocion) {
+        alert('Por favor, selecciona el tipo de promoción')
         return
       }
 
@@ -135,7 +168,8 @@ const ControlAcceso = () => {
         setFormData({
           institucion: '',
           numeroTarjeta: '',
-          fecha: new Date().toISOString().split('T')[0] // Resetear a fecha de hoy
+          fecha: new Date().toISOString().split('T')[0], // Resetear a fecha de hoy
+          tipoPromocion: ''
         })
       } else {
         alert('Error al crear el registro: ' + (response.message || response.error || 'Error desconocido'))
@@ -170,10 +204,10 @@ const ControlAcceso = () => {
             </div>
             
             {/* Título central */}
-            <h1 className="uppercase text-7xl font-bold text-center">
-              <span className="text-white">CULTUR</span>
-              <span className="text-black ml-2">ALL ACCESS</span>
-            </h1>
+            <h1 className="uppercase text-[clamp(0.8rem,4.2vw,4.2rem)] leading-tight font-bold text-center px-5" style={{ fontFamily: "'Neue Haas Grotesk Display', sans-serif", fontWeight: 700 }}>
+          <span className="text-white">CULTUR</span>
+          <span className="text-black ml-1">ALL ACCESS</span>
+        </h1>
             
             {/* Logo derecho */}
             <div className="flex items-center">
@@ -270,6 +304,35 @@ const ControlAcceso = () => {
                 </div>
               </div>
 
+              {/* Campo Tipo de Promoción - Solo visible para MARCO y Museo de Historia Mexicana */}
+              {mostrarTipoPromocion && (
+                <div>
+                  <label htmlFor="tipoPromocion" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                    TIPO DE PROMOCIÓN*
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="tipoPromocion"
+                      name="tipoPromocion"
+                      value={formData.tipoPromocion}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base appearance-none"
+                    >
+                      <option value="" className="text-gray-500">Selecciona el tipo de promoción</option>
+                      <option value="Descuento" className="text-black">Descuento</option>
+                      <option value="2x1" className="text-black">2x1</option>
+                      <option value="Entrada Gratuita" className="text-black">Entrada Gratuita</option>
+                      <option value="Promoción Especial" className="text-black">Promoción Especial</option>
+                      <option value="Descuento en restaurante" className="text-black">Descuento en restaurante</option>
+                    </select>
+                    <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-orange-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              )}
+
               {/* Campo Número de Tarjeta */}
               <div>
                 <label htmlFor="numeroTarjeta" className="block text-base font-bold text-gray-800 mb-2 text-white">
@@ -334,4 +397,5 @@ const ControlAcceso = () => {
   )
 }
 
-export default ControlAcceso
+export default Redencion
+

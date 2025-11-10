@@ -41,7 +41,7 @@ const HeroSection = () => {
         
         {/* Columna derecha - Imagen */}
         <div className="lg:w-1/2 flex justify-center lg:justify-end">
-          <div className="relative w-96 h-96 lg:w-[28rem] lg:h-[28rem] ">
+          <div className="relative w-96 h-96 lg:w-[28rem] lg:h-[28rem] -mt-8 lg:mt-0 p-8">
             <img 
               src="/images/Arco Milarca_Home 2.png" 
               alt="Logo Cultural Access"

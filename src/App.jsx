@@ -7,7 +7,7 @@ import HeroSection from './components/HeroSection'
 import BarraNaranja from './components/BarraNaranja'
 import ContenidoPrincipal from './components/ContenidoPrincipal'
 import Footer from './components/Footer'
-import Formulario from './components/Formularios/Control_Acceso'
+import Redencion from './components/Formularios/Redencion'
 import CargarPromo from './components/Formularios/CargarPromo'
 import Registro from './components/Formularios/Registro'
 import CargarPromoFunctional from './components/Formularios/CargarPromoFunctional'
@@ -38,11 +38,17 @@ function App() {
                     <ContenidoPrincipal />
                   </div>
                 } />
-                <Route path="/Control_Acceso" element={
-                  <Formulario />
+                <Route path="/Redencion" element={
+                  <Redencion />
                 } />
-                <Route path="/control_acceso" element={
-                  <Formulario />
+                <Route path="/redencion" element={
+                  <Redencion />
+                } />
+                <Route path="/Rendencion" element={
+                  <Redencion />
+                } />
+                <Route path="/Rendencion" element={
+                  <Redencion />
                 } />
                 <Route path="/CargarPromo" element={
                   <CargarPromo />

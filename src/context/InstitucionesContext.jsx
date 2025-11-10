@@ -4,6 +4,7 @@ const InstitucionesContext = createContext()
 
 // Lista base de instituciones culturales
 const institucionesBase = [
+  'Amigos de la Historia Mexicana',
   'Ballet de Monterrey',
   'Bread Coffee Roasters',
   'Café Belmonte',

@@ -219,10 +219,10 @@ const CulturalAccessForm = () => {
           <div className="flex items-center">
             <img src={imagenes.logoIzquierdo} alt="Logo CULTURA NL" className="w-24 h-24 object-contain" />
           </div>
-          <h1 className="uppercase text-7xl font-bold text-center">
-            <span className="text-white">CULTUR</span>
-            <span className="text-black ml-2">ALL ACCESS</span>
-          </h1>
+          <h1 className="uppercase text-[clamp(0.8rem,4.2vw,4.2rem)] leading-tight font-bold text-center px-5" style={{ fontFamily: "'Neue Haas Grotesk Display', sans-serif", fontWeight: 700 }}>
+          <span className="text-white">CULTUR</span>
+          <span className="text-black ml-1">ALL ACCESS</span>
+        </h1>
           <div className="flex items-center">
             <img src={imagenes.logoDerecho} alt="Logo NL" className="w-16 h-16 object-contain" />
           </div>
@@ -234,17 +234,17 @@ const CulturalAccessForm = () => {
                 <div>
                   <label htmlFor="nombre" className="block text-base font-bold text-gray-800 md:text-white mb-2">NOMBRE (S)*</label>
                   <TextInput id="nombre" name="nombre" autoComplete="given-name" value={formData.nombre}
-                    onChange={(e) => handleInputChange("nombre", e.target.value)} placeholder="INGRESA TU NOMBRE" required disabled={isSubmitting} />
+                    onChange={(e) => handleInputChange("nombre", e.target.value)} placeholder="INGRESA NOMBRE" required disabled={isSubmitting} />
                 </div>
                 <div>
                   <label htmlFor="apellidoPaterno" className="block text-base font-bold text-white mb-2">APELLIDO PATERNO*</label>
                   <TextInput id="apellidoPaterno" name="apellidoPaterno" autoComplete="family-name" value={formData.apellidoPaterno}
-                    onChange={(e) => handleInputChange("apellidoPaterno", e.target.value)} placeholder="INGRESA TU APELLIDO PATERNO" required disabled={isSubmitting} />
+                    onChange={(e) => handleInputChange("apellidoPaterno", e.target.value)} placeholder="INGRESA APELLIDO PATERNO" required disabled={isSubmitting} />
                 </div>
                 <div>
                   <label htmlFor="apellidoMaterno" className="block text-base font-bold text-white mb-2">APELLIDO MATERNO*</label>
                   <TextInput id="apellidoMaterno" name="apellidoMaterno" autoComplete="additional-name" value={formData.apellidoMaterno}
-                    onChange={(e) => handleInputChange("apellidoMaterno", e.target.value)} placeholder="INGRESA TU APELLIDO MATERNO" required disabled={isSubmitting} />
+                    onChange={(e) => handleInputChange("apellidoMaterno", e.target.value)} placeholder="INGRESA APELLIDO MATERNO" required disabled={isSubmitting} />
                 </div>
               </div>
 
@@ -262,7 +262,7 @@ const CulturalAccessForm = () => {
               <div>
                 <label htmlFor="email" className="block text-base font-bold text-white mb-2">EMAIL*</label>
                 <TextInput id="email" name="email" type="email" autoComplete="email" value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)} placeholder="INGRESA TU EMAIL" required disabled={isSubmitting} />
+                  onChange={(e) => handleInputChange("email", e.target.value)} placeholder="INGRESA EMAIL" required disabled={isSubmitting} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -275,7 +275,7 @@ const CulturalAccessForm = () => {
                   <div>
                     <label htmlFor="colonia" className="block text-base font-bold text-white mb-2">COLONIA*</label>
                     <TextInput id="colonia" name="colonia" autoComplete="address-level2" value={formData.colonia}
-                      onChange={(e) => handleInputChange("colonia", e.target.value)} placeholder="INGRESA TU COLONIA" required disabled={isSubmitting} />
+                      onChange={(e) => handleInputChange("colonia", e.target.value)} placeholder="INGRESA COLONIA" required disabled={isSubmitting} />
                   </div>
                   <div>
                     <label htmlFor="codigoPostal" className="block text-base font-bold text-white mb-2">CÓDIGO POSTAL*</label>
@@ -369,7 +369,7 @@ const CulturalAccessForm = () => {
                 <div className="opacity-0 animate-fade-in" style={{ animation: "fadeIn 0.3s ease-in-out forwards" }}>
                   <label htmlFor="curp" className="block text-base font-bold text-white mb-2">INGRESA TU CURP</label>
                   <TextInput id="curp" name="curp" value={formData.curp} onChange={(e) => handleInputChange("curp", e.target.value.toUpperCase())}
-                    placeholder="INGRESA TU CURP (18 CARACTERES)" maxLength={18} pattern="[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z][0-9]" disabled={isSubmitting} />
+                    placeholder="INGRESA CURP (18 CARACTERES)" maxLength={18} pattern="[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z][0-9]" disabled={isSubmitting} />
                   <p className="text-xs text-orange-100 mt-1">Formato: AAAA######HAAAAA##</p>
                 </div>
               )}
