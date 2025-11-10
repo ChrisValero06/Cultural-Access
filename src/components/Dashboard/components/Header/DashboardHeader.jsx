@@ -173,23 +173,33 @@ const DashboardHeader = ({
           estadoCivil = estadoCivilMap[valorLower] || String(estadoCivil).toUpperCase();
         }
         
-        // Convertir género, estudios y estado de nacimiento a mayúsculas
-        const genero = u.genero ? String(u.genero).toUpperCase() : '';
-        const estudios = u.estudios ? String(u.estudios).toUpperCase() : '';
-        const estadoNacimiento = u.estado_nacimiento ? String(u.estado_nacimiento).toUpperCase() : '';
+        // Función auxiliar para convertir a mayúsculas
+        const toUpper = (value) => value ? String(value).toUpperCase() : '';
         
-        // Convertir nombre, apellidos, municipio y estado a mayúsculas
-        const nombre = u.nombre ? String(u.nombre).toUpperCase() : '';
-        const apellidoPaterno = u.apellido_paterno ? String(u.apellido_paterno).toUpperCase() : '';
-        const apellidoMaterno = u.apellido_materno ? String(u.apellido_materno).toUpperCase() : '';
-        const municipio = u.municipio ? String(u.municipio).toUpperCase() : '';
-        const estado = u.estado ? String(u.estado).toUpperCase() : '';
+        // Convertir todos los campos de texto a mayúsculas
+        const nombre = toUpper(u.nombre);
+        const apellidoPaterno = toUpper(u.apellido_paterno);
+        const apellidoMaterno = toUpper(u.apellido_materno);
+        const genero = toUpper(u.genero);
+        const email = toUpper(u.email);
+        const telefono = toUpper(u.telefono);
+        const calleNumero = toUpper(u.calle_numero);
+        const municipio = toUpper(u.municipio);
+        const estado = toUpper(u.estado);
+        const colonia = toUpper(u.colonia);
+        const codigoPostal = toUpper(u.codigo_postal);
+        const edad = toUpper(u.edad);
+        const estudios = toUpper(u.estudios);
+        const curp = toUpper(u.curp);
+        const estadoNacimiento = toUpper(u.estado_nacimiento);
+        const numeroTarjeta = toUpper(u.numero_tarjeta);
+        const aceptaInfo = toUpper(u.acepta_info);
         
         return [
-          u.id, nombre, apellidoPaterno, apellidoMaterno, genero, u.email,
-          u.telefono, u.calle_numero, municipio, estado, u.colonia, u.codigo_postal,
-          u.edad, estadoCivil, estudios, u.curp, estadoNacimiento, u.fecha_nacimiento,
-          u.numero_tarjeta, u.acepta_info, u.fecha_registro
+          u.id, nombre, apellidoPaterno, apellidoMaterno, genero, email,
+          telefono, calleNumero, municipio, estado, colonia, codigoPostal,
+          edad, estadoCivil, estudios, curp, estadoNacimiento, u.fecha_nacimiento,
+          numeroTarjeta, aceptaInfo, u.fecha_registro
         ];
       });
       await exportToXlsx(headers, xlsxRows, 'usuarios');

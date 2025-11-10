@@ -213,9 +213,11 @@ const CulturalAccessForm = () => {
           const errorDataStr = JSON.stringify(responseData).toLowerCase();
           isEmailDuplicate = errorMessageLower.includes('email') && 
                             (errorMessageLower.includes('ya existe') || 
+                             errorMessageLower.includes('ya está registrado') ||
                              errorMessageLower.includes('duplicado') || 
                              errorMessageLower.includes('already') ||
                              errorMessageLower.includes('existe') ||
+                             errorMessageLower.includes('registrado') ||
                              errorDataStr.includes('email') && (errorDataStr.includes('unique') || errorDataStr.includes('duplicate')));
           
           // Si hay errores de validación, mostrarlos
@@ -225,7 +227,11 @@ const CulturalAccessForm = () => {
               const msg = err.message || err.msg || 'Error';
               // Detectar si es error de email duplicado
               if ((field.toLowerCase().includes('email') || msg.toLowerCase().includes('email')) && 
-                  (msg.toLowerCase().includes('ya existe') || msg.toLowerCase().includes('duplicado') || msg.toLowerCase().includes('already'))) {
+                  (msg.toLowerCase().includes('ya existe') || 
+                   msg.toLowerCase().includes('ya está registrado') ||
+                   msg.toLowerCase().includes('duplicado') || 
+                   msg.toLowerCase().includes('already') ||
+                   msg.toLowerCase().includes('registrado'))) {
                 isEmailDuplicate = true;
               }
               return `• ${field}: ${msg}`;
