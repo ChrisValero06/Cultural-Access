@@ -113,31 +113,96 @@ const CulturalAccessForm = () => {
 
     setIsSubmitting(true)
     try {
-      const toUppercaseStrings = (obj) => Object.fromEntries(Object.entries(obj).map(([key, val]) => [key, typeof val === 'string' ? val.toUpperCase() : val]));
+      // Validar formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        alert('POR FAVOR, INGRESA UN EMAIL VÁLIDO')
+        setIsSubmitting(false)
+        return
+      }
+
+      // Validar formato de fecha
+      if (!formData.diaNacimiento || !formData.mesNacimiento || !formData.anoNacimiento) {
+        alert('POR FAVOR, COMPLETA LA FECHA DE NACIMIENTO')
+        setIsSubmitting(false)
+        return
+      }
+
+      const toUppercaseStrings = (obj) => Object.fromEntries(Object.entries(obj).map(([key, val]) => {
+        // No convertir email a mayúsculas
+        if (key === 'email') return [key, val]
+        return [key, typeof val === 'string' && val.trim() !== '' ? val.toUpperCase() : val]
+      }));
+      
       const estudiosValue = formData.estudios === "SIN-ESTUDIOS" ? null : formData.estudios;
       const aceptaInfoValue = formData.aceptaInfo === "SI" ? 1 : 0;
       const diaFormateado = formData.diaNacimiento ? formData.diaNacimiento.padStart(2, '0') : '';
       const mesFormateado = formData.mesNacimiento ? formData.mesNacimiento.padStart(2, '0') : '';
 
+      // Validar que la fecha esté completa
+      if (!diaFormateado || !mesFormateado || !formData.anoNacimiento) {
+        alert('POR FAVOR, COMPLETA CORRECTAMENTE LA FECHA DE NACIMIENTO')
+        setIsSubmitting(false)
+        return
+      }
+
+      const fechaNacimiento = `${formData.anoNacimiento}-${mesFormateado}-${diaFormateado}`;
+      
+      // Validar formato de fecha (YYYY-MM-DD)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaNacimiento)) {
+        alert('LA FECHA DE NACIMIENTO TIENE UN FORMATO INVÁLIDO')
+        setIsSubmitting(false)
+        return
+      }
+
       const dataToSend = {
-        nombre: formData.nombre, apellido_paterno: formData.apellidoPaterno, apellido_materno: formData.apellidoMaterno,
-        genero: formData.genero, email: formData.email, telefono: formData.telefono || null,
-        calle_numero: formData.calleNumero, municipio: formData.municipio, estado: formData.estado,
-        colonia: formData.colonia, codigo_postal: formData.codigoPostal, edad: formData.edad || null,
-        estado_civil: formData.estadoCivil || null, estudios: estudiosValue,
-        curp: curpOption === "curp" ? formData.curp : null, estado_nacimiento: formData.estadoNacimiento,
-        fecha_nacimiento: `${formData.anoNacimiento}-${mesFormateado}-${diaFormateado}`,
-        numero_tarjeta: formData.numeroTarjeta, acepta_info: aceptaInfoValue,
+        nombre: formData.nombre.trim(), 
+        apellido_paterno: formData.apellidoPaterno.trim(), 
+        apellido_materno: formData.apellidoMaterno.trim(),
+        genero: formData.genero, 
+        email: formData.email.trim().toLowerCase(), // Email en minúsculas
+        telefono: formData.telefono && formData.telefono.trim() !== '' ? formData.telefono.trim() : null,
+        calle_numero: formData.calleNumero.trim(), 
+        municipio: formData.municipio.trim(), 
+        estado: formData.estado.trim(),
+        colonia: formData.colonia.trim(), 
+        codigo_postal: formData.codigoPostal.trim(), 
+        edad: formData.edad && formData.edad.trim() !== '' ? formData.edad : null,
+        estado_civil: formData.estadoCivil && formData.estadoCivil.trim() !== '' ? formData.estadoCivil : null, 
+        estudios: estudiosValue,
+        curp: curpOption === "curp" && formData.curp && formData.curp.trim() !== '' ? formData.curp.trim() : null, 
+        estado_nacimiento: formData.estadoNacimiento.trim(), 
+        fecha_nacimiento: fechaNacimiento,
+        numero_tarjeta: formData.numeroTarjeta.padStart(5, '0'), 
+        acepta_info: aceptaInfoValue,
       }
 
       const response = await fetch("https://culturallaccess.com/api/usuario", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(toUppercaseStrings(dataToSend))
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify(toUppercaseStrings(dataToSend))
       })
 
       if (!response.ok) {
         let errorMessage = `ERROR DEL SERVIDOR: ${response.status}`;
-        try { const errorData = await response.json(); errorMessage = errorData.message || errorMessage; } catch (e) {}
-        alert(errorMessage); return;
+        try { 
+          const errorData = await response.json(); 
+          errorMessage = errorData.message || errorData.error || errorMessage;
+          // Si hay errores de validación, mostrarlos
+          if (errorData.errors && Array.isArray(errorData.errors)) {
+            const errorMessages = errorData.errors.map(err => `• ${err.field || err.param || 'Campo'}: ${err.message || err.msg || 'Error'}`).join('\n');
+            errorMessage = `ERRORES DE VALIDACIÓN:\n${errorMessages}`;
+          }
+        } catch (e) {
+          // Si no se puede parsear el error, intentar leer el texto
+          try {
+            const errorText = await response.text();
+            if (errorText) errorMessage = errorText;
+          } catch (e2) {}
+        }
+        alert(errorMessage); 
+        setIsSubmitting(false)
+        return;
       }
 
       const result = await response.json()

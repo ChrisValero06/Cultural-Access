@@ -20,39 +20,67 @@ const Redencion = () => {
   // Instituciones que requieren tipo de promoción
   const institucionesConPromocion = [
     'Museo de Arte Contemporáneo de Monterrey (MARCO)',
-    'Museo de Historia Mexicana',
-    'Amigos de la Historia Mexicana'
+    'Museo de Historia Mexicana'
   ]
 
   // Verificar si se debe mostrar el campo de tipo de promoción
-  // Solo para las instituciones específicas: MARCO, Museo de Historia Mexicana y Amigos de la Historia Mexicana
+  // Solo para las instituciones específicas: MARCO y Museo de Historia Mexicana
   const mostrarTipoPromocion = (() => {
     const institucionLower = formData.institucion.toLowerCase().trim()
     
-    // Verificar MARCO (debe contener "marco" y "arte contemporáneo")
-    const esMarco = institucionLower.includes('marco') && 
-                    institucionLower.includes('arte contemporáneo')
-    
-    // Verificar Museo de Historia Mexicana (debe contener "museo de historia mexicana")
-    const esHistoriaMexicana = institucionLower.includes('museo de historia mexicana')
-    
-    // Verificar Amigos de la Historia Mexicana
-    const esAmigosHistoriaMexicana = institucionLower.includes('amigos de la historia mexicana')
-    
-    return esMarco || esHistoriaMexicana || esAmigosHistoriaMexicana
+    // Usar la lista de instituciones para verificar
+    return institucionesConPromocion.some(inst => {
+      const instLower = inst.toLowerCase()
+      
+      // Verificar MARCO (debe contener "marco" y "arte contemporáneo")
+      if (instLower.includes('marco') && instLower.includes('arte contemporáneo')) {
+        return institucionLower.includes('marco') && institucionLower.includes('arte contemporáneo')
+      }
+      
+      // Verificar otras instituciones por coincidencia
+      return institucionLower.includes(instLower) || instLower.includes(institucionLower)
+    })
   })()
+
+  // Verificar si es específicamente MARCO
+  const esMarco = (() => {
+    const institucionLower = formData.institucion.toLowerCase().trim()
+    return institucionLower.includes('marco') && institucionLower.includes('arte contemporáneo')
+  })()
+
+  // Opciones de promoción para MARCO
+  const promocionesMarco = [
+    { value: 'Descuento en entrada', label: 'Descuento en entrada' },
+    { value: 'Entrada gratuita', label: 'Entrada gratuita' },
+    { value: '2x1 en entrada', label: '2x1 en entrada' },
+    { value: 'Descuento en tienda', label: 'Descuento en tienda' },
+    { value: 'Descuento en restaurante', label: 'Descuento en restaurante' },
+    { value: 'Acceso a eventos especiales', label: 'Acceso a eventos especiales' },
+    { value: 'Visita guiada gratuita', label: 'Visita guiada gratuita' }
+  ]
+
+  // Opciones de promoción para Museo de Historia Mexicana
+  const promocionesHistoriaMexicana = [
+    { value: 'Descuento', label: 'Descuento' },
+    { value: '2x1', label: '2x1' },
+    { value: 'Entrada Gratuita', label: 'Entrada Gratuita' },
+    { value: 'Promoción Especial', label: 'Promoción Especial' },
+    { value: 'Descuento en restaurante', label: 'Descuento en restaurante' }
+  ]
 
   // Las instituciones ahora vienen del contexto global
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value
-    }))
-
-    // Filtrar instituciones si es el campo institución
+    
+    // Si cambia la institución, limpiar el tipo de promoción
     if (name === 'institucion') {
+      setFormData(prevState => ({
+        ...prevState,
+        [name]: value,
+        tipoPromocion: '' // Limpiar tipo de promoción al cambiar institución
+      }))
+      
       if (value.trim() === '') {
         setFilteredInstituciones([])
         setShowInstituciones(false)
@@ -61,6 +89,11 @@ const Redencion = () => {
         setFilteredInstituciones(filtered)
         setShowInstituciones(filtered.length > 0)
       }
+    } else {
+      setFormData(prevState => ({
+        ...prevState,
+        [name]: value
+      }))
     }
   }
 
@@ -320,11 +353,21 @@ const Redencion = () => {
                       className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base appearance-none"
                     >
                       <option value="" className="text-gray-500">Selecciona el tipo de promoción</option>
-                      <option value="Descuento" className="text-black">Descuento</option>
-                      <option value="2x1" className="text-black">2x1</option>
-                      <option value="Entrada Gratuita" className="text-black">Entrada Gratuita</option>
-                      <option value="Promoción Especial" className="text-black">Promoción Especial</option>
-                      <option value="Descuento en restaurante" className="text-black">Descuento en restaurante</option>
+                      {esMarco ? (
+                        // Opciones específicas para MARCO
+                        promocionesMarco.map((promo) => (
+                          <option key={promo.value} value={promo.value} className="text-black">
+                            {promo.label}
+                          </option>
+                        ))
+                      ) : (
+                        // Opciones para Museo de Historia Mexicana
+                        promocionesHistoriaMexicana.map((promo) => (
+                          <option key={promo.value} value={promo.value} className="text-black">
+                            {promo.label}
+                          </option>
+                        ))
+                      )}
                     </select>
                     <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-orange-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
