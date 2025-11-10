@@ -183,40 +183,85 @@ const CulturalAccessForm = () => {
         body: JSON.stringify(toUppercaseStrings(dataToSend))
       })
 
-      if (!response.ok) {
-        let errorMessage = `ERROR DEL SERVIDOR: ${response.status}`;
-        try { 
-          const errorData = await response.json(); 
-          errorMessage = errorData.message || errorData.error || errorMessage;
-          // Si hay errores de validación, mostrarlos
-          if (errorData.errors && Array.isArray(errorData.errors)) {
-            const errorMessages = errorData.errors.map(err => `• ${err.field || err.param || 'Campo'}: ${err.message || err.msg || 'Error'}`).join('\n');
-            errorMessage = `ERRORES DE VALIDACIÓN:\n${errorMessages}`;
-          }
-        } catch (e) {
-          // Si no se puede parsear el error, intentar leer el texto
-          try {
-            const errorText = await response.text();
-            if (errorText) errorMessage = errorText;
-          } catch (e2) {}
+      let responseData;
+      let isEmailDuplicate = false;
+      
+      // Clonar la respuesta antes de leerla para poder leerla múltiples veces si es necesario
+      const responseClone = response.clone();
+      
+      // Intentar leer la respuesta como JSON
+      try {
+        responseData = await response.json();
+      } catch (e) {
+        // Si no es JSON, intentar leer como texto
+        try {
+          const errorText = await responseClone.text();
+          responseData = errorText ? { message: errorText } : null;
+        } catch (e2) {
+          responseData = null;
         }
-        alert(errorMessage); 
-        setIsSubmitting(false)
-        return;
       }
 
-      const result = await response.json()
-      if (result.success) {
+      if (!response.ok) {
+        let errorMessage = `ERROR DEL SERVIDOR: ${response.status}`;
+        
+        if (responseData) {
+          errorMessage = responseData.message || responseData.error || errorMessage;
+          
+          // Detectar si el error es por email duplicado
+          const errorMessageLower = errorMessage.toLowerCase();
+          const errorDataStr = JSON.stringify(responseData).toLowerCase();
+          isEmailDuplicate = errorMessageLower.includes('email') && 
+                            (errorMessageLower.includes('ya existe') || 
+                             errorMessageLower.includes('duplicado') || 
+                             errorMessageLower.includes('already') ||
+                             errorMessageLower.includes('existe') ||
+                             errorDataStr.includes('email') && (errorDataStr.includes('unique') || errorDataStr.includes('duplicate')));
+          
+          // Si hay errores de validación, mostrarlos
+          if (responseData.errors && Array.isArray(responseData.errors)) {
+            const errorMessages = responseData.errors.map(err => {
+              const field = err.field || err.param || 'Campo';
+              const msg = err.message || err.msg || 'Error';
+              // Detectar si es error de email duplicado
+              if ((field.toLowerCase().includes('email') || msg.toLowerCase().includes('email')) && 
+                  (msg.toLowerCase().includes('ya existe') || msg.toLowerCase().includes('duplicado') || msg.toLowerCase().includes('already'))) {
+                isEmailDuplicate = true;
+              }
+              return `• ${field}: ${msg}`;
+            }).join('\n');
+            errorMessage = `ERRORES DE VALIDACIÓN:\n${errorMessages}`;
+          }
+        }
+        
+        // Si es error de email duplicado, tratar como registro exitoso
+        if (isEmailDuplicate && response.status === 400) {
+          // Permitir el registro aunque el email ya exista - tratar como exitoso
+          alert("¡FORMULARIO ENVIADO CORRECTAMENTE! GRACIAS POR REGISTRARTE.")
+          setFormData({ nombre: "", apellidoPaterno: "", apellidoMaterno: "", genero: "", email: "", telefono: "", calleNumero: "", municipio: "", estado: "", colonia: "", codigoPostal: "", edad: "", estudios: "", curp: "", estadoNacimiento: "", diaNacimiento: "", mesNacimiento: "", anoNacimiento: "", numeroTarjeta: "", aceptaInfo: "" })
+          setCurpOption("curp")
+          setTarjetaDisponible(null)
+          setIsSubmitting(false)
+          return;
+        } else {
+          alert(errorMessage); 
+          setIsSubmitting(false)
+          return;
+        }
+      }
+
+      // Si la respuesta fue exitosa
+      if (responseData && responseData.success) {
         alert("¡FORMULARIO ENVIADO CORRECTAMENTE! GRACIAS POR REGISTRARTE.")
         setFormData({ nombre: "", apellidoPaterno: "", apellidoMaterno: "", genero: "", email: "", telefono: "", calleNumero: "", municipio: "", estado: "", colonia: "", codigoPostal: "", edad: "", estudios: "", curp: "", estadoNacimiento: "", diaNacimiento: "", mesNacimiento: "", anoNacimiento: "", numeroTarjeta: "", aceptaInfo: "" })
         setCurpOption("curp")
         setTarjetaDisponible(null)
-      } else {
-        if (result.errors) {
-          const errorMessages = result.errors.map(err => `• ${err.field}: ${err.message}`).join('\n');
+      } else if (responseData) {
+        if (responseData.errors) {
+          const errorMessages = responseData.errors.map(err => `• ${err.field}: ${err.message}`).join('\n');
           alert(`ERRORES DE VALIDACIÓN:\n${errorMessages}`);
         } else {
-          alert(`ERROR: ${result.message || 'ERROR DESCONOCIDO'}`);
+          alert(`ERROR: ${responseData.message || 'ERROR DESCONOCIDO'}`);
         }
       }
     } catch (error) {

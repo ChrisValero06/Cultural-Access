@@ -279,7 +279,7 @@ const ContenidoPrincipal = () => {
         
         {/* Sección de header */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8 items-center mb-6 sm:mb-8 md:mb-10 lg:mb-12">
-          <div className="flex justify-center sm:justify-start">
+          <div className="flex justify-center">
             <img 
               src="/images/culturaaaaaaaaaalaccesssssslogo-04.png" 
               alt="Logo CULTURALL ACCESS - Nuevo León"
@@ -289,11 +289,11 @@ const ContenidoPrincipal = () => {
           <div className="space-y-2 sm:space-y-1 text-center sm:text-left">
             <div className="flex items-center justify-center sm:justify-start">
               <div>
-                <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800">
-                  PROMOCIONES VIGENTES-NOVIEMBRE
+                <h1 className="font-semibold text-gray-800 text-center" style={{ fontSize: '20px' }}>
+                  PROMOCIONES VIGENTES - NOVIEMBRE
                 </h1>
-                <p className="text-gray-600 leading-relaxed text-sm sm:text-base md:text-lg font-medium">
-                  Presentando tarjeta y sujeta a disponibilidad
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-base md:text-lg font-medium text-center">
+                  Presentando tarjeta y sujetas a disponibilidad
                 </p>
                 
               
