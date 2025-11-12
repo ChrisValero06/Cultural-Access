@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { imagenes } from '../../constants/imagenes'
 import { apiService } from '../../apis'
 import { API_CONFIG } from '../../config/api.js'
+import { useInstituciones } from '../../context/InstitucionesContext'
 
 const DATA = {
-  institucion: ['Amigos de la Historia Mexicana', 'Ballet de Monterrey', 'Bread Coffee Roasters', 'Café Belmonte', 'Casa Coa', 'Casa de la Cultura de Nuevo León', 'Casa Motis', 'Casa Musa', 'Centro Roberto Garza Sada', 'Cineteca de Nuevo León', 'Constelación Feria de Arte', 'Dramático', 'El Lingote Restaurante', 'Escuela Superior de Música y Danza de Monterrey', 'Fama Monterrey', 'Fondo de Cultura Económica', 'Fondo Editorial de Nuevo León', 'Fototeca de Nuevo León', 'Heart Ego', 'Horno 3', 'La Gran Audiencia', 'La Milarca', 'Librería Bruma', 'Librería Sentido', 'Monstera Coffee Bar', 'Museo 31', 'Museo del Acero Horno 3', 'Museo de Arte Contemporáneo de Monterrey (MARCO)', 'Museo de la Batalla', 'Museo de Historia Mexicana', 'Museo del Noreste', 'Museo del Palacio', 'Museo del Vidrio (MUVI)', 'Museo Estatal de Culturas Populares de Nuevo León', 'Museo Regional de Nuevo León El Obispado', 'Papalote Museo del Niño Monterrey', 'Salón de la Fama de Beisbol Mexicano', 'Saxy Jazz Club', 'Secretaría de Cultura', 'Seabird Coffee', 'Teatro de la Ciudad', 'Vaso Roto Ediciones'],
   tipoPromocion: ['Entradas gratuitas', 'Descuentos', 'Acceso prioritario', 'Descuentos para la educación', 'Visitas guiadas exclusivas', 'Descuentos en publicaciones CONARTE', 'Asistencia a conferencias', 'Descuentos en cafés/comida', 'Boletos 2x4', 'Descuentos por temporada', 'Otra'],
   disciplina: ['Artes Plásticas', 'Cine', 'Danza', 'Teatro', 'Música', 'Literatura', 'Diseño Gráfico', 'Arquitectura', 'Arte Textil', 'Otra']
 }
 
-const SelectField = ({ id, name, label, value, onChange, options, placeholder = 'Selecciona una opción', required = true }) => (
+const SelectField = ({ id, name, label, value, onChange, options, placeholder = 'Selecciona una opción', required = true, showAddNew = false, onAddNew }) => (
   <div>
     <label htmlFor={id} className="block text-base font-bold text-white mb-2">{label}{required ? '*' : ''}</label>
     <div className="relative">
@@ -24,6 +24,18 @@ const SelectField = ({ id, name, label, value, onChange, options, placeholder = 
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
       </svg>
     </div>
+    {showAddNew && onAddNew && (
+      <button
+        type="button"
+        onClick={onAddNew}
+        className="mt-2 text-sm text-black hover:text-black  flex items-center gap-1"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+        Agregar nueva institución
+      </button>
+    )}
   </div>
 )
 
@@ -47,6 +59,7 @@ const LargeTextInput = ({ id, name, label, placeholder, value, onChange, onBlur,
 }
 
 const CargarPromoFunctional = () => {
+  const { instituciones, agregarInstitucion, cargando: cargandoInstituciones } = useInstituciones()
   const [formData, setFormData] = useState({
     institucion: '', tipoPromocion: '', disciplina: '', beneficios: '',
     comentariosRestricciones: '', fechaInicio: '', fechaFin: '',
@@ -56,6 +69,9 @@ const CargarPromoFunctional = () => {
   const [previewSecundaria, setPreviewSecundaria] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
+  const [showAddInstitucion, setShowAddInstitucion] = useState(false)
+  const [nuevaInstitucion, setNuevaInstitucion] = useState('')
+  const [agregandoInstitucion, setAgregandoInstitucion] = useState(false)
   const LIMITS = { beneficios: 100, comentarios: 100 }
 
   const normalizeSpanishText = (rawText, ensureFinalPunctuation = false) => {
@@ -114,6 +130,28 @@ const CargarPromoFunctional = () => {
   const handleBlurNormalize = (e) => {
     const { name } = e.target
     setFormData(prev => ({ ...prev, [name]: normalizeSpanishText(prev[name], true) }))
+  }
+
+  const handleAgregarInstitucion = async () => {
+    if (!nuevaInstitucion.trim()) {
+      setMessage('Por favor, ingresa el nombre de la institución')
+      return
+    }
+
+    setAgregandoInstitucion(true)
+    setMessage('')
+
+    try {
+      await agregarInstitucion(nuevaInstitucion.trim())
+      setFormData(prev => ({ ...prev, institucion: nuevaInstitucion.trim() }))
+      setNuevaInstitucion('')
+      setShowAddInstitucion(false)
+      setMessage('Institución agregada exitosamente')
+    } catch (error) {
+      setMessage('Error al agregar la institución: ' + (error.message || 'Error desconocido'))
+    } finally {
+      setAgregandoInstitucion(false)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -308,15 +346,63 @@ const CargarPromoFunctional = () => {
                   <p className="text-orange-100 text-base">Completa los datos de la nueva promoción</p>
                 </div>
 
-                <SelectField
-                  id="institucion"
-                  name="institucion"
-                  label="INSTITUCIÓN"
-                  value={formData.institucion}
-                  onChange={handleChange}
-                  options={DATA.institucion}
-                  placeholder="Selecciona la institución"
-                />
+                <div>
+                  <SelectField
+                    id="institucion"
+                    name="institucion"
+                    label="INSTITUCIÓN"
+                    value={formData.institucion}
+                    onChange={handleChange}
+                    options={cargandoInstituciones ? [] : instituciones}
+                    placeholder={cargandoInstituciones ? 'Cargando instituciones...' : 'Selecciona la institución'}
+                    showAddNew={true}
+                    onAddNew={() => setShowAddInstitucion(true)}
+                  />
+                  
+                  {showAddInstitucion && (
+                    <div className="mt-3 p-4 bg-orange-400 rounded-lg border-2 border-orange-300">
+                      <label htmlFor="nuevaInstitucion" className="block text-sm font-bold text-white mb-2">
+                        Nombre de la nueva institución
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          id="nuevaInstitucion"
+                          type="text"
+                          value={nuevaInstitucion}
+                          onChange={(e) => setNuevaInstitucion(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              handleAgregarInstitucion()
+                            }
+                          }}
+                          className="flex-1 px-4 py-2 border-2 border-orange-500 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent bg-white text-black"
+                          placeholder="Institución "
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAgregarInstitucion}
+                          disabled={agregandoInstitucion || !nuevaInstitucion.trim()}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-colors"
+                        >
+                          {agregandoInstitucion ? 'Agregando...' : 'Agregar'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAddInstitucion(false)
+                            setNuevaInstitucion('')
+                            setMessage('')
+                          }}
+                          className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-medium transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <SelectField
                   id="tipoPromocion"
@@ -345,31 +431,6 @@ const CargarPromoFunctional = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <DateField name="fechaInicio" label="INICIO DE LA PROMOCIÓN" value={formData.fechaInicio} onChange={handleChange} />
                   <DateField name="fechaFin" label="FIN DE LA PROMOCIÓN" value={formData.fechaFin} onChange={handleChange} />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FileField 
-                    name="imagenPrincipal" 
-                    label="IMAGEN PRINCIPAL" 
-                    value={formData.imagenPrincipal} 
-                    onChange={handleChange} 
-                    accept="image/*" 
-                    required={false} 
-                    description="Esta imagen se mostrará en el carrusel principal (opcional). Máx. 30MB"
-                    preview={previewPrincipal}
-                    onRemove={() => handleRemoveImage('principal')}
-                  />
-                  <FileField 
-                    name="imagenSecundaria" 
-                    label="IMAGEN SECUNDARIA" 
-                    value={formData.imagenSecundaria} 
-                    onChange={handleChange} 
-                    accept="image/*" 
-                    required={false} 
-                    description="Imagen adicional para la promoción (opcional). Máx. 30MB"
-                    preview={previewSecundaria}
-                    onRemove={() => handleRemoveImage('secundaria')}
-                  />
                 </div>
 
                 <p className="text-sm text-orange-100 italic">*Campo obligatorio</p>
@@ -402,11 +463,7 @@ const CargarPromoFunctional = () => {
           </div>
         </div>
 
-        <div className="text-center pb-4 px-6">
-          <p className="text-white text-base leading-relaxed max-w-[1090px] mx-auto">
-            Tendrán derecho a participar aquellas instituciones culturales públicas y público-privadas que operen en el estado de Nuevo León, al igual que espacios culturales como museos, galerías, teatros, auditorios, centros de arte, bibliotecas, y centros culturales que cumplan con los criterios de promoción de la cultura, calidad de actividades ofrecidas y su accesibilidad al público.
-          </p>
-        </div>
+        
       </div>
     </div>
   )

@@ -3,12 +3,14 @@ export { promocionesService } from './promociones/promocionesService.js';
 export { usuariosService } from './usuarios/usuariosService.js';
 export { controlAccesoService } from './control-acceso/controlAccesoService.js';
 export { authService } from './auth/authService.js';
+export { institucionesService } from './instituciones/institucionesService.js';
 
 // Servicio unificado que combina todos los servicios (para compatibilidad con código existente)
 import { promocionesService } from './promociones/promocionesService.js';
 import { usuariosService } from './usuarios/usuariosService.js';
 import { controlAccesoService } from './control-acceso/controlAccesoService.js';
 import { authService } from './auth/authService.js';
+import { institucionesService } from './instituciones/institucionesService.js';
 
 export const apiService = {
   // Promociones
@@ -22,6 +24,9 @@ export const apiService = {
   
   // Autenticación
   ...authService,
+  
+  // Instituciones
+  ...institucionesService,
   
   // Métodos adicionales para compatibilidad
   obtenerPromocionesAdmin: promocionesService.obtenerPromocionesAdmin,
@@ -60,5 +65,12 @@ export const apiService = {
   buscarControlAccesoPorNombre: controlAccesoService.buscarControlAccesoPorNombre,
   buscarControlAccesoPorTarjeta: controlAccesoService.buscarControlAccesoPorTarjeta,
   buscarControlAccesoPorFecha: controlAccesoService.buscarControlAccesoPorFecha,
-  obtenerEstadisticasControlAcceso: controlAccesoService.obtenerEstadisticasControlAcceso
+  obtenerEstadisticasControlAcceso: controlAccesoService.obtenerEstadisticasControlAcceso,
+  
+  // Métodos de instituciones
+  obtenerInstituciones: institucionesService.obtenerInstituciones,
+  crearInstitucion: institucionesService.crearInstitucion,
+  buscarInstituciones: institucionesService.buscarInstituciones,
+  actualizarInstitucion: institucionesService.actualizarInstitucion,
+  eliminarInstitucion: institucionesService.eliminarInstitucion
 };

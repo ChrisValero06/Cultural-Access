@@ -377,7 +377,7 @@ const CulturalAccessForm = () => {
     { value: "salinas-victoria", label: "Salinas Victoria" }, { value: "san-nicolas-de-los-garza", label: "San Nicolás de los Garza" },
     { value: "san-pedro-garza-garcia", label: "San Pedro Garza García" }, { value: "santa-catarina", label: "Santa Catarina" },
     { value: "santiago", label: "Santiago" }, { value: "vallecillo", label: "Vallecillo" },
-    { value: "villaldama", label: "Villaldama" }
+    { value: "villaldama", label: "Villaldama" }, { value: "Otro", label: "Otro" }
   ];
 
   return (

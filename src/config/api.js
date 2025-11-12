@@ -15,7 +15,12 @@ export const API_CONFIG = {
     
     // Usuarios
     CREAR_USUARIO: '/usuario',
-    VERIFICAR_TARJETA: '/usuario/verificar-tarjeta'
+    VERIFICAR_TARJETA: '/usuario/verificar-tarjeta',
+    
+    // Instituciones
+    OBTENER_INSTITUCIONES: '/instituciones',
+    CREAR_INSTITUCION: '/instituciones',
+    BUSCAR_INSTITUCIONES: '/instituciones/buscar'
   },
   
   // Configuración de subida de archivos

@@ -15,60 +15,97 @@ const Redencion = () => {
 
   const [showInstituciones, setShowInstituciones] = useState(false)
   const [filteredInstituciones, setFilteredInstituciones] = useState([])
+  const [promocionesActivas, setPromocionesActivas] = useState([])
+  const [cargandoPromociones, setCargandoPromociones] = useState(false)
   const autocompleteRef = useRef(null)
 
-  // Instituciones que requieren tipo de promoción
-  const institucionesConPromocion = [
-    'Museo de Arte Contemporáneo de Monterrey (MARCO)',
-    'Museo de Historia Mexicana'
-  ]
-
   // Verificar si se debe mostrar el campo de tipo de promoción
-  // Solo para las instituciones específicas: MARCO y Museo de Historia Mexicana
-  const mostrarTipoPromocion = (() => {
-    const institucionLower = formData.institucion.toLowerCase().trim()
-    
-    // Usar la lista de instituciones para verificar
-    return institucionesConPromocion.some(inst => {
-      const instLower = inst.toLowerCase()
-      
-      // Verificar MARCO (debe contener "marco" y "arte contemporáneo")
-      if (instLower.includes('marco') && instLower.includes('arte contemporáneo')) {
-        return institucionLower.includes('marco') && institucionLower.includes('arte contemporáneo')
-      }
-      
-      // Verificar otras instituciones por coincidencia
-      return institucionLower.includes(instLower) || instLower.includes(institucionLower)
-    })
-  })()
-
-  // Verificar si es específicamente MARCO
-  const esMarco = (() => {
-    const institucionLower = formData.institucion.toLowerCase().trim()
-    return institucionLower.includes('marco') && institucionLower.includes('arte contemporáneo')
-  })()
-
-  // Opciones de promoción para MARCO
-  const promocionesMarco = [
-    { value: 'Descuento en entrada', label: 'Descuento en entrada' },
-    { value: 'Entrada gratuita', label: 'Entrada gratuita' },
-    { value: '2x1 en entrada', label: '2x1 en entrada' },
-    { value: 'Descuento en tienda', label: 'Descuento en tienda' },
-    { value: 'Descuento en restaurante', label: 'Descuento en restaurante' },
-    { value: 'Acceso a eventos especiales', label: 'Acceso a eventos especiales' },
-    { value: 'Visita guiada gratuita', label: 'Visita guiada gratuita' }
-  ]
-
-  // Opciones de promoción para Museo de Historia Mexicana
-  const promocionesHistoriaMexicana = [
-    { value: 'Descuento', label: 'Descuento' },
-    { value: '2x1', label: '2x1' },
-    { value: 'Entrada Gratuita', label: 'Entrada Gratuita' },
-    { value: 'Promoción Especial', label: 'Promoción Especial' },
-    { value: 'Descuento en restaurante', label: 'Descuento en restaurante' }
-  ]
+  // Se muestra cuando hay más de 1 promoción activa para la institución seleccionada
+  const mostrarTipoPromocion = promocionesActivas.length > 1
 
   // Las instituciones ahora vienen del contexto global
+
+  // Estado para almacenar todas las promociones (cargadas una vez)
+  const [todasLasPromociones, setTodasLasPromociones] = useState([])
+
+  // Cargar todas las promociones al montar el componente
+  useEffect(() => {
+    const cargarTodasLasPromociones = async () => {
+      try {
+        const response = await apiService.obtenerPromocionesAdmin()
+        
+        // Obtener promociones de la respuesta (manejar diferentes estructuras)
+        let promociones = []
+        if (Array.isArray(response)) {
+          promociones = response
+        } else if (response.promociones && Array.isArray(response.promociones)) {
+          promociones = response.promociones
+        } else if (response.data && Array.isArray(response.data)) {
+          promociones = response.data
+        } else if (response.resultado && Array.isArray(response.resultado)) {
+          promociones = response.resultado
+        }
+        
+        setTodasLasPromociones(promociones)
+      } catch (error) {
+        console.error('Error al cargar todas las promociones:', error)
+        setTodasLasPromociones([])
+      }
+    }
+    
+    cargarTodasLasPromociones()
+  }, [])
+
+  // Función para cargar promociones activas de una institución
+  const cargarPromocionesActivas = async (institucionNombre) => {
+    if (!institucionNombre || institucionNombre.trim() === '') {
+      setPromocionesActivas([])
+      return
+    }
+
+    try {
+      setCargandoPromociones(true)
+      
+      // Filtrar promociones por institución (comparación flexible)
+      const institucionLower = institucionNombre.toLowerCase().trim()
+      const promocionesDeInstitucion = todasLasPromociones.filter(promo => {
+        const promoInstitucion = (promo.institucion || '').toLowerCase().trim()
+        // Comparación flexible: incluye si el nombre contiene la búsqueda o viceversa
+        return promoInstitucion.includes(institucionLower) || institucionLower.includes(promoInstitucion)
+      })
+      
+      // Filtrar solo promociones activas y no expiradas
+      const hoy = new Date()
+      hoy.setHours(0, 0, 0, 0)
+      
+      const activas = promocionesDeInstitucion.filter(promo => {
+        // Verificar estado (case-insensitive)
+        const estadoLower = (promo.estado || '').toLowerCase()
+        if (estadoLower === 'inactiva' || estadoLower === 'expirada') {
+          return false
+        }
+        
+        // Verificar que no esté expirada por fecha
+        const fechaFinStr = promo.fecha_fin || promo.fechaFin || promo.fecha_final
+        if (fechaFinStr) {
+          const fechaFin = new Date(fechaFinStr)
+          fechaFin.setHours(23, 59, 59, 999)
+          if (hoy > fechaFin) {
+            return false
+          }
+        }
+        
+        return true
+      })
+      
+      setPromocionesActivas(activas)
+    } catch (error) {
+      console.error('Error al filtrar promociones:', error)
+      setPromocionesActivas([])
+    } finally {
+      setCargandoPromociones(false)
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -84,8 +121,12 @@ const Redencion = () => {
       if (value.trim() === '') {
         setFilteredInstituciones([])
         setShowInstituciones(false)
+        setPromocionesActivas([])
       } else {
-        const filtered = buscarInstituciones(value)
+        // Búsqueda local inmediata para mejor UX
+        const filtered = instituciones.filter(inst =>
+          inst.toLowerCase().includes(value.toLowerCase())
+        )
         setFilteredInstituciones(filtered)
         setShowInstituciones(filtered.length > 0)
       }
@@ -102,7 +143,10 @@ const Redencion = () => {
       setFilteredInstituciones(instituciones)
       setShowInstituciones(true)
     } else {
-      const filtered = buscarInstituciones(formData.institucion)
+      // Búsqueda local inmediata para mejor UX
+      const filtered = instituciones.filter(inst =>
+        inst.toLowerCase().includes(formData.institucion.toLowerCase())
+      )
       setFilteredInstituciones(filtered)
       setShowInstituciones(filtered.length > 0)
     }
@@ -124,6 +168,7 @@ const Redencion = () => {
     setFormData(prev => ({ ...prev, institucion: '', tipoPromocion: '' }))
     setFilteredInstituciones(instituciones)
     setShowInstituciones(true)
+    setPromocionesActivas([])
   }
 
   // Función para establecer la fecha de hoy
@@ -141,7 +186,24 @@ const Redencion = () => {
       tipoPromocion: '' // Limpiar tipo de promoción al cambiar institución
     }))
     setShowInstituciones(false)
+    // Cargar promociones activas cuando se selecciona una institución
+    cargarPromocionesActivas(institucion)
   }
+
+  // Cargar promociones cuando cambia la institución en el formulario o cuando se cargan todas las promociones
+  useEffect(() => {
+    if (formData.institucion && formData.institucion.trim() !== '' && todasLasPromociones.length > 0) {
+      // Usar un pequeño delay para evitar múltiples llamadas mientras el usuario escribe
+      const timeoutId = setTimeout(() => {
+        cargarPromocionesActivas(formData.institucion)
+      }, 300) // Reducido a 300ms ya que ahora es filtrado local
+
+      return () => clearTimeout(timeoutId)
+    } else if (!formData.institucion || formData.institucion.trim() === '') {
+      setPromocionesActivas([])
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.institucion, todasLasPromociones])
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
@@ -191,7 +253,9 @@ const Redencion = () => {
       // Enviar datos al backend
       const response = await apiService.crearControlAcceso({
         institucion: formData.institucion,
-        numeroTarjeta: formData.numeroTarjeta
+        numeroTarjeta: formData.numeroTarjeta,
+        fecha: fechaISO,
+        ...(formData.tipoPromocion ? { tipoPromocion: formData.tipoPromocion } : {})
       })
 
       if (response.success === true || response.estado === 'exito') {
@@ -204,6 +268,7 @@ const Redencion = () => {
           fecha: new Date().toISOString().split('T')[0], // Resetear a fecha de hoy
           tipoPromocion: ''
         })
+        setPromocionesActivas([])
       } else {
         alert('Error al crear el registro: ' + (response.message || response.error || 'Error desconocido'))
       }
@@ -337,38 +402,47 @@ const Redencion = () => {
                 </div>
               </div>
 
-              {/* Campo Tipo de Promoción - Solo visible para MARCO y Museo de Historia Mexicana */}
+              {/* Campo Tipo de Promoción - Visible cuando hay más de 1 promoción activa */}
               {mostrarTipoPromocion && (
                 <div>
                   <label htmlFor="tipoPromocion" className="block text-base font-bold text-gray-800 mb-2 text-white">
                     TIPO DE PROMOCIÓN*
                   </label>
                   <div className="relative">
-                    <select
-                      id="tipoPromocion"
-                      name="tipoPromocion"
-                      value={formData.tipoPromocion}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base appearance-none"
-                    >
-                      <option value="" className="text-gray-500">Selecciona el tipo de promoción</option>
-                      {esMarco ? (
-                        // Opciones específicas para MARCO
-                        promocionesMarco.map((promo) => (
-                          <option key={promo.value} value={promo.value} className="text-black">
-                            {promo.label}
-                          </option>
-                        ))
-                      ) : (
-                        // Opciones para Museo de Historia Mexicana
-                        promocionesHistoriaMexicana.map((promo) => (
-                          <option key={promo.value} value={promo.value} className="text-black">
-                            {promo.label}
-                          </option>
-                        ))
-                      )}
-                    </select>
+                    {cargandoPromociones ? (
+                      <div className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg bg-white text-gray-500 text-base">
+                        Cargando promociones...
+                      </div>
+                    ) : (
+                      <select
+                        id="tipoPromocion"
+                        name="tipoPromocion"
+                        value={formData.tipoPromocion}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base appearance-none"
+                      >
+                        <option value="" className="text-gray-500">Selecciona el tipo de promoción</option>
+                        {(() => {
+                          // Obtener tipos únicos de promoción (eliminar duplicados)
+                          const tiposUnicos = [...new Set(
+                            promocionesActivas
+                              .map(promo => promo.tipo_promocion || promo.tipoPromocion)
+                              .filter(Boolean)
+                          )]
+                          
+                          return tiposUnicos.map((tipo, index) => (
+                            <option 
+                              key={`${tipo}-${index}`} 
+                              value={tipo} 
+                              className="text-black"
+                            >
+                              {tipo}
+                            </option>
+                          ))
+                        })()}
+                      </select>
+                    )}
                     <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-orange-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>

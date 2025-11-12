@@ -38,7 +38,7 @@ const ContenidoPrincipal = () => {
         // Obtener promociones del endpoint completo
         const promociones = response.promociones || response.data || [];
         
-        // Mapear y filtrar solo promociones con imágenes válidas y no expiradas
+        // Mapear, filtrar y ordenar promociones alfabéticamente por institución (A-Z)
         const promocionesActivas = promociones
           .map(promocion => ({
             ...promocion,
@@ -77,6 +77,12 @@ const ContenidoPrincipal = () => {
             }
             
             return true;
+          })
+          .sort((a, b) => {
+            // Ordenar alfabéticamente por institución (A-Z)
+            const institucionA = (a.institucion || '').toLowerCase();
+            const institucionB = (b.institucion || '').toLowerCase();
+            return institucionA.localeCompare(institucionB, 'es', { sensitivity: 'base' });
           });
         
         setCarruseles(promocionesActivas)

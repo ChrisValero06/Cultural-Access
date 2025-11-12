@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { institucionesService } from '../apis/instituciones/institucionesService'
 
 const InstitucionesContext = createContext()
 
-// Lista base de instituciones culturales
+// Lista base de instituciones culturales (fallback en caso de error de conexión)
 const institucionesBase = [
   'Amigos de la Historia Mexicana',
   'Ballet de Monterrey',
@@ -52,34 +53,58 @@ const institucionesBase = [
 ]
 
 export const InstitucionesProvider = ({ children }) => {
-  const [instituciones, setInstituciones] = useState(institucionesBase)
+  const [instituciones, setInstituciones] = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Cargar instituciones guardadas del localStorage al inicializar
+  // Cargar instituciones desde la API al inicializar
   useEffect(() => {
-    const institucionesGuardadas = localStorage.getItem('instituciones-culturales')
-    if (institucionesGuardadas) {
+    const cargarInstituciones = async () => {
       try {
-        const institucionesParseadas = JSON.parse(institucionesGuardadas)
-        // Combinar instituciones base con las guardadas, eliminando duplicados
-        const institucionesCombinadas = [...new Set([...institucionesBase, ...institucionesParseadas])]
-        setInstituciones(institucionesCombinadas)
-      } catch (error) {
+        setCargando(true)
+        setError(null)
+        const data = await institucionesService.obtenerInstituciones()
+        
+        // Si la respuesta es un array de objetos con propiedad 'nombre', extraer solo los nombres
+        // Si es un array de strings, usarlo directamente
+        const nombresInstituciones = Array.isArray(data) 
+          ? data.map(inst => typeof inst === 'string' ? inst : inst.nombre).filter(Boolean)
+          : []
+        
+        if (nombresInstituciones.length > 0) {
+          setInstituciones(nombresInstituciones)
+        } else {
+          // Si no hay instituciones en la BD, usar la lista base
+          setInstituciones(institucionesBase)
+        }
+      } catch (err) {
+        console.error('Error al cargar instituciones desde la API:', err)
+        setError(err.message)
+        // En caso de error, usar la lista base como fallback
         setInstituciones(institucionesBase)
+      } finally {
+        setCargando(false)
       }
     }
+
+    cargarInstituciones()
   }, [])
 
-  // Guardar instituciones en localStorage cuando cambien
-  useEffect(() => {
-    if (instituciones.length > institucionesBase.length) {
-      const institucionesNuevas = instituciones.filter(inst => !institucionesBase.includes(inst))
-      localStorage.setItem('instituciones-culturales', JSON.stringify(institucionesNuevas))
+  const agregarInstitucion = async (nuevaInstitucion) => {
+    if (!nuevaInstitucion || instituciones.includes(nuevaInstitucion)) {
+      return
     }
-  }, [instituciones])
 
-  const agregarInstitucion = (nuevaInstitucion) => {
-    if (nuevaInstitucion && !instituciones.includes(nuevaInstitucion)) {
+    try {
+      // Crear la institución en la base de datos
+      await institucionesService.crearInstitucion(nuevaInstitucion)
+      // Actualizar el estado local
       setInstituciones(prev => [...prev, nuevaInstitucion])
+    } catch (err) {
+      console.error('Error al agregar institución:', err)
+      // Aún así agregar localmente para mejor UX, pero mostrar error
+      setInstituciones(prev => [...prev, nuevaInstitucion])
+      throw err // Propagar el error para que el componente pueda manejarlo
     }
   }
 
@@ -87,15 +112,31 @@ export const InstitucionesProvider = ({ children }) => {
     return instituciones
   }
 
-  const buscarInstituciones = (termino) => {
+  const buscarInstituciones = async (termino) => {
     if (!termino.trim()) return instituciones
-    return instituciones.filter(inst =>
-      inst.toLowerCase().includes(termino.toLowerCase())
-    )
+    
+    try {
+      // Buscar en la API
+      const resultados = await institucionesService.buscarInstituciones(termino)
+      const nombres = Array.isArray(resultados)
+        ? resultados.map(inst => typeof inst === 'string' ? inst : inst.nombre).filter(Boolean)
+        : []
+      return nombres.length > 0 ? nombres : instituciones.filter(inst =>
+        inst.toLowerCase().includes(termino.toLowerCase())
+      )
+    } catch (err) {
+      console.error('Error al buscar instituciones:', err)
+      // Fallback a búsqueda local
+      return instituciones.filter(inst =>
+        inst.toLowerCase().includes(termino.toLowerCase())
+      )
+    }
   }
 
   const value = {
     instituciones,
+    cargando,
+    error,
     agregarInstitucion,
     obtenerInstituciones,
     buscarInstituciones

@@ -109,36 +109,43 @@ const AdminDashboard = () => {
     }
   };
 
-  // Filtrar promociones
-  const promocionesFiltradas = promociones.filter(promocion => {
-    const matchesSearch = promocion.institucion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         promocion.tipo_promocion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         promocion.disciplina.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesInstitucion = filterInstitucion === '' || 
-                              promocion.institucion.toLowerCase().includes(filterInstitucion.toLowerCase());
-    
-    const matchesDisciplina = filterDisciplina === '' || 
-                             promocion.disciplina.toLowerCase().includes(filterDisciplina.toLowerCase());
-    
-    // Filtro por estado
-    const matchesEstado = filterEstado === '' || (() => {
-      if (filterEstado === 'activa') {
-        return promocion.estado === 'activa' || 
-               (promocion.estado !== 'inactiva' && promocion.estado !== 'expirada' && 
-                new Date() >= new Date(promocion.fecha_inicio) && 
-                new Date() <= new Date(promocion.fecha_fin));
-      } else if (filterEstado === 'inactiva') {
-        return promocion.estado === 'inactiva';
-      } else if (filterEstado === 'expirada') {
-        return promocion.estado === 'expirada' || 
-               (promocion.estado !== 'inactiva' && new Date() > new Date(promocion.fecha_fin));
-      }
-      return true;
-    })();
-    
-    return matchesSearch && matchesInstitucion && matchesDisciplina && matchesEstado;
-  });
+  // Filtrar y ordenar promociones alfabéticamente por institución (A-Z)
+  const promocionesFiltradas = promociones
+    .filter(promocion => {
+      const matchesSearch = promocion.institucion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           promocion.tipo_promocion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           promocion.disciplina.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesInstitucion = filterInstitucion === '' || 
+                                promocion.institucion.toLowerCase().includes(filterInstitucion.toLowerCase());
+      
+      const matchesDisciplina = filterDisciplina === '' || 
+                               promocion.disciplina.toLowerCase().includes(filterDisciplina.toLowerCase());
+      
+      // Filtro por estado
+      const matchesEstado = filterEstado === '' || (() => {
+        if (filterEstado === 'activa') {
+          return promocion.estado === 'activa' || 
+                 (promocion.estado !== 'inactiva' && promocion.estado !== 'expirada' && 
+                  new Date() >= new Date(promocion.fecha_inicio) && 
+                  new Date() <= new Date(promocion.fecha_fin));
+        } else if (filterEstado === 'inactiva') {
+          return promocion.estado === 'inactiva';
+        } else if (filterEstado === 'expirada') {
+          return promocion.estado === 'expirada' || 
+                 (promocion.estado !== 'inactiva' && new Date() > new Date(promocion.fecha_fin));
+        }
+        return true;
+      })();
+      
+      return matchesSearch && matchesInstitucion && matchesDisciplina && matchesEstado;
+    })
+    .sort((a, b) => {
+      // Ordenar alfabéticamente por institución (A-Z)
+      const institucionA = (a.institucion || '').toLowerCase();
+      const institucionB = (b.institucion || '').toLowerCase();
+      return institucionA.localeCompare(institucionB, 'es', { sensitivity: 'base' });
+    });
 
   const getStatusBadge = (fechaInicio, fechaFin, estado) => {
     // Solo para promociones (con fechas)
