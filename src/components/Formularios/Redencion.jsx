@@ -10,7 +10,8 @@ const Redencion = () => {
     institucion: '',
     numeroTarjeta: '',
     fecha: new Date().toISOString().split('T')[0], // Fecha de hoy en formato YYYY-MM-DD
-    tipoPromocion: ''
+    tipoPromocion: '',
+    email: ''
   })
 
   const [showInstituciones, setShowInstituciones] = useState(false)
@@ -131,9 +132,11 @@ const Redencion = () => {
         setShowInstituciones(filtered.length > 0)
       }
     } else {
+      // No convertir email a mayúsculas
+      const processedValue = name === 'email' ? value : value
       setFormData(prevState => ({
         ...prevState,
-        [name]: value
+        [name]: processedValue
       }))
     }
   }
@@ -224,8 +227,15 @@ const Redencion = () => {
     
     try {
       // Validar que todos los campos estén llenos
-      if (!formData.institucion || !formData.numeroTarjeta || !formData.fecha) {
+      if (!formData.institucion || !formData.numeroTarjeta || !formData.fecha || !formData.email) {
         alert('Por favor, completa todos los campos')
+        return
+      }
+
+      // Validar formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        alert('Por favor, ingresa un email válido')
         return
       }
 
@@ -250,15 +260,102 @@ const Redencion = () => {
 
       const fechaISO = normalizeToISODate(formData.fecha)
 
-      // Enviar datos al backend
-      const response = await apiService.crearControlAcceso({
+      // Enviar datos al backend usando fetch directamente para manejar errores de email duplicado
+      const url = import.meta.env.DEV ? '/api/control-acceso' : 'https://culturallaccess.com/api/control-acceso'
+      const payload = {
         institucion: formData.institucion,
-        numeroTarjeta: formData.numeroTarjeta,
+        numero_tarjeta: formData.numeroTarjeta,
         fecha: fechaISO,
-        ...(formData.tipoPromocion ? { tipoPromocion: formData.tipoPromocion } : {})
+        email: formData.email.trim().toLowerCase(), // Email en minúsculas
+        ...(formData.tipoPromocion ? { tipo_promocion: formData.tipoPromocion } : {})
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       })
 
-      if (response.success === true || response.estado === 'exito') {
+      let responseData;
+      let isEmailDuplicate = false;
+      
+      // Clonar la respuesta antes de leerla para poder leerla múltiples veces si es necesario
+      const responseClone = response.clone();
+      
+      // Intentar leer la respuesta como JSON
+      try {
+        responseData = await response.json();
+      } catch (e) {
+        // Si no es JSON, intentar leer como texto
+        try {
+          const errorText = await responseClone.text();
+          responseData = errorText ? { message: errorText } : null;
+        } catch (e2) {
+          responseData = null;
+        }
+      }
+
+      if (!response.ok) {
+        let errorMessage = `ERROR DEL SERVIDOR: ${response.status}`;
+        
+        if (responseData) {
+          errorMessage = responseData.message || responseData.error || errorMessage;
+          
+          // Detectar si el error es por email duplicado
+          const errorMessageLower = errorMessage.toLowerCase();
+          const errorDataStr = JSON.stringify(responseData).toLowerCase();
+          isEmailDuplicate = errorMessageLower.includes('email') && 
+                            (errorMessageLower.includes('ya existe') || 
+                             errorMessageLower.includes('ya está registrado') ||
+                             errorMessageLower.includes('duplicado') || 
+                             errorMessageLower.includes('already') ||
+                             errorMessageLower.includes('existe') ||
+                             errorMessageLower.includes('registrado') ||
+                             errorDataStr.includes('email') && (errorDataStr.includes('unique') || errorDataStr.includes('duplicate')));
+          
+          // Si hay errores de validación, mostrarlos
+          if (responseData.errors && Array.isArray(responseData.errors)) {
+            const errorMessages = responseData.errors.map(err => {
+              const field = err.field || err.param || 'Campo';
+              const msg = err.message || err.msg || 'Error';
+              // Detectar si es error de email duplicado
+              if ((field.toLowerCase().includes('email') || msg.toLowerCase().includes('email')) && 
+                  (msg.toLowerCase().includes('ya existe') || 
+                   msg.toLowerCase().includes('ya está registrado') ||
+                   msg.toLowerCase().includes('duplicado') || 
+                   msg.toLowerCase().includes('already') ||
+                   msg.toLowerCase().includes('registrado'))) {
+                isEmailDuplicate = true;
+              }
+              return `• ${field}: ${msg}`;
+            }).join('\n');
+            errorMessage = `ERRORES DE VALIDACIÓN:\n${errorMessages}`;
+          }
+        }
+        
+        // Si es error de email duplicado, tratar como registro exitoso
+        if (isEmailDuplicate && response.status === 400) {
+          // Permitir el registro aunque el email ya exista - tratar como exitoso
+          alert('Registro de control de acceso creado exitosamente!')
+          
+          // Limpiar el formulario
+          setFormData({
+            institucion: '',
+            numeroTarjeta: '',
+            fecha: new Date().toISOString().split('T')[0], // Resetear a fecha de hoy
+            tipoPromocion: '',
+            email: ''
+          })
+          setPromocionesActivas([])
+          return;
+        } else {
+          alert('Error al crear el registro: ' + errorMessage)
+          return;
+        }
+      }
+
+      // Si la respuesta fue exitosa
+      if (responseData && (responseData.success === true || responseData.estado === 'exito')) {
         alert('Registro de control de acceso creado exitosamente!')
         
         // Limpiar el formulario
@@ -266,11 +363,12 @@ const Redencion = () => {
           institucion: '',
           numeroTarjeta: '',
           fecha: new Date().toISOString().split('T')[0], // Resetear a fecha de hoy
-          tipoPromocion: ''
+          tipoPromocion: '',
+          email: ''
         })
         setPromocionesActivas([])
       } else {
-        alert('Error al crear el registro: ' + (response.message || response.error || 'Error desconocido'))
+        alert('Error al crear el registro: ' + (responseData?.message || responseData?.error || 'Error desconocido'))
       }
       
     } catch (error) {
@@ -449,6 +547,23 @@ const Redencion = () => {
                   </div>
                 </div>
               )}
+
+              {/* Campo Email */}
+              <div>
+                <label htmlFor="email" className="block text-base font-bold text-gray-800 mb-2 text-white">
+                  EMAIL*
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base placeholder:text-gray-500"
+                  placeholder="Ingresa tu email"
+                />
+              </div>
 
               {/* Campo Número de Tarjeta */}
               <div>

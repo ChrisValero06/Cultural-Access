@@ -180,6 +180,14 @@ const AdminDashboard = () => {
     setTabActiva(tab);
   };
 
+  // Función para manejar refresh según la pestaña activa
+  const handleRefresh = () => {
+    if (tabActiva === 'promociones') {
+      cargarPromociones();
+    }
+    // Las otras pestañas manejan su propio refresh
+  };
+
   // Funciones para limpiar filtros
   const handleClearFiltersPromociones = () => {
     setSearchTerm('');
@@ -340,9 +348,7 @@ const AdminDashboard = () => {
       <DashboardHeader
         tabActiva={tabActiva}
         onTabChange={handleTabChange}
-        onRefresh={() => {
-          if (tabActiva === 'promociones') cargarPromociones();
-        }}
+        onRefresh={handleRefresh}
         totalPromociones={promociones.length}
         lastUpdate={lastUpdate}
         loading={loading}

@@ -8,7 +8,7 @@ export const controlAccesoService = {
   // Crear nuevo registro de control de acceso (POST /control-acceso)
   async crearControlAcceso(controlData) {
     try {
-      const { institucion, numeroTarjeta, fecha, estado, tipoPromocion } = controlData;
+      const { institucion, numeroTarjeta, fecha, estado, tipoPromocion, email } = controlData;
 
       const url = `${API_BASE_URL}${CONTROL_ENDPOINT}`;
       const payload = {
@@ -16,7 +16,8 @@ export const controlAccesoService = {
         numero_tarjeta: numeroTarjeta,
         ...(fecha ? { fecha } : {}),
         ...(estado ? { estado } : {}),
-        ...(tipoPromocion ? { tipo_promocion: tipoPromocion } : {})
+        ...(tipoPromocion ? { tipo_promocion: tipoPromocion } : {}),
+        ...(email ? { email } : {})
       };
 
       const response = await fetch(url, {

@@ -2,6 +2,7 @@ import React from 'react';
 import PromocionesFilters from '../Promociones/PromocionesFilters';
 import PromocionesTable from '../Promociones/PromocionesTable';
 import EstadisticasPerfiles from '../EstadisticasPerfiles';
+import ReportesUsuarios from '../Reportes/ReportesUsuarios';
 
 const DashboardContent = ({ 
   tabActiva,
@@ -47,6 +48,7 @@ const DashboardContent = ({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {tabActiva === 'promociones' && renderPromociones()}
       {tabActiva === 'estadisticas' && <EstadisticasPerfiles />}
+      {tabActiva === 'reportes' && <ReportesUsuarios />}
     </div>
   );
 };
