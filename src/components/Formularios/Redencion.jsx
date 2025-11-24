@@ -251,7 +251,7 @@ const Redencion = () => {
       const fechaISO = normalizeToISODate(formData.fecha)
 
       // Enviar datos al backend
-      const url = import.meta.env.DEV ? '/api/control-acceso' : 'https://culturallaccess.com/api/control-acceso'
+      const url = import.meta.env.DEV ? '/api/controlacceso' : 'https://culturallaccess.com/api/controlacceso'
       const payload = {
         institucion: formData.institucion,
         numero_tarjeta: formData.numeroTarjeta,
@@ -259,23 +259,32 @@ const Redencion = () => {
         ...(formData.tipoPromocion ? { tipo_promocion: formData.tipoPromocion } : {})
       }
 
+      console.log('📤 Frontend - Enviando petición POST a:', url)
+      console.log('📤 Frontend - Payload:', payload)
+
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
 
+      console.log('📥 Frontend - Respuesta recibida:', response.status, response.statusText)
+
       let responseData;
       
       // Intentar leer la respuesta como JSON
       try {
         responseData = await response.json();
+        console.log('📥 Frontend - Response Data:', JSON.stringify(responseData, null, 2))
       } catch (e) {
+        console.error('❌ Frontend - Error al parsear JSON:', e)
         // Si no es JSON, intentar leer como texto
         try {
           const errorText = await response.text();
           responseData = errorText ? { message: errorText } : null;
+          console.log('📥 Frontend - Response Text:', errorText)
         } catch (e2) {
+          console.error('❌ Frontend - Error al leer texto:', e2)
           responseData = null;
         }
       }

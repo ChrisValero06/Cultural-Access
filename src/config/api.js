@@ -11,7 +11,7 @@ export const API_CONFIG = {
     BUSCAR_PROMOCION: '/promociones/buscar_promocion',
     SUBIR_IMAGEN: '/promociones/subir_imagen',
     PROMOCIONES_CARRUSEL: '/promociones/carrusel',
-    CONTROL_ACCESO: '/control-acceso',
+    CONTROL_ACCESO: '/controlacceso',
     
     // Usuarios
     CREAR_USUARIO: '/usuario',
