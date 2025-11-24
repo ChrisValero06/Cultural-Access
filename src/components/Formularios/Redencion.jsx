@@ -20,8 +20,13 @@ const Redencion = () => {
   const autocompleteRef = useRef(null)
 
   // Verificar si se debe mostrar el campo de tipo de promoción
-  // Se muestra cuando hay más de 1 promoción activa para la institución seleccionada
-  const mostrarTipoPromocion = promocionesActivas.length > 1
+  // Se muestra SOLO cuando hay más de 1 promoción activa CON TIPOS DIFERENTES para la institución seleccionada
+  const tiposUnicos = [...new Set(
+    promocionesActivas
+      .map(promo => promo.tipo_promocion || promo.tipoPromocion)
+      .filter(Boolean) // Filtrar valores vacíos/null/undefined
+  )]
+  const mostrarTipoPromocion = tiposUnicos.length > 1
 
   // Las instituciones ahora vienen del contexto global
 
@@ -66,13 +71,39 @@ const Redencion = () => {
     try {
       setCargandoPromociones(true)
       
-      // Filtrar promociones por institución (comparación flexible)
+      // Filtrar promociones por institución (comparación EXACTA solamente)
       const institucionLower = institucionNombre.toLowerCase().trim()
+      
+      // SOLO usar coincidencia exacta - esto evita falsos positivos
       const promocionesDeInstitucion = todasLasPromociones.filter(promo => {
         const promoInstitucion = (promo.institucion || '').toLowerCase().trim()
-        // Comparación flexible: incluye si el nombre contiene la búsqueda o viceversa
-        return promoInstitucion.includes(institucionLower) || institucionLower.includes(promoInstitucion)
+        // Comparación exacta solamente
+        return promoInstitucion === institucionLower
       })
+      
+      // Log para debugging
+      console.log('🔍 Filtrando promociones para:', institucionNombre)
+      console.log('📊 Total promociones en sistema:', todasLasPromociones.length)
+      console.log('📊 Promociones encontradas (coincidencia exacta):', promocionesDeInstitucion.length)
+      
+      if (promocionesDeInstitucion.length > 0) {
+        console.log('📋 Promociones encontradas:', promocionesDeInstitucion.map(p => ({
+          institucion: p.institucion,
+          tipo: p.tipo_promocion || p.tipoPromocion,
+          estado: p.estado,
+          fecha_fin: p.fecha_fin || p.fechaFin || p.fecha_final
+        })))
+      } else {
+        console.log('⚠️ No se encontraron promociones con coincidencia exacta para:', institucionNombre)
+        // Mostrar algunas promociones cercanas para debugging
+        const promocionesCercanas = todasLasPromociones.filter(promo => {
+          const promoInstitucion = (promo.institucion || '').toLowerCase().trim()
+          return promoInstitucion.includes(institucionLower) || institucionLower.includes(promoInstitucion)
+        }).slice(0, 5)
+        if (promocionesCercanas.length > 0) {
+          console.log('🔍 Promociones con nombres similares (NO incluidas):', promocionesCercanas.map(p => p.institucion))
+        }
+      }
       
       // Filtrar solo promociones activas y no expiradas
       const hoy = new Date()
@@ -97,6 +128,16 @@ const Redencion = () => {
         
         return true
       })
+      
+      console.log('✅ Promociones activas después de filtrar:', activas.length)
+      if (activas.length > 1) {
+        console.log('⚠️ Se mostrará el campo "Tipo de Promoción" porque hay', activas.length, 'promociones activas')
+        console.log('📋 Tipos de promoción únicos:', [...new Set(activas.map(p => p.tipo_promocion || p.tipoPromocion).filter(Boolean))])
+      } else if (activas.length === 1) {
+        console.log('ℹ️ Hay 1 promoción activa, NO se mostrará el campo "Tipo de Promoción"')
+      } else {
+        console.log('ℹ️ No hay promociones activas para esta institución')
+      }
       
       setPromocionesActivas(activas)
     } catch (error) {
@@ -287,6 +328,61 @@ const Redencion = () => {
           console.error('❌ Frontend - Error al leer texto:', e2)
           responseData = null;
         }
+      }
+
+      // ⭐⭐ MOSTRAR INFORMACIÓN DE CORREOS DESTINATARIOS EN EL FRONTEND
+      if (responseData?.email_info) {
+        console.log('═══════════════════════════════════════════════════════')
+        console.log('📧 INFORMACIÓN DE CORREOS DESTINATARIOS:')
+        console.log('═══════════════════════════════════════════════════════')
+        
+        // Manejar diferentes estructuras de respuesta del backend
+        let destinatarios = [];
+        let totalDestinatarios = 0;
+        
+        // Si viene la estructura esperada (destinatarios)
+        if (responseData.email_info.destinatarios && Array.isArray(responseData.email_info.destinatarios)) {
+          destinatarios = responseData.email_info.destinatarios;
+          totalDestinatarios = responseData.email_info.total_destinatarios || destinatarios.length;
+        }
+        // Si viene la estructura de Nodemailer (accepted)
+        else if (responseData.email_info.accepted && Array.isArray(responseData.email_info.accepted)) {
+          destinatarios = responseData.email_info.accepted;
+          totalDestinatarios = destinatarios.length;
+        }
+        // Si viene en envelope.to
+        else if (responseData.email_info.envelope?.to && Array.isArray(responseData.email_info.envelope.to)) {
+          destinatarios = responseData.email_info.envelope.to;
+          totalDestinatarios = destinatarios.length;
+        }
+        
+        console.log('📧 Total destinatarios:', totalDestinatarios)
+        console.log('📧 Correos destinatarios:')
+        if (destinatarios.length > 0) {
+          destinatarios.forEach((email, index) => {
+            console.log(`   ${index + 1}. ${email}`)
+          })
+        } else {
+          console.log('   (No se encontraron destinatarios en la respuesta)')
+        }
+        
+        // Mostrar información adicional si está disponible
+        if (responseData.email_info.rejected && Array.isArray(responseData.email_info.rejected) && responseData.email_info.rejected.length > 0) {
+          console.log('📧 Correos rechazados:', responseData.email_info.rejected)
+        }
+        
+        if (responseData.email_info.mensaje) {
+          console.log('📧 Mensaje:', responseData.email_info.mensaje)
+        }
+        
+        if (responseData.email_info.messageId) {
+          console.log('📧 Message ID:', responseData.email_info.messageId)
+        }
+        
+        console.log('═══════════════════════════════════════════════════════')
+      } else {
+        console.warn('▲▲ El backend no devolvió información de correos destinatarios.')
+        console.warn('▲▲ Asegúrate de que el router del servidor incluya email_info en la respuesta.')
       }
 
       if (!response.ok) {

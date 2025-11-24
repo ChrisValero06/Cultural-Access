@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { imagenes } from '../../constants/imagenes'
 import { apiService } from '../../apis'
+import { API_CONFIG } from '../../config/api.js'
 
 const DATA = {
   institucion: ['Amigos de la Historia Mexicana', 'Ballet de Monterrey', 'Bread Coffee Roasters', 'Café Belmonte', 'Casa Coa', 'Casa de la Cultura de Nuevo León', 'Casa Motis', 'Casa Musa', 'Centro Roberto Garza Sada', 'Cineteca de Nuevo León', 'Constelación Feria de Arte', 'Dramático', 'El Lingote Restaurante', 'Escuela Superior de Música y Danza de Monterrey', 'Fama Monterrey', 'Fondo de Cultura Económica', 'Fondo Editorial de Nuevo León', 'Fototeca de Nuevo León', 'Heart Ego', 'Horno 3', 'La Gran Audiencia', 'La Milarca', 'Librería Bruma', 'Librería Sentido', 'Monstera Coffee Bar', 'Museo 31', 'Museo del Acero Horno 3', 'Museo de Arte Contemporáneo de Monterrey (MARCO)', 'Museo de la Batalla', 'Museo de Historia Mexicana', 'Museo del Noreste', 'Museo del Palacio', 'Museo del Vidrio (MUVI)', 'Museo Estatal de Culturas Populares de Nuevo León', 'Museo Regional de Nuevo León El Obispado', 'Papalote Museo del Niño Monterrey', 'Salón de la Fama de Beisbol Mexicano', 'Saxy Jazz Club', 'Secretaría de Cultura', 'Seabird Coffee', 'Teatro de la Ciudad', 'Vaso Roto Ediciones'],
@@ -99,7 +100,89 @@ const CargarPromoFunctional = () => {
         fecha_fin: formData.fechaFin
       }
 
+      // ⭐⭐ JSON COMPLETO QUE SE ESTÁ ENVIANDO
+      const datosCompletos = {
+        url: `${API_CONFIG.BASE_URL}/promociones`,
+        metodo: 'POST',
+        promocionData: promocionData,
+        datos_formulario: {
+          institucion: formData.institucion,
+          tipoPromocion: formData.tipoPromocion,
+          disciplina: formData.disciplina,
+          beneficios: formData.beneficios,
+          comentariosRestricciones: formData.comentariosRestricciones,
+          fechaInicio: formData.fechaInicio,
+          fechaFin: formData.fechaFin
+        },
+        validaciones: {
+          beneficios_length: formData.beneficios.length,
+          beneficios_limit: LIMITS.beneficios,
+          comentarios_length: formData.comentariosRestricciones.length,
+          comentarios_limit: LIMITS.comentarios
+        },
+        timestamp: new Date().toISOString()
+      }
+
+      
+
       const result = await apiService.crearPromocion(promocionData)
+      
+      
+
+      // ⭐⭐ MOSTRAR INFORMACIÓN DE CORREOS DESTINATARIOS EN EL FRONTEND
+      if (result?.email_info) {
+        console.log('═══════════════════════════════════════════════════════')
+        console.log('📧 INFORMACIÓN DE CORREOS DESTINATARIOS:')
+        console.log('═══════════════════════════════════════════════════════')
+        
+        // Manejar diferentes estructuras de respuesta del backend
+        let destinatarios = [];
+        let totalDestinatarios = 0;
+        
+        // Si viene la estructura esperada (destinatarios)
+        if (result.email_info.destinatarios && Array.isArray(result.email_info.destinatarios)) {
+          destinatarios = result.email_info.destinatarios;
+          totalDestinatarios = result.email_info.total_destinatarios || destinatarios.length;
+        }
+        // Si viene la estructura de Nodemailer (accepted)
+        else if (result.email_info.accepted && Array.isArray(result.email_info.accepted)) {
+          destinatarios = result.email_info.accepted;
+          totalDestinatarios = destinatarios.length;
+        }
+        // Si viene en envelope.to
+        else if (result.email_info.envelope?.to && Array.isArray(result.email_info.envelope.to)) {
+          destinatarios = result.email_info.envelope.to;
+          totalDestinatarios = destinatarios.length;
+        }
+        
+        console.log('📧 Total destinatarios:', totalDestinatarios)
+        console.log('📧 Correos destinatarios:')
+        if (destinatarios.length > 0) {
+          destinatarios.forEach((email, index) => {
+            console.log(`   ${index + 1}. ${email}`)
+          })
+        } else {
+          console.log('   (No se encontraron destinatarios en la respuesta)')
+        }
+        
+        // Mostrar información adicional si está disponible
+        if (result.email_info.rejected && Array.isArray(result.email_info.rejected) && result.email_info.rejected.length > 0) {
+          console.log('📧 Correos rechazados:', result.email_info.rejected)
+        }
+        
+        if (result.email_info.mensaje) {
+          console.log('📧 Mensaje:', result.email_info.mensaje)
+        }
+        
+        if (result.email_info.messageId) {
+          console.log('📧 Message ID:', result.email_info.messageId)
+        }
+        
+        console.log('═══════════════════════════════════════════════════════')
+      } else {
+        console.warn('▲▲ El backend no devolvió información de correos destinatarios.')
+        console.warn('▲▲ Asegúrate de que el router del servidor incluya email_info en la respuesta.')
+      }
 
       if (result?.success || result?.estado === 'exito') {
         setMessage('¡Promoción cargada exitosamente!')
