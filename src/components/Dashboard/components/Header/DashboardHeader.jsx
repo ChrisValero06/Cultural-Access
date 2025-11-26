@@ -124,17 +124,104 @@ const DashboardHeader = ({
 
   const exportControlAcceso = async () => {
     try {
-      const res = await fetch('/api/control-acceso');
+      console.log('🔄 Iniciando exportación de redenciones...');
+      
+      // Intentar primero con all=1 para obtener todos los registros
+      let res = await fetch('/api/controlacceso?all=1');
+      
+      // Si falla, intentar sin parámetros y luego hacer paginación
+      if (!res.ok) {
+        console.log('⚠️ all=1 no disponible, usando paginación...');
+        res = await fetch('/api/controlacceso');
+      }
+      
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
+      
+      let data = await res.json();
+      let list = data.data || data.datos || data.rows || [];
+      
+      // Detectar el límite real del backend basado en la respuesta
+      // Si recibimos 101 registros, el límite podría ser 101, no 100
+      const reportedLimit = data.limit || 100;
+      const actualLimit = list.length >= reportedLimit ? list.length : reportedLimit;
+      const totalRecords = data.total || data.count; // Total conocido del backend (puede ser undefined)
+      
+      console.log(`📊 Primera petición: ${list.length} registros obtenidos`);
+      console.log(`📊 Límite reportado: ${reportedLimit}`);
+      console.log(`📊 Límite detectado: ${actualLimit}`);
+      if (totalRecords) {
+        console.log(`📊 Total conocido: ${totalRecords}`);
+      }
+      
+      // SIEMPRE hacer paginación si recibimos exactamente el límite o más
+      // Esto asegura que obtengamos todos los registros incluso si el backend no reporta el total
+      if (list.length >= actualLimit) {
+        console.log('🔄 Obteniendo registros restantes mediante paginación...');
+        const allRecords = [...list];
+        let offset = list.length; // Empezar desde donde terminamos
+        let hasMore = true;
+        let consecutiveEmpty = 0; // Contador para detectar cuando ya no hay más registros
+        
+        while (hasMore) {
+          const paginatedRes = await fetch(`/api/controlacceso?limit=${actualLimit}&offset=${offset}`);
+          if (!paginatedRes.ok) {
+            console.log(`⚠️ Error en petición paginada (offset ${offset}): HTTP ${paginatedRes.status}`);
+            break;
+          }
+          
+          const paginatedData = await paginatedRes.json();
+          const paginatedList = paginatedData.data || paginatedData.datos || paginatedData.rows || [];
+          
+          if (paginatedList.length === 0) {
+            consecutiveEmpty++;
+            // Si recibimos 2 respuestas vacías consecutivas, asumimos que no hay más registros
+            if (consecutiveEmpty >= 2) {
+              console.log('ℹ️ No hay más registros (respuestas vacías consecutivas)');
+              hasMore = false;
+              break;
+            }
+            // Incrementar offset y continuar
+            offset += actualLimit;
+            continue;
+          }
+          
+          consecutiveEmpty = 0; // Resetear contador si recibimos datos
+          allRecords.push(...paginatedList);
+          
+          console.log(`📊 Progreso: ${allRecords.length} registros obtenidos (offset: ${offset}, página: ${paginatedList.length} registros)`);
+          
+          // Si recibimos menos que el límite, significa que ya no hay más registros
+          if (paginatedList.length < actualLimit) {
+            console.log(`ℹ️ Última página recibida (${paginatedList.length} < ${actualLimit})`);
+            hasMore = false;
+          } else {
+            // Continuar con la siguiente página
+            offset += actualLimit;
+          }
+          
+          // Protección: evitar bucles infinitos (máximo 50 páginas = ~5000 registros)
+          if (allRecords.length >= 5000) {
+            console.log('⚠️ Límite de seguridad alcanzado (5000 registros)');
+            hasMore = false;
+          }
+        }
+        
+        list = allRecords;
+        console.log(`✅ Total de registros obtenidos: ${list.length}`);
+      } else {
+        console.log(`ℹ️ Se recibieron ${list.length} registros (menos que el límite ${actualLimit}), asumiendo que son todos`);
+      }
+      
       const headers = ['id_institucion','institucion','numero_tarjeta','fecha'];
-      const list = data.data || data.datos || data.rows || [];
       const xlsxRows = list.map(a => [
         a.id_institucion, a.institucion, a.numero_tarjeta, a.fecha
       ]);
+      
+      console.log(`📤 Exportando ${xlsxRows.length} registros a Excel...`);
       await exportToXlsx(headers, xlsxRows, 'control_acceso');
+      console.log('✅ Exportación completada exitosamente');
     } catch (e) {
-      console.error('Error exportando control de acceso:', e);
+      console.error('❌ Error exportando control de acceso:', e);
       alert('No se pudo exportar control de acceso: ' + e.message);
     }
   };
