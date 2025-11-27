@@ -4,7 +4,49 @@ import { apiService } from '../../apis'
 import { useInstituciones } from '../../context/InstitucionesContext'
 
 const Redencion = () => {
-  const { instituciones, buscarInstituciones } = useInstituciones()
+  const { instituciones, buscarInstituciones, recargarInstituciones, cargando: cargandoInstituciones } = useInstituciones()
+  
+  // Función de depuración temporal - exponer en window para pruebas
+  useEffect(() => {
+    window.debugInstituciones = async () => {
+      console.log('🔍 DEPURACIÓN DE INSTITUCIONES')
+      console.log('📊 Instituciones en contexto:', instituciones)
+      console.log('📊 Total:', instituciones.length)
+      console.log('🔍 Buscando "Luztopía"...')
+      const luztopia = instituciones.find(inst => 
+        inst.toLowerCase().includes('luztopía') || inst.toLowerCase().includes('luztopia')
+      )
+      console.log('✅ ¿Encontrada?', luztopia || 'NO ENCONTRADA')
+      
+      // Llamar directamente a la API
+      try {
+        const API_BASE_URL = import.meta.env.DEV ? '/api' : 'https://culturallaccess.com/api'
+        console.log('🌐 Llamando directamente a:', `${API_BASE_URL}/instituciones`)
+        const response = await fetch(`${API_BASE_URL}/instituciones`)
+        const data = await response.json()
+        console.log('📦 Respuesta directa de la API:', data)
+        console.log('📦 Tipo:', Array.isArray(data) ? 'Array' : typeof data)
+        console.log('📦 Longitud:', Array.isArray(data) ? data.length : 'N/A')
+        
+        if (Array.isArray(data)) {
+          const tieneLuztopia = data.some(inst => {
+            const nombre = typeof inst === 'string' ? inst : inst.nombre
+            return nombre && (nombre.toLowerCase().includes('luztopía') || nombre.toLowerCase().includes('luztopia'))
+          })
+          console.log('🔍 ¿La API contiene "Luztopía"?', tieneLuztopia)
+          if (tieneLuztopia) {
+            const luztopiaEnAPI = data.find(inst => {
+              const nombre = typeof inst === 'string' ? inst : inst.nombre
+              return nombre && (nombre.toLowerCase().includes('luztopía') || nombre.toLowerCase().includes('luztopia'))
+            })
+            console.log('✅ Encontrada en API:', luztopiaEnAPI)
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error al llamar a la API:', error)
+      }
+    }
+  }, [instituciones])
   
   const [formData, setFormData] = useState({
     institucion: '',
@@ -494,9 +536,16 @@ const Redencion = () => {
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Campo Institución */}
               <div>
-                <label htmlFor="institucion" className="block text-base font-bold text-gray-800 mb-2 text-white">
-                  INSTITUCIÓN*
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="institucion" className="block text-base font-bold text-gray-800 text-white">
+                    INSTITUCIÓN*
+                  </label>
+                  {/* Botón temporal de depuración */}
+
+                    
+                    
+                  
+                </div>
                 <div className="relative" ref={autocompleteRef}>
                   <input
                     type="text"
