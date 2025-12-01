@@ -57,6 +57,46 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
       setImagenSecundariaError(false);
     }
   }, [modalAbierto]);
+
+  // Convertir fechas ISO a formato yyyy-MM-dd para los inputs de tipo date
+  useEffect(() => {
+    if (modalAbierto && editandoForm) {
+      const formatearFecha = (fecha) => {
+        if (!fecha) return '';
+        // Si ya está en formato yyyy-MM-dd, devolverlo tal cual
+        if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+          return fecha;
+        }
+        // Si es una fecha ISO o Date, convertirla
+        try {
+          const fechaObj = new Date(fecha);
+          if (!isNaN(fechaObj.getTime())) {
+            const año = fechaObj.getFullYear();
+            const mes = String(fechaObj.getMonth() + 1).padStart(2, '0');
+            const dia = String(fechaObj.getDate()).padStart(2, '0');
+            return `${año}-${mes}-${dia}`;
+          }
+        } catch (e) {
+          console.warn('Error al formatear fecha:', fecha, e);
+        }
+        return '';
+      };
+
+      // Solo actualizar si las fechas necesitan conversión
+      if (editandoForm.fecha_inicio || editandoForm.fecha_fin) {
+        const fechaInicioFormateada = formatearFecha(editandoForm.fecha_inicio);
+        const fechaFinFormateada = formatearFecha(editandoForm.fecha_fin);
+        
+        if (fechaInicioFormateada !== editandoForm.fecha_inicio || fechaFinFormateada !== editandoForm.fecha_fin) {
+          setEditandoForm({
+            ...editandoForm,
+            fecha_inicio: fechaInicioFormateada,
+            fecha_fin: fechaFinFormateada
+          });
+        }
+      }
+    }
+  }, [modalAbierto, editandoForm?.id]); // Solo cuando se abre el modal o cambia el ID
   
   if (!modalAbierto) return null;
 
@@ -158,71 +198,78 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
       // Preparar datos para envío
       const datosPromocion = { ...editandoForm };
       
-      // Si hay archivos nuevos, subir las imágenes primero
-      if (imagenPrincipalFile || imagenSecundariaFile) {
-        console.log('🔄 Actualizando promoción con archivos:', {
+      // ⭐⭐ MANEJAR ELIMINACIÓN DE IMÁGENES
+      // Si la imagen fue eliminada (string vacío), enviar null explícitamente
+      const imagenPrincipalEliminada = datosPromocion.imagen_principal === '';
+      const imagenSecundariaEliminada = datosPromocion.imagen_secundaria === '';
+      
+      if (imagenPrincipalEliminada) {
+        datosPromocion.imagen_principal = null;
+      }
+      if (imagenSecundariaEliminada) {
+        datosPromocion.imagen_secundaria = null;
+      }
+      
+      // Si hay archivos nuevos O imágenes eliminadas, usar actualizarPromocionConArchivos
+      if (imagenPrincipalFile || imagenSecundariaFile || imagenPrincipalEliminada || imagenSecundariaEliminada) {
+        console.log('🔄 Actualizando promoción con cambios en imágenes:', {
           id: editandoForm.id,
-          imagenPrincipal: imagenPrincipalFile?.name,
-          imagenSecundaria: imagenSecundariaFile?.name
+          imagenPrincipal: imagenPrincipalFile?.name || (imagenPrincipalEliminada ? 'ELIMINADA' : 'sin cambios'),
+          imagenSecundaria: imagenSecundariaFile?.name || (imagenSecundariaEliminada ? 'ELIMINADA' : 'sin cambios')
         });
         
-        // Subir imágenes por separado
-        let nuevaImagenPrincipal = datosPromocion.imagen_principal;
-        let nuevaImagenSecundaria = datosPromocion.imagen_secundaria;
-        
-        if (imagenPrincipalFile) {
-          try {
-            const nombreArchivo = `principal_${Date.now()}_${imagenPrincipalFile.name}`;
-            const responseImagen = await apiService.subirImagen(imagenPrincipalFile, nombreArchivo);
-            if (responseImagen.estado === 'exito' || responseImagen.success) {
-              nuevaImagenPrincipal = responseImagen.ruta || responseImagen.url;
-              console.log('✅ Imagen principal subida:', nuevaImagenPrincipal);
-            }
-          } catch (error) {
-            console.error('❌ Error subiendo imagen principal:', error);
-            alert('Error al subir la imagen principal. Se guardará sin cambios en la imagen.');
-          }
-        }
-        
-        if (imagenSecundariaFile) {
-          try {
-            const nombreArchivo = `secundaria_${Date.now()}_${imagenSecundariaFile.name}`;
-            const responseImagen = await apiService.subirImagen(imagenSecundariaFile, nombreArchivo);
-            if (responseImagen.estado === 'exito' || responseImagen.success) {
-              nuevaImagenSecundaria = responseImagen.ruta || responseImagen.url;
-              console.log('✅ Imagen secundaria subida:', nuevaImagenSecundaria);
-            }
-          } catch (error) {
-            console.error('❌ Error subiendo imagen secundaria:', error);
-            alert('Error al subir la imagen secundaria. Se guardará sin cambios en la imagen.');
-          }
-        }
-        
-        // Actualizar los datos con las nuevas rutas de imagen
-        const promocionActualizada = {
-          ...datosPromocion,
-          imagen_principal: nuevaImagenPrincipal,
-          imagen_secundaria: nuevaImagenSecundaria
-        };
-        
-        // Actualizar la promoción con los datos actualizados
-        const response = await apiService.actualizarPromocion(editandoForm.id, promocionActualizada);
-        
-        console.log('📡 Respuesta del servidor:', response);
-        
-        if (response.estado === 'exito' || response.success === true) {
-          // Cerrar el modal
-          setModalAbierto(false);
-          setEditandoForm(null);
+        // ⭐⭐ USAR actualizarPromocionConArchivos() que envía todo junto
+        try {
+          const response = await apiService.actualizarPromocionConArchivos(
+            editandoForm.id,
+            datosPromocion,
+            imagenPrincipalFile, // null si no hay archivo nuevo
+            imagenSecundariaFile // null si no hay archivo nuevo
+          );
           
-          // Notificar al dashboard que la promoción fue actualizada
-          if (onPromocionActualizada) {
-            onPromocionActualizada(promocionActualizada);
-          }
+          console.log('📡 Respuesta completa del servidor:', response);
           
-          alert('✅ Promoción actualizada correctamente con nuevas imágenes');
-        } else {
-          alert('❌ No se pudo actualizar la promoción: ' + (response.message || 'Error desconocido'));
+          if (response.estado === 'exito' || response.success === true) {
+            // Construir la promoción actualizada con las URLs del servidor
+            const promocionActualizada = {
+              ...datosPromocion,
+              id: editandoForm.id,
+              // Usar las URLs del servidor si están disponibles
+              imagen_principal: response.promocion?.imagen_principal || 
+                                response.imagen_principal || 
+                                response.data?.imagen_principal ||
+                                datosPromocion.imagen_principal,
+              imagen_secundaria: response.promocion?.imagen_secundaria || 
+                                 response.imagen_secundaria || 
+                                 response.data?.imagen_secundaria ||
+                                 datosPromocion.imagen_secundaria,
+              // Incluir cualquier otro dato que el servidor haya devuelto
+              ...(response.promocion || response.data || {})
+            };
+            
+            console.log('✅ Promoción actualizada con URLs:', {
+              id: promocionActualizada.id,
+              imagen_principal: promocionActualizada.imagen_principal,
+              imagen_secundaria: promocionActualizada.imagen_secundaria
+            });
+            
+            // Cerrar el modal
+            setModalAbierto(false);
+            setEditandoForm(null);
+            
+            // Notificar al dashboard que la promoción fue actualizada
+            if (onPromocionActualizada) {
+              onPromocionActualizada(promocionActualizada);
+            }
+            
+            alert('✅ Promoción actualizada correctamente con nuevas imágenes');
+          } else {
+            alert('❌ No se pudo actualizar la promoción: ' + (response.message || 'Error desconocido'));
+          }
+        } catch (error) {
+          console.error('❌ Error actualizando promoción con archivos:', error);
+          alert('❌ Error al actualizar la promoción: ' + error.message);
+          throw error; // Re-lanzar para que el catch externo lo maneje
         }
       } else {
         // Si no hay archivos nuevos, usar la función simple

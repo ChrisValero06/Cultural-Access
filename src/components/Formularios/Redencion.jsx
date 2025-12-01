@@ -540,11 +540,7 @@ const Redencion = () => {
                   <label htmlFor="institucion" className="block text-base font-bold text-gray-800 text-white">
                     INSTITUCIÓN*
                   </label>
-                  {/* Botón temporal de depuración */}
-
-                    
-                    
-                  
+          
                 </div>
                 <div className="relative" ref={autocompleteRef}>
                   <input

@@ -340,7 +340,14 @@ export const promocionesService = {
       
       // Agregar datos de la promoción
       Object.keys(promocionData).forEach(key => {
-        if (promocionData[key] !== null && promocionData[key] !== undefined) {
+        // ⭐⭐ Incluir null explícitamente para imágenes (permite eliminarlas)
+        if (key === 'imagen_principal' || key === 'imagen_secundaria') {
+          if (promocionData[key] === null || promocionData[key] === '') {
+            formData.append(key, ''); // Enviar string vacío para eliminar
+          } else if (promocionData[key] !== undefined) {
+            formData.append(key, promocionData[key]);
+          }
+        } else if (promocionData[key] !== null && promocionData[key] !== undefined) {
           formData.append(key, promocionData[key]);
         }
       });
