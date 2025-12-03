@@ -133,9 +133,6 @@ const CargarPromoFunctional = () => {
 
       // ⭐⭐ MOSTRAR INFORMACIÓN DE CORREOS DESTINATARIOS EN EL FRONTEND
       if (result?.email_info) {
-        console.log('═══════════════════════════════════════════════════════')
-        console.log('📧 INFORMACIÓN DE CORREOS DESTINATARIOS:')
-        console.log('═══════════════════════════════════════════════════════')
         
         // Manejar diferentes estructuras de respuesta del backend
         let destinatarios = [];
@@ -156,34 +153,18 @@ const CargarPromoFunctional = () => {
           destinatarios = result.email_info.envelope.to;
           totalDestinatarios = destinatarios.length;
         }
-        
-        console.log('📧 Total destinatarios:', totalDestinatarios)
-        console.log('📧 Correos destinatarios:')
-        if (destinatarios.length > 0) {
-          destinatarios.forEach((email, index) => {
-            console.log(`   ${index + 1}. ${email}`)
-          })
-        } else {
-          console.log('   (No se encontraron destinatarios en la respuesta)')
-        }
-        
+
         // Mostrar información adicional si está disponible
         if (result.email_info.rejected && Array.isArray(result.email_info.rejected) && result.email_info.rejected.length > 0) {
-          console.log('📧 Correos rechazados:', result.email_info.rejected)
         }
         
         if (result.email_info.mensaje) {
-          console.log('📧 Mensaje:', result.email_info.mensaje)
         }
         
         if (result.email_info.messageId) {
-          console.log('📧 Message ID:', result.email_info.messageId)
         }
         
-        console.log('═══════════════════════════════════════════════════════')
       } else {
-        console.warn('▲▲ El backend no devolvió información de correos destinatarios.')
-        console.warn('▲▲ Asegúrate de que el router del servidor incluya email_info en la respuesta.')
       }
 
       if (result?.success || result?.estado === 'exito') {

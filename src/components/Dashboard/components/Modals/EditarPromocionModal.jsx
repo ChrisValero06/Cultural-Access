@@ -77,7 +77,6 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
             return `${año}-${mes}-${dia}`;
           }
         } catch (e) {
-          console.warn('Error al formatear fecha:', fecha, e);
         }
         return '';
       };
@@ -101,24 +100,15 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
   if (!modalAbierto) return null;
 
   // Debug: mostrar datos de la promoción
-  console.log('🔍 Datos de la promoción en el modal:', {
-    id: editandoForm?.id,
-    institucion: editandoForm?.institucion,
-    imagen_principal: editandoForm?.imagen_principal,
-    imagen_secundaria: editandoForm?.imagen_secundaria,
-    previewPrincipal,
-    previewSecundaria
-  });
+
 
   const validarImagen = (file) => {
     const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
     const tamañoMaximo = 30 * 1024 * 1024; // 30MB
     if (!tiposPermitidos.includes(file.type)) {
-      alert('Tipo de archivo no permitido. Use JPG, PNG o GIF.');
       return false;
     }
     if (file.size > tamañoMaximo) {
-      alert('El archivo es demasiado grande. Máximo 30MB.');
       return false;
     }
     return true;
@@ -161,25 +151,25 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
   };
 
   const handleGuardar = async () => {
-    if (!editandoForm.institucion.trim()) { alert('La institución es requerida'); return; }
-    if (!editandoForm.tipo_promocion.trim()) { alert('El tipo de promoción es requerido'); return; }
-    if (!editandoForm.disciplina.trim()) { alert('La disciplina es requerida'); return; }
-    if (!editandoForm.fecha_inicio) { alert('La fecha de inicio es requerida'); return; }
-    if (!editandoForm.fecha_fin) { alert('La fecha de fin es requerida'); return; }
+    if (!editandoForm.institucion.trim()) { return; }
+    if (!editandoForm.tipo_promocion.trim()) { return; }
+    if (!editandoForm.disciplina.trim()) { return; }
+    if (!editandoForm.fecha_inicio) { return; }
+    if (!editandoForm.fecha_fin) { return; }
     
     // Validar que las fechas sean válidas
     const fechaInicio = new Date(editandoForm.fecha_inicio);
     const fechaFin = new Date(editandoForm.fecha_fin);
     
     if (isNaN(fechaInicio.getTime())) {
-      alert('La fecha de inicio no es válida'); return;
+      return;
     }
     if (isNaN(fechaFin.getTime())) {
-      alert('La fecha de fin no es válida'); return;
+      return;
     }
     
     if (fechaInicio >= fechaFin) {
-      alert('La fecha de fin debe ser posterior a la fecha de inicio'); return;
+      return;
     }
     
     // Validar que la fecha de inicio no sea muy antigua (opcional)
@@ -188,9 +178,7 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
     const diasDiferencia = Math.ceil((hoy - fechaInicio) / (1000 * 60 * 60 * 24));
     
     if (diasDiferencia > 365) {
-      if (!confirm('La fecha de inicio es muy antigua (más de 1 año). ¿Estás seguro de continuar?')) {
-        return;
-      }
+      return;
     }
 
     setGuardando(true);
@@ -212,11 +200,7 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
       
       // Si hay archivos nuevos O imágenes eliminadas, usar actualizarPromocionConArchivos
       if (imagenPrincipalFile || imagenSecundariaFile || imagenPrincipalEliminada || imagenSecundariaEliminada) {
-        console.log('🔄 Actualizando promoción con cambios en imágenes:', {
-          id: editandoForm.id,
-          imagenPrincipal: imagenPrincipalFile?.name || (imagenPrincipalEliminada ? 'ELIMINADA' : 'sin cambios'),
-          imagenSecundaria: imagenSecundariaFile?.name || (imagenSecundariaEliminada ? 'ELIMINADA' : 'sin cambios')
-        });
+        
         
         // ⭐⭐ USAR actualizarPromocionConArchivos() que envía todo junto
         try {
@@ -226,8 +210,6 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
             imagenPrincipalFile, // null si no hay archivo nuevo
             imagenSecundariaFile // null si no hay archivo nuevo
           );
-          
-          console.log('📡 Respuesta completa del servidor:', response);
           
           if (response.estado === 'exito' || response.success === true) {
             // Construir la promoción actualizada con las URLs del servidor
@@ -247,12 +229,6 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
               ...(response.promocion || response.data || {})
             };
             
-            console.log('✅ Promoción actualizada con URLs:', {
-              id: promocionActualizada.id,
-              imagen_principal: promocionActualizada.imagen_principal,
-              imagen_secundaria: promocionActualizada.imagen_secundaria
-            });
-            
             // Cerrar el modal
             setModalAbierto(false);
             setEditandoForm(null);
@@ -262,23 +238,17 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
               onPromocionActualizada(promocionActualizada);
             }
             
-            alert('✅ Promoción actualizada correctamente con nuevas imágenes');
           } else {
-            alert('❌ No se pudo actualizar la promoción: ' + (response.message || 'Error desconocido'));
+            return;
           }
         } catch (error) {
-          console.error('❌ Error actualizando promoción con archivos:', error);
-          alert('❌ Error al actualizar la promoción: ' + error.message);
           throw error; // Re-lanzar para que el catch externo lo maneje
         }
       } else {
         // Si no hay archivos nuevos, usar la función simple
-        console.log('🔄 Actualizando promoción sin archivos');
         await onGuardarCambios();
       }
     } catch (error) {
-      console.error('💥 Error en handleGuardar:', error);
-      alert('❌ Error al actualizar la promoción: ' + error.message);
     } finally {
       setGuardando(false);
     }
@@ -291,7 +261,7 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleOverlayClick}>
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">✏️ Editar Promoción</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4"> Editar Promoción</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Institución *</label>

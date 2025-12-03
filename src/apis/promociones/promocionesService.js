@@ -329,18 +329,10 @@ export const promocionesService = {
   // Actualizar promoción con archivos (usando FormData)
   async actualizarPromocionConArchivos(id, promocionData, imagenPrincipalFile = null, imagenSecundariaFile = null) {
     try {
-      console.log('🚀 Iniciando actualización con archivos:', {
-        id,
-        promocionData,
-        imagenPrincipal: imagenPrincipalFile?.name,
-        imagenSecundaria: imagenSecundariaFile?.name
-      });
-
       const formData = new FormData();
       
       // Agregar datos de la promoción
       Object.keys(promocionData).forEach(key => {
-        // ⭐⭐ Incluir null explícitamente para imágenes (permite eliminarlas)
         if (key === 'imagen_principal' || key === 'imagen_secundaria') {
           if (promocionData[key] === null || promocionData[key] === '') {
             formData.append(key, ''); // Enviar string vacío para eliminar
@@ -355,34 +347,26 @@ export const promocionesService = {
       // Agregar archivos si existen
       if (imagenPrincipalFile) {
         formData.append('imagen_principal', imagenPrincipalFile);
-        console.log('📎 Agregada imagen principal:', imagenPrincipalFile.name);
       }
       if (imagenSecundariaFile) {
         formData.append('imagen_secundaria', imagenSecundariaFile);
-        console.log('📎 Agregada imagen secundaria:', imagenSecundariaFile.name);
       }
 
       const url = `${API_BASE_URL}/promociones/${id}`;
-      console.log('🌐 Enviando PUT a:', url);
 
       const response = await fetch(url, {
         method: 'PUT',
         body: formData,
       });
 
-      console.log('📡 Respuesta HTTP:', response.status, response.statusText);
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('❌ Error del servidor:', errorData);
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('✅ Datos recibidos:', data);
       return data;
     } catch (error) {
-      console.error('💥 Error en actualizarPromocionConArchivos:', error);
       throw error;
     }
   }

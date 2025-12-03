@@ -293,7 +293,7 @@ const ContenidoPrincipal = () => {
                 </p>
 
                 <p className="text-gray-600 leading-relaxed text-sm sm:text-base md:text-lg font-medium text-center">
-                Consulta horarios de temporada
+                Consulta horarios de temporada           
                 </p>
                 
               

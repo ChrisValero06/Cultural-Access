@@ -87,7 +87,6 @@ export const InstitucionesProvider = ({ children }) => {
       if (nombresInstituciones.length > 0) {
         setInstituciones(nombresInstituciones)
       } else {
-        console.warn('⚠️ No se encontraron instituciones, usando lista base')
         // Si no hay instituciones en la BD, usar la lista base
         setInstituciones(institucionesBase)
       }
@@ -149,7 +148,6 @@ export const InstitucionesProvider = ({ children }) => {
         inst.toLowerCase().includes(termino.toLowerCase())
       )
     } catch (err) {
-      console.error('Error al buscar instituciones:', err)
       // Fallback a búsqueda local
       return instituciones.filter(inst =>
         inst.toLowerCase().includes(termino.toLowerCase())
