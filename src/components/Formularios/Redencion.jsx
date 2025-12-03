@@ -9,41 +9,29 @@ const Redencion = () => {
   // Función de depuración temporal - exponer en window para pruebas
   useEffect(() => {
     window.debugInstituciones = async () => {
-      console.log('🔍 DEPURACIÓN DE INSTITUCIONES')
-      console.log('📊 Instituciones en contexto:', instituciones)
-      console.log('📊 Total:', instituciones.length)
-      console.log('🔍 Buscando "Luztopía"...')
       const luztopia = instituciones.find(inst => 
         inst.toLowerCase().includes('luztopía') || inst.toLowerCase().includes('luztopia')
       )
-      console.log('✅ ¿Encontrada?', luztopia || 'NO ENCONTRADA')
       
       // Llamar directamente a la API
       try {
         const API_BASE_URL = import.meta.env.DEV ? '/api' : 'https://culturallaccess.com/api'
-        console.log('🌐 Llamando directamente a:', `${API_BASE_URL}/instituciones`)
         const response = await fetch(`${API_BASE_URL}/instituciones`)
         const data = await response.json()
-        console.log('📦 Respuesta directa de la API:', data)
-        console.log('📦 Tipo:', Array.isArray(data) ? 'Array' : typeof data)
-        console.log('📦 Longitud:', Array.isArray(data) ? data.length : 'N/A')
         
         if (Array.isArray(data)) {
           const tieneLuztopia = data.some(inst => {
             const nombre = typeof inst === 'string' ? inst : inst.nombre
             return nombre && (nombre.toLowerCase().includes('luztopía') || nombre.toLowerCase().includes('luztopia'))
           })
-          console.log('🔍 ¿La API contiene "Luztopía"?', tieneLuztopia)
           if (tieneLuztopia) {
             const luztopiaEnAPI = data.find(inst => {
               const nombre = typeof inst === 'string' ? inst : inst.nombre
               return nombre && (nombre.toLowerCase().includes('luztopía') || nombre.toLowerCase().includes('luztopia'))
             })
-            console.log('✅ Encontrada en API:', luztopiaEnAPI)
           }
         }
       } catch (error) {
-        console.error('❌ Error al llamar a la API:', error)
       }
     }
   }, [instituciones])
@@ -95,7 +83,6 @@ const Redencion = () => {
         
         setTodasLasPromociones(promociones)
       } catch (error) {
-        console.error('Error al cargar todas las promociones:', error)
         setTodasLasPromociones([])
       }
     }
@@ -123,28 +110,8 @@ const Redencion = () => {
         return promoInstitucion === institucionLower
       })
       
-      // Log para debugging
-      console.log('🔍 Filtrando promociones para:', institucionNombre)
-      console.log('📊 Total promociones en sistema:', todasLasPromociones.length)
-      console.log('📊 Promociones encontradas (coincidencia exacta):', promocionesDeInstitucion.length)
-      
       if (promocionesDeInstitucion.length > 0) {
-        console.log('📋 Promociones encontradas:', promocionesDeInstitucion.map(p => ({
-          institucion: p.institucion,
-          tipo: p.tipo_promocion || p.tipoPromocion,
-          estado: p.estado,
-          fecha_fin: p.fecha_fin || p.fechaFin || p.fecha_final
-        })))
       } else {
-        console.log('⚠️ No se encontraron promociones con coincidencia exacta para:', institucionNombre)
-        // Mostrar algunas promociones cercanas para debugging
-        const promocionesCercanas = todasLasPromociones.filter(promo => {
-          const promoInstitucion = (promo.institucion || '').toLowerCase().trim()
-          return promoInstitucion.includes(institucionLower) || institucionLower.includes(promoInstitucion)
-        }).slice(0, 5)
-        if (promocionesCercanas.length > 0) {
-          console.log('🔍 Promociones con nombres similares (NO incluidas):', promocionesCercanas.map(p => p.institucion))
-        }
       }
       
       // Filtrar solo promociones activas y no expiradas
@@ -171,19 +138,13 @@ const Redencion = () => {
         return true
       })
       
-      console.log('✅ Promociones activas después de filtrar:', activas.length)
       if (activas.length > 1) {
-        console.log('⚠️ Se mostrará el campo "Tipo de Promoción" porque hay', activas.length, 'promociones activas')
-        console.log('📋 Tipos de promoción únicos:', [...new Set(activas.map(p => p.tipo_promocion || p.tipoPromocion).filter(Boolean))])
       } else if (activas.length === 1) {
-        console.log('ℹ️ Hay 1 promoción activa, NO se mostrará el campo "Tipo de Promoción"')
       } else {
-        console.log('ℹ️ No hay promociones activas para esta institución')
       }
       
       setPromocionesActivas(activas)
     } catch (error) {
-      console.error('Error al filtrar promociones:', error)
       setPromocionesActivas([])
     } finally {
       setCargandoPromociones(false)
@@ -308,13 +269,11 @@ const Redencion = () => {
     try {
       // Validar que todos los campos estén llenos
       if (!formData.institucion || !formData.numeroTarjeta || !formData.fecha) {
-        alert('Por favor, completa todos los campos')
         return
       }
 
       // Validar tipo de promoción si es requerido
       if (mostrarTipoPromocion && !formData.tipoPromocion) {
-        alert('Por favor, selecciona el tipo de promoción')
         return
       }
 
@@ -342,30 +301,22 @@ const Redencion = () => {
         ...(formData.tipoPromocion ? { tipo_promocion: formData.tipoPromocion } : {})
       }
 
-      console.log('📤 Frontend - Enviando petición POST a:', url)
-      console.log('📤 Frontend - Payload:', payload)
-
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
 
-      console.log('📥 Frontend - Respuesta recibida:', response.status, response.statusText)
-
       let responseData;
       
       // Intentar leer la respuesta como JSON
       try {
         responseData = await response.json();
-        console.log('📥 Frontend - Response Data:', JSON.stringify(responseData, null, 2))
       } catch (e) {
-        console.error('❌ Frontend - Error al parsear JSON:', e)
         // Si no es JSON, intentar leer como texto
         try {
           const errorText = await response.text();
           responseData = errorText ? { message: errorText } : null;
-          console.log('📥 Frontend - Response Text:', errorText)
         } catch (e2) {
           console.error('❌ Frontend - Error al leer texto:', e2)
           responseData = null;
@@ -374,9 +325,6 @@ const Redencion = () => {
 
       // ⭐⭐ MOSTRAR INFORMACIÓN DE CORREOS DESTINATARIOS EN EL FRONTEND
       if (responseData?.email_info) {
-        console.log('═══════════════════════════════════════════════════════')
-        console.log('📧 INFORMACIÓN DE CORREOS DESTINATARIOS:')
-        console.log('═══════════════════════════════════════════════════════')
         
         // Manejar diferentes estructuras de respuesta del backend
         let destinatarios = [];
@@ -398,33 +346,16 @@ const Redencion = () => {
           totalDestinatarios = destinatarios.length;
         }
         
-        console.log('📧 Total destinatarios:', totalDestinatarios)
-        console.log('📧 Correos destinatarios:')
-        if (destinatarios.length > 0) {
-          destinatarios.forEach((email, index) => {
-            console.log(`   ${index + 1}. ${email}`)
-          })
-        } else {
-          console.log('   (No se encontraron destinatarios en la respuesta)')
-        }
-        
         // Mostrar información adicional si está disponible
         if (responseData.email_info.rejected && Array.isArray(responseData.email_info.rejected) && responseData.email_info.rejected.length > 0) {
-          console.log('📧 Correos rechazados:', responseData.email_info.rejected)
         }
         
-        if (responseData.email_info.mensaje) {
-          console.log('📧 Mensaje:', responseData.email_info.mensaje)
+        if (responseData.email_info.mensaje) {  
         }
         
         if (responseData.email_info.messageId) {
-          console.log('📧 Message ID:', responseData.email_info.messageId)
         }
         
-        console.log('═══════════════════════════════════════════════════════')
-      } else {
-        console.warn('▲▲ El backend no devolvió información de correos destinatarios.')
-        console.warn('▲▲ Asegúrate de que el router del servidor incluya email_info en la respuesta.')
       }
 
       if (!response.ok) {

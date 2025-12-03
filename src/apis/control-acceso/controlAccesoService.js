@@ -2,7 +2,7 @@
 import { API_CONFIG } from '../../config/api.js';
 
 const API_BASE_URL = API_CONFIG.BASE_URL;
-const CONTROL_ENDPOINT = API_CONFIG.ENDPOINTS?.CONTROL_ACCESO || '/control-acceso';
+const CONTROL_ENDPOINT = API_CONFIG.ENDPOINTS?.CONTROL_ACCESO || '/controlacceso';
 
 export const controlAccesoService = {
   // Crear nuevo registro de control de acceso (POST /control-acceso)

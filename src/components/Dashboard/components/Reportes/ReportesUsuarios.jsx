@@ -185,7 +185,6 @@ const ReportesUsuarios = () => {
       const nombreArchivo = `reporte_usuarios_${perfilSeleccionado ? perfilMap[perfilSeleccionado].replace(' ', '_') : 'todos'}_${fechaInicio}_${fechaFin}.xlsx`;
       XLSX.writeFile(wb, nombreArchivo);
     } catch (err) {
-      console.error('Error al exportar:', err);
       alert('Error al exportar el reporte: ' + err.message);
     }
   };

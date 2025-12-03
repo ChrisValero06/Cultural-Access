@@ -62,51 +62,36 @@ export const InstitucionesProvider = ({ children }) => {
     try {
       setCargando(true)
       setError(null)
-      console.log('🔄 Cargando instituciones desde la API...')
       const data = await institucionesService.obtenerInstituciones()
-      
-      console.log('📥 Datos recibidos de la API:', data)
-      console.log('📥 Tipo de datos:', Array.isArray(data) ? 'Array' : typeof data)
       
       // Si la respuesta es un array de objetos con propiedad 'nombre', extraer solo los nombres
       // Si es un array de strings, usarlo directamente
       const nombresInstituciones = Array.isArray(data) 
         ? data.map(inst => {
             const nombre = typeof inst === 'string' ? inst : inst.nombre
-            console.log('📝 Procesando institución:', inst, '-> nombre:', nombre)
             return nombre
           }).filter(Boolean)
         : []
-      
-      console.log('✅ Instituciones procesadas:', nombresInstituciones)
-      console.log('📊 Total de instituciones:', nombresInstituciones.length)
       
       // Verificar si "Luztopía" está en la lista
       const tieneLuztopia = nombresInstituciones.some(inst => 
         inst.toLowerCase().includes('luztopía') || inst.toLowerCase().includes('luztopia')
       )
-      console.log('🔍 ¿Contiene "Luztopía"?', tieneLuztopia)
       if (tieneLuztopia) {
         const luztopia = nombresInstituciones.find(inst => 
           inst.toLowerCase().includes('luztopía') || inst.toLowerCase().includes('luztopia')
         )
-        console.log('✅ Encontrada:', luztopia)
       } else {
-        console.warn('⚠️ "Luztopía" NO encontrada en la lista recibida')
-        console.log('📋 Primeras 5 instituciones:', nombresInstituciones.slice(0, 5))
-        console.log('📋 Últimas 5 instituciones:', nombresInstituciones.slice(-5))
       }
       
       if (nombresInstituciones.length > 0) {
         setInstituciones(nombresInstituciones)
-        console.log('✅ Lista de instituciones actualizada en el contexto')
       } else {
         console.warn('⚠️ No se encontraron instituciones, usando lista base')
         // Si no hay instituciones en la BD, usar la lista base
         setInstituciones(institucionesBase)
       }
     } catch (err) {
-      console.error('❌ Error al cargar instituciones desde la API:', err)
       setError(err.message)
       // En caso de error, usar la lista base como fallback
       setInstituciones(institucionesBase)
@@ -122,37 +107,27 @@ export const InstitucionesProvider = ({ children }) => {
 
   const agregarInstitucion = async (nuevaInstitucion) => {
     if (!nuevaInstitucion) {
-      console.warn('⚠️ Intento de agregar institución vacía')
       return
     }
 
     // Normalizar el nombre para comparación (trim y case-insensitive)
     const nombreNormalizado = nuevaInstitucion.trim()
-    console.log('➕ Intentando agregar institución:', nombreNormalizado)
     
     const existe = instituciones.some(inst => 
       inst.trim().toLowerCase() === nombreNormalizado.toLowerCase()
     )
 
     if (existe) {
-      console.warn('⚠️ La institución ya existe:', nombreNormalizado)
       return
     }
 
     try {
-      console.log('📤 Creando institución en la base de datos...')
       // Crear la institución en la base de datos
       await institucionesService.crearInstitucion(nombreNormalizado)
-      console.log('✅ Institución creada en la BD:', nombreNormalizado)
-      
       // Recargar todas las instituciones desde la API para asegurar sincronización
       // Esto garantiza que todos los componentes vean la lista actualizada
-      console.log('🔄 Recargando lista completa de instituciones...')
       await cargarInstituciones()
-      
-      console.log('✅ Institución agregada y lista recargada:', nombreNormalizado)
     } catch (err) {
-      console.error('❌ Error al agregar institución:', err)
       throw err // Propagar el error para que el componente pueda manejarlo
     }
   }
