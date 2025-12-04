@@ -36,10 +36,10 @@ const AdminDashboard = () => {
       return;
     }
     
-    // Solo Pepe puede acceder al AdminDashboard
+    // Solo Pepe y Francisco pueden acceder al AdminDashboard
     const perfilId = localStorage.getItem('perfilId');
-    if (perfilId !== 'pepe') {
-      // Si no es Pepe, redirigir al Registro
+    if (perfilId !== 'pepe' && perfilId !== 'francisco') {
+      // Si no es Pepe o Francisco, redirigir al Registro
       navigate('/Registro');
       return;
     }

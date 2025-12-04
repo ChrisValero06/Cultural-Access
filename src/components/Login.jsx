@@ -48,6 +48,7 @@ const Login = () => {
     { usuario: 'pepe', password: '7373', perfilId: 'pepe', nombre: 'Pepe' },
     { usuario: 'jose', password: '7373', perfilId: 'jose', nombre: 'Jose' },
     { usuario: 'labnl', password: 'labnl2025', perfilId: 'labnl', nombre: 'LABNL' },
+    { usuario: 'francisco', password: '7421', perfilId: 'francisco', nombre: 'Francisco' },
   ];
 
   const handleSubmit = async (e) => { 
@@ -63,18 +64,21 @@ const Login = () => {
       }
 
       // Validar contra credenciales fijas
-      const match = FIXED_CREDENTIALS.find(c => c.usuario === usuario && c.password === password);
+      const usuarioTrimmed = usuario.trim();
+      const passwordTrimmed = password.trim();
+      const match = FIXED_CREDENTIALS.find(c => c.usuario === usuarioTrimmed && c.password === passwordTrimmed);
       if (!match) {
         throw new Error('Credenciales inválidas');
       }
 
-      localStorage.setItem('authToken', `${usuario}-token`);
-      localStorage.setItem('userUsuario', usuario);
+      localStorage.setItem('authToken', `${usuarioTrimmed}-token`);
+      localStorage.setItem('userUsuario', usuarioTrimmed);
       localStorage.setItem('perfilId', match.perfilId);
       localStorage.setItem('perfilNombre', match.nombre);
       
-      // Solo Pepe accede al AdminDashboard, los demás (incluyendo Jose) van al Registro
-      if (match.perfilId === 'pepe') {
+      // Pepe y Francisco acceden al AdminDashboard, los demás van al Registro
+      const perfilId = match.perfilId?.trim().toLowerCase();
+      if (perfilId === 'pepe' || perfilId === 'francisco') {
         navigate('/AdminDashboard');
       } else {
         navigate('/Registro');
