@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../../../../apis';
+import useDocumentTitle from '../../../../hooks/useDocumentTitle';
 
 const ReportesRedenciones = () => {
+  useDocumentTitle('Reportes');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [institucionSeleccionada, setInstitucionSeleccionada] = useState('');
@@ -127,10 +129,10 @@ const ReportesRedenciones = () => {
           return false;
         }
 
-        // Filtrar por institución si está seleccionada
+        // Filtrar por institución si está seleccionada (comparar sin acentos)
         if (institucionSeleccionada) {
           const institucionRedencion = redencion.institucion || '';
-          if (institucionRedencion.toLowerCase().trim() !== institucionSeleccionada.toLowerCase().trim()) {
+          if (normalizarTexto(institucionRedencion) !== normalizarTexto(institucionSeleccionada)) {
             return false;
           }
         }
@@ -170,7 +172,7 @@ const ReportesRedenciones = () => {
     
     const redencionesInstitucion = redenciones.filter(r => {
       const institucion = r.institucion || '';
-      return institucion.toLowerCase().trim() === institucionSeleccionada.toLowerCase().trim();
+      return normalizarTexto(institucion) === normalizarTexto(institucionSeleccionada);
     });
     
     const tipos = redencionesInstitucion
@@ -274,6 +276,16 @@ const ReportesRedenciones = () => {
     }
   };
 
+  // Función para normalizar texto removiendo acentos y caracteres especiales
+  const normalizarTexto = (texto) => {
+    return texto
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
+      .replace(/\s+/g, ' '); // Eliminar espacios múltiples
+  };
+
   // Preparar lista de instituciones para el dropdown (eliminar duplicados normalizando)
   const institucionesUnicas = React.useMemo(() => {
     const institucionesMap = new Map();
@@ -282,24 +294,26 @@ const ReportesRedenciones = () => {
       const institucion = r.institucion;
       if (!institucion) return;
       
-      // Normalizar: trim, lowercase, y eliminar espacios múltiples
-      const normalizada = institucion.trim().toLowerCase().replace(/\s+/g, ' ');
+      // Normalizar: trim, lowercase, eliminar acentos y espacios múltiples
+      const normalizada = normalizarTexto(institucion);
       
-      // Si no existe en el mapa o si el nombre original es más completo, guardarlo
-      if (!institucionesMap.has(normalizada) || institucion.length > institucionesMap.get(normalizada).length) {
-        institucionesMap.set(normalizada, institucion);
+      // Si no existe en el mapa, guardarlo
+      // Preferir la versión con acentos (más caracteres después de normalizar indica acentos)
+      if (!institucionesMap.has(normalizada)) {
+        institucionesMap.set(normalizada, institucion.trim());
+      } else {
+        // Si ya existe, preferir la versión con acentos (León > Leon)
+        const existente = institucionesMap.get(normalizada);
+        if (institucion.trim().length > existente.length) {
+          institucionesMap.set(normalizada, institucion.trim());
+        }
       }
     });
     
-    // Convertir a array, ordenar alfabéticamente y eliminar duplicados finales
+    // Convertir a array y ordenar alfabéticamente
     const institucionesArray = Array.from(institucionesMap.values());
     
-    // Eliminar duplicados exactos (por si acaso)
-    const unicas = institucionesArray.filter((inst, index, self) => 
-      index === self.findIndex(i => i.toLowerCase().trim() === inst.toLowerCase().trim())
-    );
-    
-    return unicas.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+    return institucionesArray.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
   }, [redenciones]);
 
   return (

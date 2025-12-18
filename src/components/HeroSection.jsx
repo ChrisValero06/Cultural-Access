@@ -1,7 +1,9 @@
 import React from 'react'
 import { imagenes } from '../constants/imagenes'
+import useDocumentTitle from '../hooks/useDocumentTitle'
 
 const HeroSection = () => {
+  useDocumentTitle('Inicio');
   return (
     <section className="relative w-full">
       <img 

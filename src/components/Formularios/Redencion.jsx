@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from 'react'
 import { imagenes } from '../../constants/imagenes'
 import { apiService } from '../../apis'
 import { useInstituciones } from '../../context/InstitucionesContext'
+import useDocumentTitle from '../../hooks/useDocumentTitle'
 
 const Redencion = () => {
+  useDocumentTitle('Redención');
   const { instituciones, buscarInstituciones, recargarInstituciones, cargando: cargandoInstituciones } = useInstituciones()
   
   // Función de depuración temporal - exponer en window para pruebas

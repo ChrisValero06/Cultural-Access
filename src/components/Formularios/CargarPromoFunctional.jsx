@@ -3,6 +3,7 @@ import { imagenes } from '../../constants/imagenes'
 import { apiService } from '../../apis'
 import { API_CONFIG } from '../../config/api.js'
 import { useInstituciones } from '../../context/InstitucionesContext'
+import useDocumentTitle from '../../hooks/useDocumentTitle'
 
 const DATA = {
   tipoPromocion: ['Entradas gratuitas', 'Descuentos', 'Acceso prioritario', 'Descuentos para la educación', 'Visitas guiadas exclusivas', 'Descuentos en publicaciones CONARTE', 'Asistencia a conferencias', 'Descuentos en cafés/comida', 'Boletos 2x4', 'Descuentos por temporada', 'Otra'],
@@ -59,6 +60,7 @@ const LargeTextInput = ({ id, name, label, placeholder, value, onChange, onBlur,
 }
 
 const CargarPromoFunctional = () => {
+  useDocumentTitle('Cargar Promoción');
   const { instituciones, agregarInstitucion, cargando: cargandoInstituciones } = useInstituciones()
   const [formData, setFormData] = useState({
     institucion: '', tipoPromocion: '', disciplina: '', beneficios: '',
@@ -318,25 +320,43 @@ const CargarPromoFunctional = () => {
 
 
   return (
-    <div className="relative overflow-hidden h-full">
+    <div className="relative overflow-hidden min-h-screen">
       <div className="absolute inset-0">
         <img src="/images/BACKGROUND-06.png" alt="Fondo Cultural Access" className="w-full h-full object-cover" />
       </div>
 
-      <div className="relative z-10 h-full flex flex-col">
-        <div className="flex flex-row items-center justify-center py-6 space-x-8">
-          <div className="flex items-center">
-            <img src={imagenes.logoIzquierdo} alt="Logo CULTURA NL" className="w-24 h-24 object-contain" />
-          </div>
-          <h1 className="uppercase text-7xl font-bold text-center">
-            <span className="text-white">CULTUR</span>
-            <span className="text-black ml-2">ALL ACCESS</span>
-          </h1>
-          <div className="flex items-center">
-            <img src={imagenes.logoDerecho} alt="Logo NL" className="w-16 h-16 object-contain" />
+      {/* Header fijo */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-orange-500 backdrop-blur-sm shadow-lg">
+        <div className="max-w-[1090px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center py-6 space-x-8">
+            {/* Logo izquierdo */}
+            <div className="flex items-center">
+              <img 
+                src={imagenes.logoIzquierdo} 
+                alt="Logo CULTURA NL" 
+                className="w-24 h-24 object-contain"
+              />
+            </div>
+            
+            {/* Título central */}
+            <h1 className="uppercase text-[clamp(0.8rem,4.2vw,4.2rem)] leading-tight font-bold text-center px-5" style={{ fontFamily: "'Neue Haas Grotesk Display', sans-serif", fontWeight: 700 }}>
+              <span className="text-white">CULTUR</span>
+              <span className="text-black ml-1">ALL ACCESS</span>
+            </h1>
+            
+            {/* Logo derecho */}
+            <div className="flex items-center">
+              <img 
+                src={imagenes.logoDerecho} 
+                alt="Logo NL" 
+                className="w-16 h-16 object-contain"
+              />
+            </div>
           </div>
         </div>
+      </header>
 
+      <div className="relative z-10 min-h-screen flex flex-col pt-36">
         <div className="flex-1 flex items-center justify-center px-6 py-8">
           <div className="w-full max-w-[800px] max-h-full">
             <div className="bg-orange-500 rounded-2xl p-6 shadow-2xl overflow-y-auto">

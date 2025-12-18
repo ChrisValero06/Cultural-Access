@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
 const EstadisticasPerfiles = () => {
+  useDocumentTitle('Estadísticas');
   const [estadisticas, setEstadisticas] = useState({
     francisco_murga: 0,
     alejandro_olachea: 0,

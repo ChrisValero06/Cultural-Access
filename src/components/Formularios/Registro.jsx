@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiService } from '../../apis'
 import { imagenes } from '../../constants/imagenes'
+import useDocumentTitle from '../../hooks/useDocumentTitle'
 
 const RadioButton = ({ id, name, value, checked, onChange, label, disabled, required = false }) => (
   <div className="flex items-center space-x-2">
@@ -34,6 +35,7 @@ const SelectInput = ({ id, name, autoComplete, value, onChange, required = false
 )
 
 const CulturalAccessForm = () => {
+  useDocumentTitle('Registro');
   const navigate = useNavigate()
   const [curpOption, setCurpOption] = useState("curp")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -381,23 +383,43 @@ const CulturalAccessForm = () => {
   ];
 
   return (
-    <div className="relative overflow-hidden h-full">
+    <div className="relative overflow-hidden min-h-screen">
       <div className="absolute inset-0">
         <img src="/images/BACKGROUND-06.png" alt="Fondo Cultural Access" className="w-full h-full object-cover" />
       </div>
-      <div className="relative z-10 h-full flex flex-col">
-        <div className="flex flex-row items-center justify-center py-6 space-x-8">
-          <div className="flex items-center">
-            <img src={imagenes.logoIzquierdo} alt="Logo CULTURA NL" className="w-24 h-24 object-contain" />
-          </div>
-          <h1 className="uppercase text-[clamp(0.8rem,4.2vw,4.2rem)] leading-tight font-bold text-center px-5" style={{ fontFamily: "'Neue Haas Grotesk Display', sans-serif", fontWeight: 700 }}>
-          <span className="text-white">CULTUR</span>
-          <span className="text-black ml-1">ALL ACCESS</span>
-        </h1>
-          <div className="flex items-center">
-            <img src={imagenes.logoDerecho} alt="Logo NL" className="w-16 h-16 object-contain" />
+      
+      {/* Header fijo */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-orange-500 backdrop-blur-sm shadow-lg">
+        <div className="max-w-[1090px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center py-6 space-x-8">
+            {/* Logo izquierdo */}
+            <div className="flex items-center">
+              <img 
+                src={imagenes.logoIzquierdo} 
+                alt="Logo CULTURA NL" 
+                className="w-24 h-24 object-contain"
+              />
+            </div>
+            
+            {/* Título central */}
+            <h1 className="uppercase text-[clamp(0.8rem,4.2vw,4.2rem)] leading-tight font-bold text-center px-5" style={{ fontFamily: "'Neue Haas Grotesk Display', sans-serif", fontWeight: 700 }}>
+              <span className="text-white">CULTUR</span>
+              <span className="text-black ml-1">ALL ACCESS</span>
+            </h1>
+            
+            {/* Logo derecho */}
+            <div className="flex items-center">
+              <img 
+                src={imagenes.logoDerecho} 
+                alt="Logo NL" 
+                className="w-16 h-16 object-contain"
+              />
+            </div>
           </div>
         </div>
+      </header>
+
+      <div className="relative z-10 min-h-screen flex flex-col pt-36">
         <div className="flex-1 flex items-center justify-center px-6 py-8">
           <div className="bg-orange-500 rounded-2xl p-8 shadow-2xl max-w-[1090px] w-full max-h-full overflow-y-auto">
             <form onSubmit={handleSubmit} className="space-y-6">

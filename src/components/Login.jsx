@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { apiService } from '../apis';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const Login = () => {
+  useDocumentTitle('Iniciar Sesión');
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

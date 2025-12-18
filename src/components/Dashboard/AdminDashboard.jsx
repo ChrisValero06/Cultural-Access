@@ -5,8 +5,10 @@ import { useCarrusel } from '../../context/CarruselContext';
 import DashboardHeader from './components/Header/DashboardHeader';
 import DashboardContent from './components/Content/DashboardContent';
 import EditarPromocionModal from './components/Modals/EditarPromocionModal';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const AdminDashboard = () => {
+  useDocumentTitle('Panel de Control');
   const navigate = useNavigate();
   // Estados para promociones
   const [promociones, setPromociones] = useState([]);

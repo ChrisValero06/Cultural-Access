@@ -1,7 +1,9 @@
 import React from 'react';
 import { imagenes } from '../constants/imagenes';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const AvisoPrivacidad = () => {
+  useDocumentTitle('Aviso de Privacidad');
   return (
     <div className="relative overflow-hidden h-full">
       {/* Fondo naranja sólido */}
