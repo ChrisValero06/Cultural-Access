@@ -286,15 +286,13 @@ const ContenidoPrincipal = () => {
             <div className="flex items-center justify-center sm:justify-start">
               <div>
                 <h1 className="font-semibold text-gray-800 text-center" style={{ fontSize: '20px' }}>
-                  PROMOCIONES VIGENTES - DICIEMBRE
+                PROMOCIONES VIGENTES - ENERO
                 </h1>
                 <p className="text-gray-600 leading-relaxed text-sm sm:text-base md:text-lg font-medium text-center">
-                  Presentando tarjeta y sujetas a disponibilidad
+                Presentando tarjeta y sujetas a disponibilidad
                 </p>
 
-                <p className="text-gray-600 leading-relaxed text-sm sm:text-base md:text-lg font-medium text-center">
-                Consulta horarios de temporada           
-                </p>
+                
                 
               
               </div>
