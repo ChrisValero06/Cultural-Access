@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../../../../apis';
 import useDocumentTitle from '../../../../hooks/useDocumentTitle';
 
@@ -17,6 +17,106 @@ const ReportesRedenciones = () => {
   useEffect(() => {
     cargarRedenciones();
   }, []);
+
+  // Filtrar automáticamente cuando cambia la institución, tipo de promoción o fechas
+  useEffect(() => {
+    if (redenciones.length === 0) return;
+
+    try {
+      setError(null);
+
+      // Validar fechas si ambas están seleccionadas
+      if (fechaInicio && fechaFin) {
+        if (new Date(fechaInicio) > new Date(fechaFin)) {
+          setError('La fecha de inicio no puede ser posterior a la fecha de fin');
+          return;
+        }
+      }
+
+      // Si hay una institución seleccionada, filtrar automáticamente
+      if (institucionSeleccionada) {
+        const filtradas = redenciones.filter(redencion => {
+          // Filtrar por institución (comparar sin acentos)
+          const institucionRedencion = redencion.institucion || '';
+          if (normalizarTexto(institucionRedencion) !== normalizarTexto(institucionSeleccionada)) {
+            return false;
+          }
+
+          // Filtrar por fecha solo si ambas fechas están seleccionadas
+          if (fechaInicio && fechaFin) {
+            const fechaRedencion = redencion.fecha || redencion.fecha_redencion || redencion.created_at;
+            if (!fechaRedencion) {
+              return false;
+            }
+
+            const fechaInicioObj = new Date(fechaInicio);
+            fechaInicioObj.setHours(0, 0, 0, 0);
+            
+            const fechaFinObj = new Date(fechaFin);
+            fechaFinObj.setHours(23, 59, 59, 999);
+
+            const fecha = new Date(fechaRedencion);
+            if (fecha < fechaInicioObj || fecha > fechaFinObj) {
+              return false;
+            }
+          }
+
+          // Filtrar por tipo de promoción si está seleccionado
+          if (tipoPromocionSeleccionado) {
+            const tipoPromocionRedencion = redencion.tipo_promocion || redencion.tipoPromocion || '';
+            if (tipoPromocionRedencion.toLowerCase().trim() !== tipoPromocionSeleccionado.toLowerCase().trim()) {
+              return false;
+            }
+          }
+
+          return true;
+        });
+
+        setRedencionesFiltradas(filtradas);
+        setReporteGenerado(true);
+      } 
+      // Si no hay institución pero hay ambas fechas, también filtrar
+      else if (fechaInicio && fechaFin) {
+        const filtradas = redenciones.filter(redencion => {
+          const fechaRedencion = redencion.fecha || redencion.fecha_redencion || redencion.created_at;
+          if (!fechaRedencion) {
+            return false;
+          }
+
+          const fechaInicioObj = new Date(fechaInicio);
+          fechaInicioObj.setHours(0, 0, 0, 0);
+          
+          const fechaFinObj = new Date(fechaFin);
+          fechaFinObj.setHours(23, 59, 59, 999);
+
+          const fecha = new Date(fechaRedencion);
+          if (fecha < fechaInicioObj || fecha > fechaFinObj) {
+            return false;
+          }
+
+          // Filtrar por tipo de promoción si está seleccionado
+          if (tipoPromocionSeleccionado) {
+            const tipoPromocionRedencion = redencion.tipo_promocion || redencion.tipoPromocion || '';
+            if (tipoPromocionRedencion.toLowerCase().trim() !== tipoPromocionSeleccionado.toLowerCase().trim()) {
+              return false;
+            }
+          }
+
+          return true;
+        });
+
+        setRedencionesFiltradas(filtradas);
+        setReporteGenerado(true);
+      }
+      // Si no hay filtros, limpiar resultados
+      else {
+        setRedencionesFiltradas([]);
+        setReporteGenerado(false);
+      }
+    } catch (err) {
+      setError('Error al filtrar redenciones: ' + err.message);
+    }
+  }, [institucionSeleccionada, tipoPromocionSeleccionado, fechaInicio, fechaFin, redenciones]);
 
   const cargarRedenciones = async () => {
     try {
@@ -95,44 +195,56 @@ const ReportesRedenciones = () => {
     }
   };
 
-  const generarReporte = () => {
-    if (!fechaInicio || !fechaFin) {
-      alert('Por favor, selecciona ambas fechas (inicio y fin)');
-      return;
+  // Función para normalizar texto removiendo acentos y caracteres especiales
+  const normalizarTexto = (texto) => {
+    if (!texto || typeof texto !== 'string') {
+      return '';
     }
+    return texto
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
+      .replace(/\s+/g, ' '); // Eliminar espacios múltiples
+  };
 
-    if (new Date(fechaInicio) > new Date(fechaFin)) {
-      alert('La fecha de inicio no puede ser posterior a la fecha de fin');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
+  // Función para filtrar redenciones
+  const filtrarRedenciones = useCallback(() => {
     try {
-      // Filtrar redenciones por rango de fechas e institución
-      const fechaInicioObj = new Date(fechaInicio);
-      fechaInicioObj.setHours(0, 0, 0, 0);
-      
-      const fechaFinObj = new Date(fechaFin);
-      fechaFinObj.setHours(23, 59, 59, 999);
+      setError(null);
+
+      // Validar fechas si ambas están seleccionadas
+      if (fechaInicio && fechaFin) {
+        if (new Date(fechaInicio) > new Date(fechaFin)) {
+          setError('La fecha de inicio no puede ser posterior a la fecha de fin');
+          return;
+        }
+      }
 
       const filtradas = redenciones.filter(redencion => {
-        // Filtrar por fecha (puede venir como 'fecha' o 'fecha_redencion')
-        const fechaRedencion = redencion.fecha || redencion.fecha_redencion || redencion.created_at;
-        if (!fechaRedencion) {
-          return false; // Excluir redenciones sin fecha
-        }
-
-        const fecha = new Date(fechaRedencion);
-        if (fecha < fechaInicioObj || fecha > fechaFinObj) {
-          return false;
-        }
-
         // Filtrar por institución si está seleccionada (comparar sin acentos)
         if (institucionSeleccionada) {
           const institucionRedencion = redencion.institucion || '';
           if (normalizarTexto(institucionRedencion) !== normalizarTexto(institucionSeleccionada)) {
+            return false;
+          }
+        }
+
+        // Filtrar por fecha solo si ambas fechas están seleccionadas
+        if (fechaInicio && fechaFin) {
+          const fechaRedencion = redencion.fecha || redencion.fecha_redencion || redencion.created_at;
+          if (!fechaRedencion) {
+            return false; // Excluir redenciones sin fecha cuando se filtran por fechas
+          }
+
+          const fechaInicioObj = new Date(fechaInicio);
+          fechaInicioObj.setHours(0, 0, 0, 0);
+          
+          const fechaFinObj = new Date(fechaFin);
+          fechaFinObj.setHours(23, 59, 59, 999);
+
+          const fecha = new Date(fechaRedencion);
+          if (fecha < fechaInicioObj || fecha > fechaFinObj) {
             return false;
           }
         }
@@ -151,10 +263,22 @@ const ReportesRedenciones = () => {
       setRedencionesFiltradas(filtradas);
       setReporteGenerado(true);
     } catch (err) {
-      setError('Error al generar el reporte: ' + err.message);
-    } finally {
-      setLoading(false);
+      setError('Error al filtrar redenciones: ' + err.message);
     }
+  }, [redenciones, institucionSeleccionada, fechaInicio, fechaFin, tipoPromocionSeleccionado]);
+
+  const generarReporte = () => {
+    // Si hay una institución seleccionada, permitir generar sin fechas
+    if (!institucionSeleccionada) {
+      if (!fechaInicio || !fechaFin) {
+        alert('Por favor, selecciona ambas fechas (inicio y fin) o una institución');
+        return;
+      }
+    }
+
+    setLoading(true);
+    filtrarRedenciones();
+    setLoading(false);
   };
 
   const limpiarFiltros = () => {
@@ -168,20 +292,30 @@ const ReportesRedenciones = () => {
 
   // Obtener tipos de promoción únicos para la institución seleccionada
   const tiposPromocionDisponibles = React.useMemo(() => {
-    if (!institucionSeleccionada) return [];
-    
-    const redencionesInstitucion = redenciones.filter(r => {
-      const institucion = r.institucion || '';
-      return normalizarTexto(institucion) === normalizarTexto(institucionSeleccionada);
-    });
-    
-    const tipos = redencionesInstitucion
-      .map(r => r.tipo_promocion || r.tipoPromocion)
-      .filter(Boolean)
-      .filter((tipo, index, self) => self.indexOf(tipo) === index)
-      .sort();
-    
-    return tipos;
+    try {
+      if (!institucionSeleccionada) return [];
+      
+      const redencionesInstitucion = redenciones.filter(r => {
+        try {
+          const institucion = r?.institucion || '';
+          return normalizarTexto(institucion) === normalizarTexto(institucionSeleccionada);
+        } catch (err) {
+          console.error('Error al filtrar redenciones por institución:', err);
+          return false;
+        }
+      });
+      
+      const tipos = redencionesInstitucion
+        .map(r => r?.tipo_promocion || r?.tipoPromocion || '')
+        .filter(Boolean)
+        .filter((tipo, index, self) => self.indexOf(tipo) === index)
+        .sort();
+      
+      return tipos;
+    } catch (err) {
+      console.error('Error al obtener tipos de promoción:', err);
+      return [];
+    }
   }, [institucionSeleccionada, redenciones]);
 
   // Determinar si se debe mostrar el campo de tipo de promoción
@@ -276,45 +410,54 @@ const ReportesRedenciones = () => {
     }
   };
 
-  // Función para normalizar texto removiendo acentos y caracteres especiales
-  const normalizarTexto = (texto) => {
-    return texto
-      .trim()
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
-      .replace(/\s+/g, ' '); // Eliminar espacios múltiples
-  };
-
   // Preparar lista de instituciones para el dropdown (eliminar duplicados normalizando)
   const institucionesUnicas = React.useMemo(() => {
-    const institucionesMap = new Map();
-    
-    redenciones.forEach(r => {
-      const institucion = r.institucion;
-      if (!institucion) return;
+    try {
+      const institucionesMap = new Map();
       
-      // Normalizar: trim, lowercase, eliminar acentos y espacios múltiples
-      const normalizada = normalizarTexto(institucion);
-      
-      // Si no existe en el mapa, guardarlo
-      // Preferir la versión con acentos (más caracteres después de normalizar indica acentos)
-      if (!institucionesMap.has(normalizada)) {
-        institucionesMap.set(normalizada, institucion.trim());
-      } else {
-        // Si ya existe, preferir la versión con acentos (León > Leon)
-        const existente = institucionesMap.get(normalizada);
-        if (institucion.trim().length > existente.length) {
-          institucionesMap.set(normalizada, institucion.trim());
+      redenciones.forEach(r => {
+        try {
+          const institucion = r?.institucion;
+          if (!institucion || typeof institucion !== 'string') return;
+          
+          // Normalizar: trim, lowercase, eliminar acentos y espacios múltiples
+          const normalizada = normalizarTexto(institucion);
+          
+          // Si no existe en el mapa, guardarlo
+          // Preferir la versión con acentos (más caracteres después de normalizar indica acentos)
+          if (!institucionesMap.has(normalizada)) {
+            institucionesMap.set(normalizada, institucion.trim());
+          } else {
+            // Si ya existe, preferir la versión con acentos (León > Leon)
+            const existente = institucionesMap.get(normalizada);
+            if (institucion.trim().length > existente.length) {
+              institucionesMap.set(normalizada, institucion.trim());
+            }
+          }
+        } catch (err) {
+          console.error('Error al procesar institución:', err);
         }
-      }
-    });
-    
-    // Convertir a array y ordenar alfabéticamente
-    const institucionesArray = Array.from(institucionesMap.values());
-    
-    return institucionesArray.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+      });
+      
+      // Convertir a array y ordenar alfabéticamente
+      const institucionesArray = Array.from(institucionesMap.values());
+      
+      return institucionesArray.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+    } catch (err) {
+      console.error('Error al obtener instituciones únicas:', err);
+      return [];
+    }
   }, [redenciones]);
+
+  // Asegurar que siempre tengamos un array válido para institucionesUnicas
+  const institucionesParaDropdown = React.useMemo(() => {
+    try {
+      return Array.isArray(institucionesUnicas) ? institucionesUnicas : [];
+    } catch (err) {
+      console.error('Error al preparar instituciones para dropdown:', err);
+      return [];
+    }
+  }, [institucionesUnicas]);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -325,7 +468,7 @@ const ReportesRedenciones = () => {
         <div className={`grid grid-cols-1 ${mostrarTipoPromocion ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4 mb-4`}>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fecha Inicio *
+              Fecha Inicio {!institucionSeleccionada && '*'}
             </label>
             <input
               type="date"
@@ -337,7 +480,7 @@ const ReportesRedenciones = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fecha Fin *
+              Fecha Fin {!institucionSeleccionada && '*'}
             </label>
             <input
               type="date"
@@ -354,13 +497,18 @@ const ReportesRedenciones = () => {
             <select
               value={institucionSeleccionada}
               onChange={(e) => {
-                setInstitucionSeleccionada(e.target.value);
-                setTipoPromocionSeleccionado(''); // Limpiar tipo de promoción al cambiar institución
+                try {
+                  setInstitucionSeleccionada(e.target.value);
+                  setTipoPromocionSeleccionado(''); // Limpiar tipo de promoción al cambiar institución
+                } catch (err) {
+                  console.error('Error al cambiar institución:', err);
+                  setError('Error al seleccionar institución. Por favor, intenta de nuevo.');
+                }
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
               <option value="">Todas las instituciones</option>
-              {institucionesUnicas.map(inst => (
+              {institucionesParaDropdown.map(inst => (
                 <option key={inst} value={inst}>
                   {inst}
                 </option>
@@ -392,7 +540,7 @@ const ReportesRedenciones = () => {
         <div className="flex gap-3">
           <button
             onClick={generarReporte}
-            disabled={loading || !fechaInicio || !fechaFin}
+            disabled={loading || (!institucionSeleccionada && (!fechaInicio || !fechaFin))}
             className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading ? (
@@ -457,9 +605,16 @@ const ReportesRedenciones = () => {
                   <span className="font-semibold">Tipo de Promoción:</span> {tipoPromocionSeleccionado}
                 </p>
               )}
-              <p className="text-blue-700 text-sm">
-                <span className="font-semibold">Período:</span> {new Date(fechaInicio).toLocaleDateString('es-MX')} - {new Date(fechaFin).toLocaleDateString('es-MX')}
-              </p>
+              {(fechaInicio && fechaFin) && (
+                <p className="text-blue-700 text-sm">
+                  <span className="font-semibold">Período:</span> {new Date(fechaInicio).toLocaleDateString('es-MX')} - {new Date(fechaFin).toLocaleDateString('es-MX')}
+                </p>
+              )}
+              {(!fechaInicio || !fechaFin) && (
+                <p className="text-blue-700 text-sm">
+                  <span className="font-semibold">Período:</span> Todas las fechas
+                </p>
+              )}
             </div>
             
             {/* Estadísticas detalladas */}
