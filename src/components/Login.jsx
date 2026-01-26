@@ -51,6 +51,7 @@ const Login = () => {
     { usuario: 'jose', password: '7373', perfilId: 'jose', nombre: 'Jose' },
     { usuario: 'labnl', password: 'labnl2025', perfilId: 'labnl', nombre: 'LABNL' },
     { usuario: 'francisco', password: '7421', perfilId: 'francisco', nombre: 'Francisco' },
+    { usuario: 'planeacion', password: 'planeacion2026', perfilId: 'planeacion', nombre: 'Planeación' },
   ];
 
   const handleSubmit = async (e) => { 
@@ -78,10 +79,12 @@ const Login = () => {
       localStorage.setItem('perfilId', match.perfilId);
       localStorage.setItem('perfilNombre', match.nombre);
       
-      // Pepe y Francisco acceden al AdminDashboard, los demás van al Registro
+      // Redirigir según el perfil del usuario
       const perfilId = match.perfilId?.trim().toLowerCase();
       if (perfilId === 'pepe' || perfilId === 'francisco') {
         navigate('/AdminDashboard');
+      } else if (perfilId === 'planeacion') {
+        navigate('/reportes');
       } else {
         navigate('/Registro');
       }
