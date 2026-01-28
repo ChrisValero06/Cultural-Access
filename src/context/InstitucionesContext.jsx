@@ -85,15 +85,25 @@ export const InstitucionesProvider = ({ children }) => {
       }
       
       if (nombresInstituciones.length > 0) {
-        setInstituciones(nombresInstituciones)
+        // Ordenar alfabéticamente ignorando mayúsculas/minúsculas
+        const institucionesOrdenadas = nombresInstituciones.sort((a, b) => 
+          a.localeCompare(b, 'es', { sensitivity: 'base' })
+        )
+        setInstituciones(institucionesOrdenadas)
       } else {
-        // Si no hay instituciones en la BD, usar la lista base
-        setInstituciones(institucionesBase)
+        // Si no hay instituciones en la BD, usar la lista base ordenada
+        const baseOrdenada = [...institucionesBase].sort((a, b) => 
+          a.localeCompare(b, 'es', { sensitivity: 'base' })
+        )
+        setInstituciones(baseOrdenada)
       }
     } catch (err) {
       setError(err.message)
-      // En caso de error, usar la lista base como fallback
-      setInstituciones(institucionesBase)
+      // En caso de error, usar la lista base ordenada como fallback
+      const baseOrdenada = [...institucionesBase].sort((a, b) => 
+        a.localeCompare(b, 'es', { sensitivity: 'base' })
+      )
+      setInstituciones(baseOrdenada)
     } finally {
       setCargando(false)
     }

@@ -388,6 +388,16 @@ const DashboardHeader = ({
              Estadísticas
             </button>
             <button
+              onClick={() => onTabChange('instituciones')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                tabActiva === 'instituciones'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-black hover:text-white hover:bg-orange-500'
+              }`}
+            >
+              Instituciones
+            </button>
+            <button
               onClick={() => navigate('/reportes')}
               className="px-4 py-2 rounded-md text-sm font-medium transition-colors text-black hover:text-white hover:bg-orange-500"
             >

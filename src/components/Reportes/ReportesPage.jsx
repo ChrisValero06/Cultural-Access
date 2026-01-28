@@ -44,12 +44,12 @@ const ReportesPage = () => {
 
   const perfiles = [
     { value: '', label: 'Todos los usuarios' },
-    { value: 'francisco_murga', label: 'Francisco Murga' },
     { value: 'alejandro_olachea', label: 'Alejandro Olachea' },
-    { value: 'raymundo_ibarra', label: 'Raymundo Ibarra' },
-    { value: 'karla_acevedo', label: 'Karla Acevedo' },
+    { value: 'francisco_murga', label: 'Francisco Murga' },
     { value: 'jose', label: 'Jose' },
-    { value: 'labnl', label: 'LABNL' }
+    { value: 'karla_acevedo', label: 'Karla Acevedo' },
+    { value: 'labnl', label: 'LABNL' },
+    { value: 'raymundo_ibarra', label: 'Raymundo Ibarra' }
   ];
 
   useEffect(() => {
@@ -262,7 +262,7 @@ const ReportesPage = () => {
 
   const institucionesUnicas = [...new Set(
     redenciones.map(r => r.institucion).filter(Boolean)
-  )].sort();
+  )].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
 
   const exportarUsuarios = async () => {
     if (usuariosFiltrados.length === 0) {
