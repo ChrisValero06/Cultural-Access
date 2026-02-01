@@ -10,7 +10,7 @@ const institucionesBase = [
   'Bread Coffee Roasters',
   'Café Belmonte',
   'Casa Coa',
-  'Casa de la Cultura de Nuevo León',
+  'Edición Conarte',
   'Casa Motis',
   'Casa Musa',
   'Centro Roberto Garza Sada',
