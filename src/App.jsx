@@ -15,6 +15,7 @@ import AdminDashboard from './components/Dashboard/AdminDashboard'
 import Login from './components/Login'
 import AvisoPrivacidad from './components/AvisoPrivacidad'
 import PreguntasFrecuentes from './components/PreguntasFrecuentes'
+import ReportesPage from './components/Reportes/ReportesPage'
 
 function App() {
   const ProtectedRoute = ({ children }) => {
@@ -39,6 +40,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/AdminDashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/reportes" element={<ProtectedRoute><ReportesPage /></ProtectedRoute>} />
         <Route path="/*" element={
           <>
             <Header />
