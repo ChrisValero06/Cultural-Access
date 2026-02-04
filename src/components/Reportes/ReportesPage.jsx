@@ -281,13 +281,64 @@ const ReportesPage = () => {
       });
 
       const XLSX = await loadXLSX();
-      const headers = ['ID', 'Nombre', 'Apellido Paterno', 'Apellido Materno', 'Email', 'Teléfono', 'Registrado Por', 'Fecha Registro'];
-      const rows = usuariosFiltrados.map(u => [
-        u.id, u.nombre || '', u.apellido_paterno || '', u.apellido_materno || '',
-        u.email || '', u.telefono || '',
-        perfilMap[u.registrado_por] || u.registrado_por || 'SIN PERFIL',
-        u.fecha_registro || ''
-      ]);
+      const headers = [
+        'ID', 
+        'Nombre', 
+        'Apellidos', 
+        'Email', 
+        'Teléfono', 
+        'Registrado Por', 
+        'Fecha Registro',
+        'Género',
+        'Calle y Número',
+        'Municipio',
+        'Estado',
+        'Colonia',
+        'Código Postal',
+        'Edad',
+        'CURP',
+        'Estado de Nacimiento',
+        'Fecha de Nacimiento',
+        'Número de Tarjeta',
+        'Estado Civil'
+      ];
+      
+      const rows = usuariosFiltrados.map(u => {
+        // Construir apellidos completos
+        const apellidos = [u.apellido_paterno || '', u.apellido_materno || '']
+          .filter(a => a)
+          .join(' ');
+        
+        // Construir fecha de nacimiento si está disponible
+        let fechaNacimiento = '';
+        if (u.fecha_nacimiento) {
+          fechaNacimiento = u.fecha_nacimiento;
+        } else if (u.dia_nacimiento && u.mes_nacimiento && u.ano_nacimiento) {
+          fechaNacimiento = `${u.dia_nacimiento}/${u.mes_nacimiento}/${u.ano_nacimiento}`;
+        }
+
+        return [
+          u.id,
+          u.nombre || '',
+          apellidos,
+          u.email || '',
+          u.telefono || '',
+          perfilMap[u.registrado_por] || u.registrado_por || 'SIN PERFIL',
+          u.fecha_registro || '',
+          u.genero || '',
+          u.calle_numero || '',
+          u.municipio || '',
+          u.estado || '',
+          u.colonia || '',
+          u.codigo_postal || '',
+          u.edad || '',
+          u.curp || '',
+          u.estado_nacimiento || '',
+          fechaNacimiento,
+          u.numero_tarjeta || '',
+          u.estado_civil || ''
+        ];
+      });
 
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       const wb = XLSX.utils.book_new();
