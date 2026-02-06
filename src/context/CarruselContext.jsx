@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { configService } from '../apis/config/configService';
 
 const CarruselContext = createContext();
 
@@ -38,24 +39,67 @@ export const CarruselProvider = ({ children }) => {
     desktop: 'h-[334px]'  // Altura fija 334px
   });
 
-  // Cargar estado desde localStorage al inicializar
+  // Textos editables de la sección promociones (título y subtítulo)
+  const [textosPromociones, setTextosPromociones] = useState({
+    titulo: 'PROMOCIONES VIGENTES - FEBRERO',
+    subtitulo: 'Presentando tarjeta y sujetas a disponibilidad'
+  });
+
+  // Cargar estado desde backend (textos) y localStorage al inicializar
   useEffect(() => {
     const savedState = localStorage.getItem('carruselState');
     const savedTamano = localStorage.getItem('tamanoCarruselState');
-    
+    const savedTextos = localStorage.getItem('textosPromocionesState');
+
     if (savedState) {
       try {
         setCarruseles(JSON.parse(savedState));
       } catch (error) {
       }
     }
-    
+
     if (savedTamano) {
       try {
         setTamanoCarrusel(JSON.parse(savedTamano));
       } catch (error) {
       }
     }
+
+    // Textos: primero intentar backend; si no hay endpoint o falla, usar localStorage
+    const defaults = { titulo: 'PROMOCIONES VIGENTES - FEBRERO', subtitulo: 'Presentando tarjeta y sujetas a disponibilidad' };
+    configService.getTextosPromociones().then((data) => {
+      if (data && typeof data.titulo === 'string' && typeof data.subtitulo === 'string') {
+        setTextosPromociones({ titulo: data.titulo, subtitulo: data.subtitulo });
+        return;
+      }
+      if (savedTextos) {
+        try {
+          const parsed = JSON.parse(savedTextos);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            setTextosPromociones({
+              titulo: typeof parsed.titulo === 'string' ? parsed.titulo : defaults.titulo,
+              subtitulo: typeof parsed.subtitulo === 'string' ? parsed.subtitulo : defaults.subtitulo
+            });
+          }
+        } catch (error) {
+          setTextosPromociones(defaults);
+        }
+      }
+    }).catch(() => {
+      if (savedTextos) {
+        try {
+          const parsed = JSON.parse(savedTextos);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            setTextosPromociones({
+              titulo: typeof parsed.titulo === 'string' ? parsed.titulo : defaults.titulo,
+              subtitulo: typeof parsed.subtitulo === 'string' ? parsed.subtitulo : defaults.subtitulo
+            });
+          }
+        } catch (error) {
+          setTextosPromociones(defaults);
+        }
+      }
+    });
   }, []);
 
   // Guardar estado en localStorage cuando cambie
@@ -66,6 +110,10 @@ export const CarruselProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('tamanoCarruselState', JSON.stringify(tamanoCarrusel));
   }, [tamanoCarrusel]);
+
+  useEffect(() => {
+    localStorage.setItem('textosPromocionesState', JSON.stringify(textosPromociones));
+  }, [textosPromociones]);
 
   const toggleCarrusel = (carruselId) => {
     setCarruseles(prev => ({
@@ -129,19 +177,34 @@ export const CarruselProvider = ({ children }) => {
     return `${tamanoCarrusel.movil} ${tamanoCarrusel.desktop}`;
   };
 
-  const value = { 
-    carruseles, 
-    toggleCarrusel, 
-    activarCarrusel, 
-    desactivarCarrusel, 
-    getCarruselActivo, 
+  const actualizarTextosPromociones = (titulo, subtitulo) => {
+    setTextosPromociones(prev => {
+      const next = {
+        ...prev,
+        ...(titulo !== undefined && { titulo }),
+        ...(subtitulo !== undefined && { subtitulo })
+      };
+      // Persistir en backend (si el endpoint existe)
+      configService.updateTextosPromociones(next).catch(() => {});
+      return next;
+    });
+  };
+
+  const value = useMemo(() => ({
+    carruseles,
+    toggleCarrusel,
+    activarCarrusel,
+    desactivarCarrusel,
+    getCarruselActivo,
     getCarruselVisible,
     getAllCarruseles,
     tamanoCarrusel,
     cambiarTamanoCarrusel,
     getTamanoCarrusel,
-    getClaseTamanoCarrusel
-  };
+    getClaseTamanoCarrusel,
+    textosPromociones: textosPromociones || { titulo: 'PROMOCIONES VIGENTES - FEBRERO', subtitulo: 'Presentando tarjeta y sujetas a disponibilidad' },
+    actualizarTextosPromociones
+  }), [carruseles, tamanoCarrusel, textosPromociones]);
 
   return (
     <CarruselContext.Provider value={value}>

@@ -3,6 +3,7 @@ import PromocionesFilters from '../Promociones/PromocionesFilters';
 import PromocionesTable from '../Promociones/PromocionesTable';
 import EstadisticasPerfiles from '../EstadisticasPerfiles';
 import InstitucionesAdmin from '../InstitucionesAdmin';
+import ConfiguracionCarrusel from '../ConfiguracionCarrusel';
 
 const DashboardContent = ({ 
   tabActiva,
@@ -49,6 +50,7 @@ const DashboardContent = ({
       {tabActiva === 'promociones' && renderPromociones()}
       {tabActiva === 'estadisticas' && <EstadisticasPerfiles />}
       {tabActiva === 'instituciones' && <InstitucionesAdmin />}
+      {tabActiva === 'configuracion' && <ConfiguracionCarrusel />}
     </div>
   );
 };

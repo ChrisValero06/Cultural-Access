@@ -4,6 +4,7 @@ export { usuariosService } from './usuarios/usuariosService.js';
 export { controlAccesoService } from './control-acceso/controlAccesoService.js';
 export { authService } from './auth/authService.js';
 export { institucionesService } from './instituciones/institucionesService.js';
+export { configService } from './config/configService.js';
 
 // Servicio unificado que combina todos los servicios (para compatibilidad con código existente)
 import { promocionesService } from './promociones/promocionesService.js';
@@ -11,6 +12,7 @@ import { usuariosService } from './usuarios/usuariosService.js';
 import { controlAccesoService } from './control-acceso/controlAccesoService.js';
 import { authService } from './auth/authService.js';
 import { institucionesService } from './instituciones/institucionesService.js';
+import { configService } from './config/configService.js';
 
 export const apiService = {
   // Promociones
@@ -72,5 +74,9 @@ export const apiService = {
   crearInstitucion: institucionesService.crearInstitucion,
   buscarInstituciones: institucionesService.buscarInstituciones,
   actualizarInstitucion: institucionesService.actualizarInstitucion,
-  eliminarInstitucion: institucionesService.eliminarInstitucion
+  eliminarInstitucion: institucionesService.eliminarInstitucion,
+
+  // Config (textos promociones)
+  getTextosPromociones: configService.getTextosPromociones,
+  updateTextosPromociones: configService.updateTextosPromociones
 };

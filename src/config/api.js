@@ -20,7 +20,10 @@ export const API_CONFIG = {
     // Instituciones
     OBTENER_INSTITUCIONES: '/instituciones',
     CREAR_INSTITUCION: '/instituciones',
-    BUSCAR_INSTITUCIONES: '/instituciones/buscar'
+    BUSCAR_INSTITUCIONES: '/instituciones/buscar',
+
+    // Configuración (textos página principal)
+    TEXTOS_PROMOCIONES: '/config/textos-promociones'
   },
   
   // Configuración de subida de archivos

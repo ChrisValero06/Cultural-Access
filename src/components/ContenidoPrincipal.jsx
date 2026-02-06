@@ -3,8 +3,8 @@ import { apiService } from '../apis'
 import { useCarrusel } from '../context/CarruselContext'
 
 const ContenidoPrincipal = () => {
-  // Usar el contexto para controlar la visibilidad de carruseles y su tamaño
-  const { carruseles: carruselConfig, getCarruselVisible, getClaseTamanoCarrusel } = useCarrusel();
+  // Usar el contexto para controlar la visibilidad de carruseles, tamaño y textos editables
+  const { carruseles: carruselConfig, getCarruselVisible, getClaseTamanoCarrusel, textosPromociones } = useCarrusel();
   
   // Estado para las promociones dinámicas
   const [carruseles, setCarruseles] = useState([])
@@ -286,10 +286,10 @@ const ContenidoPrincipal = () => {
             <div className="flex items-center justify-center sm:justify-start">
               <div>
                 <h1 className="font-semibold text-gray-800 text-center" style={{ fontSize: '20px' }}>
-                PROMOCIONES VIGENTES - FEBRERO
+                  {textosPromociones?.titulo ?? 'PROMOCIONES VIGENTES - FEBRERO'}
                 </h1>
                 <p className="text-gray-600 leading-relaxed text-sm sm:text-base md:text-lg font-medium text-center">
-                Presentando tarjeta y sujetas a disponibilidad
+                  {textosPromociones?.subtitulo ?? 'Presentando tarjeta y sujetas a disponibilidad'}
                 </p>
 
                 

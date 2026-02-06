@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../../apis';
-import { useCarrusel } from '../../context/CarruselContext';
 import DashboardHeader from './components/Header/DashboardHeader';
 import DashboardContent from './components/Content/DashboardContent';
 import EditarPromocionModal from './components/Modals/EditarPromocionModal';
@@ -26,10 +25,6 @@ const AdminDashboard = () => {
   
   // Estado para la pestaña activa
   const [tabActiva, setTabActiva] = useState('promociones');
-  
-
-  // Usar el contexto para controlar carruseles
-  const { carruseles, activarCarrusel, desactivarCarrusel } = useCarrusel();
 
   useEffect(() => {
     // Verificar autenticación antes de cargar datos
