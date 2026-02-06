@@ -187,8 +187,16 @@ const CulturalAccessForm = () => {
         if (key === 'email' || key === 'telefono' || key === 'registrado_por') return [key, val]
         return [key, typeof val === 'string' && val.trim() !== '' ? val.toUpperCase() : val]
       }));
+
+      // Asegura que no se envíe undefined: el backend puede usarlo para el correo sin fallos
+      const sanitizePayload = (obj) => Object.fromEntries(
+        Object.entries(obj).map(([key, val]) => [
+          key,
+          val === undefined ? null : (typeof val === 'object' && val !== null && !Array.isArray(val) ? sanitizePayload(val) : val)
+        ])
+      );
       
-      const estudiosValue = formData.estudios === "SIN-ESTUDIOS" ? null : formData.estudios;
+      const estudiosValue = formData.estudios === "SIN-ESTUDIOS" ? null : (formData.estudios ?? '');
       const aceptaInfoValue = formData.aceptaInfo === "SI" ? 1 : 0;
       const diaFormateado = formData.diaNacimiento ? formData.diaNacimiento.padStart(2, '0') : '';
       const mesFormateado = formData.mesNacimiento ? formData.mesNacimiento.padStart(2, '0') : '';
@@ -210,33 +218,33 @@ const CulturalAccessForm = () => {
       }
 
       const dataToSend = {
-        nombre: formData.nombre.trim(), 
-        apellido_paterno: formData.apellidoPaterno.trim(), 
-        apellido_materno: formData.apellidoMaterno.trim(),
-        genero: formData.genero, 
-        email: formData.email.trim().toLowerCase(), // Email en minúsculas
-        telefono: formData.telefono && formData.telefono.trim() !== '' ? formData.telefono.replace(/\D/g, '') : null, // Remover guiones y caracteres no numéricos
-        calle_numero: formData.calleNumero.trim(), 
-        municipio: formData.municipio.trim(), 
-        estado: formData.estado.trim(),
-        colonia: formData.colonia.trim(), 
-        codigo_postal: formData.codigoPostal.trim(), 
-        edad: formData.edad && formData.edad.trim() !== '' ? formData.edad : null,
-        estado_civil: formData.estadoCivil && formData.estadoCivil.trim() !== '' ? formData.estadoCivil : null, 
-        estudios: estudiosValue,
-        curp: curpOption === "curp" && formData.curp && formData.curp.trim() !== '' ? formData.curp.trim() : null, 
-        estado_nacimiento: formData.estadoNacimiento.trim(), 
-        fecha_nacimiento: fechaNacimiento,
-        numero_tarjeta: formData.numeroTarjeta.padStart(5, '0'), 
+        nombre: (formData.nombre ?? '').toString().trim(),
+        apellido_paterno: (formData.apellidoPaterno ?? '').toString().trim(),
+        apellido_materno: (formData.apellidoMaterno ?? '').toString().trim(),
+        genero: formData.genero ?? '',
+        email: (formData.email ?? '').toString().trim().toLowerCase(),
+        telefono: formData.telefono && (formData.telefono ?? '').toString().trim() !== '' ? (formData.telefono ?? '').toString().replace(/\D/g, '') : null,
+        calle_numero: (formData.calleNumero ?? '').toString().trim(),
+        municipio: (formData.municipio ?? '').toString().trim(),
+        estado: (formData.estado ?? '').toString().trim(),
+        colonia: (formData.colonia ?? '').toString().trim(),
+        codigo_postal: (formData.codigoPostal ?? '').toString().trim(),
+        edad: formData.edad && (formData.edad ?? '').toString().trim() !== '' ? (formData.edad ?? '').toString().trim() : null,
+        estado_civil: formData.estadoCivil && (formData.estadoCivil ?? '').toString().trim() !== '' ? (formData.estadoCivil ?? '').toString().trim() : null,
+        estudios: estudiosValue ?? null,
+        curp: curpOption === "curp" && formData.curp && (formData.curp ?? '').toString().trim() !== '' ? (formData.curp ?? '').toString().trim() : null,
+        estado_nacimiento: (formData.estadoNacimiento ?? '').toString().trim(),
+        fecha_nacimiento: fechaNacimiento ?? '',
+        numero_tarjeta: (formData.numeroTarjeta ?? '').toString().padStart(5, '0'),
         acepta_info: aceptaInfoValue,
-        registrado_por: localStorage.getItem('perfilId') || null, // Guardar qué perfil registró este usuario (obtener en el momento del submit)
-      }
+        registrado_por: localStorage.getItem('perfilId') || null,
+      };
 
-      const dataFinal = toUppercaseStrings(dataToSend);
+      const dataFinal = sanitizePayload(toUppercaseStrings(dataToSend));
 
       const response = await fetch("https://culturallaccess.com/api/usuario", {
-        method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dataFinal)
       })
 
