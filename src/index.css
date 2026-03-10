@@ -1,0 +1,321 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Custom font faces */
+@font-face {
+  font-family: 'Futura';
+  src: url("./fonts/Futura.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Mont: si falla la carga (OTS/sfntversion), el navegador usará la fuente del stack (ej. Futura). */
+@font-face {
+  font-family: 'Mont';
+  src: url("./fonts/AnyConv.com__Fontfabric%20-%20Mont%20Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Mont';
+  src: url("./fonts/AnyConv.com__Fontfabric%20-%20Mont%20Heavy.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Neue Haas Grotesk Display';
+  src: url("./fonts/Neue Haas Grotesk Display W02 Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  font-family: 'Futura', 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light only;
+  color: #213547;
+  background-color: #ffffff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #ffffff;
+  color: #213547;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #f9f9f9;
+  color: #213547;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Forzar modo claro siempre - sin cambios de color automáticos */
+
+/* Forzar colores naranjas fijos - nunca cambian con el modo oscuro */
+.bg-orange-500,
+.bg-orange-600,
+.bg-orange-400 {
+  background-color: #f97316 !important; /* orange-500 */
+}
+
+.bg-orange-600 {
+  background-color: #ea580c !important; /* orange-600 */
+}
+
+.bg-orange-400 {
+  background-color: #fb923c !important; /* orange-400 */
+}
+
+.text-orange-500,
+.text-orange-600,
+.text-orange-400,
+.text-orange-100,
+.text-orange-200,
+.text-orange-300 {
+  color: #f97316 !important; /* orange-500 */
+}
+
+.text-orange-600 {
+  color: #ea580c !important; /* orange-600 */
+}
+
+.text-orange-400 {
+  color: #fb923c !important; /* orange-400 */
+}
+
+.text-orange-100 {
+  color: #fed7aa !important; /* orange-100 */
+}
+
+.text-orange-200 {
+  color: #fed7aa !important; /* orange-200 */
+}
+
+.text-orange-300 {
+  color: #fdba74 !important; /* orange-300 */
+}
+
+.border-orange-400,
+.border-orange-500,
+.border-orange-600 {
+  border-color: #fb923c !important; /* orange-400 */
+}
+
+.border-orange-500 {
+  border-color: #f97316 !important; /* orange-500 */
+}
+
+.border-orange-600 {
+  border-color: #ea580c !important; /* orange-600 */
+}
+
+.focus\:ring-orange-200:focus {
+  --tw-ring-color: #fed7aa !important; /* orange-200 */
+}
+
+.focus\:ring-orange-600:focus {
+  --tw-ring-color: #ea580c !important; /* orange-600 */
+}
+
+.hover\:bg-orange-50:hover {
+  background-color: #fff7ed !important; /* orange-50 */
+}
+
+.hover\:bg-orange-100:hover {
+  background-color: #ffedd5 !important; /* orange-100 */
+}
+
+.hover\:bg-orange-500:hover {
+  background-color: #f97316 !important; /* orange-500 */
+}
+
+.hover\:bg-orange-600:hover {
+  background-color: #ea580c !important; /* orange-600 */
+}
+
+.hover\:text-orange-700:hover {
+  color: #c2410c !important; /* orange-700 */
+}
+
+/* Gradientes naranjas fijos */
+.bg-gradient-to-r.from-orange-500.to-orange-600 {
+  background: linear-gradient(to right, #f97316, #ea580c) !important;
+}
+
+/* Estados de hover y focus para elementos naranjas */
+button.bg-orange-500:hover,
+button.bg-orange-600:hover {
+  background-color: #ea580c !important;
+}
+
+input:focus.border-orange-400,
+textarea:focus.border-orange-400,
+select:focus.border-orange-400 {
+  border-color: #fb923c !important;
+  box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.1) !important;
+}
+
+/* Forzar colores claros en formularios - especialmente en móviles */
+form input,
+form textarea,
+form select,
+form option {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #fb923c !important;
+}
+
+form input::placeholder,
+form textarea::placeholder {
+  color: #6b7280 !important; /* gray-500 */
+}
+
+form select option {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Asegurar que los labels sean blancos en todos los dispositivos */
+form label {
+  color: #ffffff !important; /* blanco para todos los dispositivos */
+}
+
+/* Forzar colores en dispositivos móviles */
+@media (max-width: 768px) {
+  form input,
+  form textarea,
+  form select,
+  form option {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #fb923c !important;
+  }
+  
+  form label {
+    color: #ffffff !important; /* blanco para móvil también */
+  }
+  
+  /* Fondo naranja fijo para el contenedor del formulario en móvil */
+  .bg-orange-500 {
+    background-color: #f97316 !important;
+  }
+}
+
+/* Layout de Grid para mantener header y footer fijos */
+#root {
+  display: grid;
+  min-height: 100dvh;
+  grid-template-rows: auto 1fr auto;
+}
+
+/* Asegurar que el contenido principal ocupe todo el espacio disponible */
+main {
+  min-height: 0;
+}
+
+/* Estilos para formularios que se integren con el grid */
+main > div {
+  height: 100%;
+}
+
+/* Asegurar que los formularios ocupen todo el espacio disponible */
+main form,
+main > div > div {
+  height: 100%;
+}
+
+/* Estilos de impresión para el Dashboard */
+@media print {
+  /* Ocultar elementos no necesarios para impresión */
+  header,
+  footer,
+  button,
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Asegurar que el contenido sea legible */
+  body {
+    font-size: 12pt;
+    line-height: 1.4;
+    color: #000;
+    background: #fff;
+  }
+  
+  /* Estilos para la tabla */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  th {
+    background-color: #f8f9fa !important;
+    font-weight: bold;
+  }
+  
+  /* Asegurar que las imágenes se muestren */
+  img {
+    max-width: 100px;
+    height: auto;
+  }
+  
+  /* Estilos para las tarjetas de estadísticas */
+  .stats-card {
+    break-inside: avoid;
+    margin-bottom: 20px;
+  }
+  
+  /* Asegurar que el contenido no se corte entre páginas */
+  tr {
+    break-inside: avoid;
+  }
+}
