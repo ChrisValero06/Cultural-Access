@@ -205,13 +205,81 @@ const DashboardHeader = ({
 
   const exportUsuarios = async () => {
     try {
-      const res = await fetch('/api/usuario');
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
+      let todosLosUsuarios = [];
+
+      // Intentar obtener todos con all=1 primero
+      try {
+        const resAll = await fetch('/api/usuario?all=1');
+        if (resAll.ok) {
+          const dataAll = await resAll.json();
+          const listAll = dataAll.data || dataAll.usuarios || dataAll.rows || [];
+          if (Array.isArray(listAll) && listAll.length > 100) {
+            todosLosUsuarios = listAll;
+            console.log('Usuarios export cargados con all=1:', listAll.length);
+          }
+        }
+      } catch (e) {
+        console.log('all=1 no funcionó para usuarios export, usando paginación');
+      }
+
+      // Si no obtuvimos suficientes, usar paginación
+      if (todosLosUsuarios.length < 100) {
+        todosLosUsuarios = [];
+        let offset = 0;
+        const limit = 500;
+        let hayMas = true;
+        let intentos = 0;
+
+        while (hayMas && intentos < 50) {
+          intentos++;
+          try {
+            const res = await fetch(`/api/usuario?limit=${limit}&offset=${offset}`);
+            if (!res.ok) break;
+
+            const data = await res.json();
+            const pageList = data.data || data.usuarios || data.rows || [];
+
+            if (Array.isArray(pageList) && pageList.length > 0) {
+              todosLosUsuarios = [...todosLosUsuarios, ...pageList];
+              if (pageList.length < limit) {
+                hayMas = false;
+              } else {
+                offset += pageList.length;
+              }
+            } else {
+              hayMas = false;
+            }
+          } catch (e) {
+            hayMas = false;
+          }
+        }
+      }
+
+      // Fallback al método original
+      if (todosLosUsuarios.length === 0) {
+        const res = await fetch('/api/usuario');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const fallbackList = data.data || data.usuarios || data.rows || [];
+        todosLosUsuarios = Array.isArray(fallbackList) ? fallbackList : [];
+      }
+
+      // Eliminar duplicados por ID
+      const idsVistos = new Set();
+      const list = todosLosUsuarios.filter(u => {
+        const id = u.id;
+        if (!id) return true;
+        if (idsVistos.has(id)) return false;
+        idsVistos.add(id);
+        return true;
+      });
+
+      console.log('TOTAL USUARIOS PARA EXPORT:', list.length);
+
       const headers = [
         'id','nombre','apellido_paterno','apellido_materno','genero','email','telefono','calle_numero','municipio','estado','colonia','codigo_postal','edad','estado_civil','estudios','curp','estado_nacimiento','fecha_nacimiento','numero_tarjeta','acepta_info','registrado_por','fecha_registro'
       ];
-      
+
       // Mapeo de IDs de perfil a nombres legibles
       const perfilMap = {
         'francisco_murga': 'Francisco Murga',
@@ -223,7 +291,6 @@ const DashboardHeader = ({
         'labnl': 'LABNL',
         'admin': 'Pepe' // Compatibilidad con registros antiguos
       };
-      const list = data.data || data.usuarios || data.rows || [];
       
       // Mapeo de valores a etiquetas en mayúsculas para estado civil
       const estadoCivilMap = {

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { imagenes } from '../../constants/imagenes'
 import { apiService } from '../../apis'
+import { tiposPromocionService } from '../../apis/tipos-promocion/tiposPromocionService'
 import { useInstituciones } from '../../context/InstitucionesContext'
 import useDocumentTitle from '../../hooks/useDocumentTitle'
 
@@ -50,15 +51,11 @@ const Redencion = () => {
   const [promocionesActivas, setPromocionesActivas] = useState([])
   const [cargandoPromociones, setCargandoPromociones] = useState(false)
   const autocompleteRef = useRef(null)
+  const [tiposPromocionCatalogo, setTiposPromocionCatalogo] = useState([])
+  const [tiposParaInstitucion, setTiposParaInstitucion] = useState([])
 
-  // Verificar si se debe mostrar el campo de tipo de promoción
-  // Se muestra SOLO cuando hay más de 1 promoción activa CON TIPOS DIFERENTES para la institución seleccionada
-  const tiposUnicos = [...new Set(
-    promocionesActivas
-      .map(promo => promo.tipo_promocion || promo.tipoPromocion)
-      .filter(Boolean) // Filtrar valores vacíos/null/undefined
-  )]
-  const mostrarTipoPromocion = tiposUnicos.length > 1
+  // Mostrar el campo de tipo de promoción cuando hay tipos asignados a la institución seleccionada
+  const mostrarTipoPromocion = tiposParaInstitucion.length > 0
 
   // Las instituciones ahora vienen del contexto global
 
@@ -91,6 +88,37 @@ const Redencion = () => {
     
     cargarTodasLasPromociones()
   }, [])
+
+  // Cargar catálogo de tipos de promoción al montar
+  useEffect(() => {
+    const cargarTiposCatalogo = async () => {
+      try {
+        const tipos = await tiposPromocionService.obtenerTiposPromocion()
+        setTiposPromocionCatalogo(Array.isArray(tipos) ? tipos : [])
+      } catch (err) {
+        setTiposPromocionCatalogo([])
+      }
+    }
+    cargarTiposCatalogo()
+  }, [])
+
+  // Actualizar tipos disponibles cuando cambia la institución o el catálogo
+  useEffect(() => {
+    if (!formData.institucion || formData.institucion.trim() === '') {
+      setTiposParaInstitucion([])
+      return
+    }
+    const normalizar = (str) => (str || '').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ')
+    const normalInst = normalizar(formData.institucion)
+    const tipos = tiposPromocionCatalogo
+      .filter(tipo => {
+        const insts = Array.isArray(tipo.instituciones) ? tipo.instituciones : []
+        return insts.some(inst => normalizar(inst) === normalInst)
+      })
+      .map(tipo => tipo.nombre || tipo)
+      .filter(Boolean)
+    setTiposParaInstitucion(tipos)
+  }, [formData.institucion, tiposPromocionCatalogo])
 
   // Función para cargar promociones activas de una institución
   const cargarPromocionesActivas = async (institucionNombre) => {
@@ -215,6 +243,7 @@ const Redencion = () => {
     setFilteredInstituciones(instituciones)
     setShowInstituciones(true)
     setPromocionesActivas([])
+    setTiposParaInstitucion([])
   }
 
   // Función para establecer la fecha de hoy
@@ -550,24 +579,15 @@ const Redencion = () => {
                         className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base appearance-none"
                       >
                         <option value="" className="text-gray-500">Selecciona el tipo de promoción</option>
-                        {(() => {
-                          // Obtener tipos únicos de promoción (eliminar duplicados)
-                          const tiposUnicos = [...new Set(
-                            promocionesActivas
-                              .map(promo => promo.tipo_promocion || promo.tipoPromocion)
-                              .filter(Boolean)
-                          )]
-                          
-                          return tiposUnicos.map((tipo, index) => (
-                            <option 
-                              key={`${tipo}-${index}`} 
-                              value={tipo} 
-                              className="text-black"
-                            >
-                              {tipo}
-                            </option>
-                          ))
-                        })()}
+                        {tiposParaInstitucion.map((tipo, index) => (
+                          <option
+                            key={`${tipo}-${index}`}
+                            value={tipo}
+                            className="text-black"
+                          >
+                            {tipo}
+                          </option>
+                        ))}
                       </select>
                     )}
                     <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-orange-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">

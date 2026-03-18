@@ -25,17 +25,67 @@ const EstadisticasPerfiles = () => {
   const cargarEstadisticas = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://culturallaccess.com/api/usuario', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
 
-      if (!response.ok) {
-        throw new Error('Error al cargar usuarios');
+      let todosLosUsuarios = [];
+
+      // Intentar obtener todos con all=1 primero
+      try {
+        const resAll = await fetch('/api/usuario?all=1');
+        if (resAll.ok) {
+          const dataAll = await resAll.json();
+          const listAll = dataAll.data || dataAll.usuarios || dataAll.rows || [];
+          if (Array.isArray(listAll) && listAll.length > 100) {
+            todosLosUsuarios = listAll;
+          }
+        }
+      } catch (e) {}
+
+      // Si no obtuvimos suficientes, usar paginación
+      if (todosLosUsuarios.length < 100) {
+        todosLosUsuarios = [];
+        let offset = 0;
+        const limit = 500;
+        let hayMas = true;
+        let intentos = 0;
+
+        while (hayMas && intentos < 50) {
+          intentos++;
+          try {
+            const res = await fetch(`/api/usuario?limit=${limit}&offset=${offset}`);
+            if (!res.ok) break;
+            const data = await res.json();
+            const pageList = data.data || data.usuarios || data.rows || [];
+            if (Array.isArray(pageList) && pageList.length > 0) {
+              todosLosUsuarios = [...todosLosUsuarios, ...pageList];
+              if (pageList.length < limit) hayMas = false;
+              else offset += pageList.length;
+            } else {
+              hayMas = false;
+            }
+          } catch (e) { hayMas = false; }
+        }
       }
 
-      const data = await response.json();
-      const usuarios = data.data || data || [];
+      // Fallback al método original
+      if (todosLosUsuarios.length === 0) {
+        const response = await fetch('/api/usuario', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error('Error al cargar usuarios');
+        const data = await response.json();
+        todosLosUsuarios = data.data || data || [];
+      }
+
+      // Eliminar duplicados por ID
+      const idsVistos = new Set();
+      const usuarios = todosLosUsuarios.filter(u => {
+        const id = u.id;
+        if (!id) return true;
+        if (idsVistos.has(id)) return false;
+        idsVistos.add(id);
+        return true;
+      });
 
       // Contar usuarios por perfil
       const stats = {

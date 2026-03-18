@@ -49,9 +49,16 @@ const CulturalAccessForm = () => {
       navigate('/login')
       return
     }
-    
-    // Si es Pepe, redirigir al AdminDashboard (Jose puede registrar)
+
     const perfilId = localStorage.getItem('perfilId')
+
+    // Si no hay perfil asignado, redirigir al login para evitar registros sin perfil
+    if (!perfilId) {
+      navigate('/login')
+      return
+    }
+
+    // Si es Pepe, redirigir al AdminDashboard (Jose puede registrar)
     if (perfilId === 'pepe') {
       navigate('/AdminDashboard')
       return
