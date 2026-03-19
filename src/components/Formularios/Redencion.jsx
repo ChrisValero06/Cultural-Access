@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { imagenes } from '../../constants/imagenes'
-import { apiService } from '../../apis'
 import { tiposPromocionService } from '../../apis/tipos-promocion/tiposPromocionService'
 import { useInstituciones } from '../../context/InstitucionesContext'
 import useDocumentTitle from '../../hooks/useDocumentTitle'
@@ -48,55 +47,25 @@ const Redencion = () => {
 
   const [showInstituciones, setShowInstituciones] = useState(false)
   const [filteredInstituciones, setFilteredInstituciones] = useState([])
-  const [promocionesActivas, setPromocionesActivas] = useState([])
-  const [cargandoPromociones, setCargandoPromociones] = useState(false)
   const autocompleteRef = useRef(null)
   const [tiposPromocionCatalogo, setTiposPromocionCatalogo] = useState([])
   const [tiposParaInstitucion, setTiposParaInstitucion] = useState([])
+  const [cargandoCatalogo, setCargandoCatalogo] = useState(true)
 
   // Mostrar el campo de tipo de promoción cuando hay tipos asignados a la institución seleccionada
-  const mostrarTipoPromocion = tiposParaInstitucion.length > 0
-
-  // Las instituciones ahora vienen del contexto global
-
-  // Estado para almacenar todas las promociones (cargadas una vez)
-  const [todasLasPromociones, setTodasLasPromociones] = useState([])
-
-  // Cargar todas las promociones al montar el componente
-  useEffect(() => {
-    const cargarTodasLasPromociones = async () => {
-      try {
-        const response = await apiService.obtenerPromocionesAdmin()
-        
-        // Obtener promociones de la respuesta (manejar diferentes estructuras)
-        let promociones = []
-        if (Array.isArray(response)) {
-          promociones = response
-        } else if (response.promociones && Array.isArray(response.promociones)) {
-          promociones = response.promociones
-        } else if (response.data && Array.isArray(response.data)) {
-          promociones = response.data
-        } else if (response.resultado && Array.isArray(response.resultado)) {
-          promociones = response.resultado
-        }
-        
-        setTodasLasPromociones(promociones)
-      } catch (error) {
-        setTodasLasPromociones([])
-      }
-    }
-    
-    cargarTodasLasPromociones()
-  }, [])
+  const mostrarTipoPromocion = tiposParaInstitucion.length > 0 || (cargandoCatalogo && formData.institucion.trim() !== '')
 
   // Cargar catálogo de tipos de promoción al montar
   useEffect(() => {
     const cargarTiposCatalogo = async () => {
       try {
+        setCargandoCatalogo(true)
         const tipos = await tiposPromocionService.obtenerTiposPromocion()
         setTiposPromocionCatalogo(Array.isArray(tipos) ? tipos : [])
       } catch (err) {
         setTiposPromocionCatalogo([])
+      } finally {
+        setCargandoCatalogo(false)
       }
     }
     cargarTiposCatalogo()
@@ -120,67 +89,6 @@ const Redencion = () => {
     setTiposParaInstitucion(tipos)
   }, [formData.institucion, tiposPromocionCatalogo])
 
-  // Función para cargar promociones activas de una institución
-  const cargarPromocionesActivas = async (institucionNombre) => {
-    if (!institucionNombre || institucionNombre.trim() === '') {
-      setPromocionesActivas([])
-      return
-    }
-
-    try {
-      setCargandoPromociones(true)
-      
-      // Filtrar promociones por institución (comparación EXACTA solamente)
-      const institucionLower = institucionNombre.toLowerCase().trim()
-      
-      // SOLO usar coincidencia exacta - esto evita falsos positivos
-      const promocionesDeInstitucion = todasLasPromociones.filter(promo => {
-        const promoInstitucion = (promo.institucion || '').toLowerCase().trim()
-        // Comparación exacta solamente
-        return promoInstitucion === institucionLower
-      })
-      
-      if (promocionesDeInstitucion.length > 0) {
-      } else {
-      }
-      
-      // Filtrar solo promociones activas y no expiradas
-      const hoy = new Date()
-      hoy.setHours(0, 0, 0, 0)
-      
-      const activas = promocionesDeInstitucion.filter(promo => {
-        // Verificar estado (case-insensitive)
-        const estadoLower = (promo.estado || '').toLowerCase()
-        if (estadoLower === 'inactiva' || estadoLower === 'expirada') {
-          return false
-        }
-        
-        // Verificar que no esté expirada por fecha
-        const fechaFinStr = promo.fecha_fin || promo.fechaFin || promo.fecha_final
-        if (fechaFinStr) {
-          const fechaFin = new Date(fechaFinStr)
-          fechaFin.setHours(23, 59, 59, 999)
-          if (hoy > fechaFin) {
-            return false
-          }
-        }
-        
-        return true
-      })
-      
-      if (activas.length > 1) {
-      } else if (activas.length === 1) {
-      } else {
-      }
-      
-      setPromocionesActivas(activas)
-    } catch (error) {
-      setPromocionesActivas([])
-    } finally {
-      setCargandoPromociones(false)
-    }
-  }
-
   const handleChange = (e) => {
     const { name, value } = e.target
     
@@ -195,7 +103,6 @@ const Redencion = () => {
       if (value.trim() === '') {
         setFilteredInstituciones([])
         setShowInstituciones(false)
-        setPromocionesActivas([])
       } else {
         // Búsqueda local inmediata para mejor UX
         const filtered = instituciones.filter(inst =>
@@ -242,7 +149,6 @@ const Redencion = () => {
     setFormData(prev => ({ ...prev, institucion: '', tipoPromocion: '' }))
     setFilteredInstituciones(instituciones)
     setShowInstituciones(true)
-    setPromocionesActivas([])
     setTiposParaInstitucion([])
   }
 
@@ -261,24 +167,7 @@ const Redencion = () => {
       tipoPromocion: '' // Limpiar tipo de promoción al cambiar institución
     }))
     setShowInstituciones(false)
-    // Cargar promociones activas cuando se selecciona una institución
-    cargarPromocionesActivas(institucion)
   }
-
-  // Cargar promociones cuando cambia la institución en el formulario o cuando se cargan todas las promociones
-  useEffect(() => {
-    if (formData.institucion && formData.institucion.trim() !== '' && todasLasPromociones.length > 0) {
-      // Usar un pequeño delay para evitar múltiples llamadas mientras el usuario escribe
-      const timeoutId = setTimeout(() => {
-        cargarPromocionesActivas(formData.institucion)
-      }, 300) // Reducido a 300ms ya que ahora es filtrado local
-
-      return () => clearTimeout(timeoutId)
-    } else if (!formData.institucion || formData.institucion.trim() === '') {
-      setPromocionesActivas([])
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.institucion, todasLasPromociones])
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
@@ -421,7 +310,6 @@ const Redencion = () => {
           fecha: new Date().toISOString().split('T')[0], // Resetear a fecha de hoy
           tipoPromocion: ''
         })
-        setPromocionesActivas([])
       } else {
         alert('Error al crear el registro: ' + (responseData?.message || responseData?.error || 'Error desconocido'))
       }
@@ -558,16 +446,16 @@ const Redencion = () => {
                 </div>
               </div>
 
-              {/* Campo Tipo de Promoción - Visible cuando hay más de 1 promoción activa */}
+              {/* Campo Tipo de Promoción - Visible cuando hay tipos asignados o está cargando */}
               {mostrarTipoPromocion && (
                 <div>
                   <label htmlFor="tipoPromocion" className="block text-base font-bold text-gray-800 mb-2 text-white">
                     TIPO DE PROMOCIÓN*
                   </label>
                   <div className="relative">
-                    {cargandoPromociones ? (
+                    {cargandoCatalogo ? (
                       <div className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg bg-white text-gray-500 text-base">
-                        Cargando promociones...
+                        Cargando tipos de promoción...
                       </div>
                     ) : (
                       <select

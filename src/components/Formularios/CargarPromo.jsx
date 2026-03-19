@@ -52,6 +52,10 @@ const CargarPromoFunctional = () => {
   const { instituciones, cargando: cargandoInstituciones } = useInstituciones()
   const [tiposPromocion, setTiposPromocion] = useState([])
   const [todosLosTipos, setTodosLosTipos] = useState([])
+  const [formData, setFormData] = useState({
+    institucion: '', tipoPromocion: '', disciplina: '', beneficios: '',
+    comentariosRestricciones: '', fechaInicio: '', fechaFin: ''
+  })
 
   useEffect(() => {
     tiposPromocionService.obtenerTiposPromocion()
@@ -80,11 +84,6 @@ const CargarPromoFunctional = () => {
       setTiposPromocion(nombres);
     }
   }, [formData.institucion, todosLosTipos]);
-
-  const [formData, setFormData] = useState({
-    institucion: '', tipoPromocion: '', disciplina: '', beneficios: '',
-    comentariosRestricciones: '', fechaInicio: '', fechaFin: ''
-  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const LIMITS = { beneficios: 100, comentarios: 100 }
