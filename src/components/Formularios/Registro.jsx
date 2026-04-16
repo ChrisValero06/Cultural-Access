@@ -132,7 +132,6 @@ const CulturalAccessForm = () => {
     if (!numeroTarjeta || numeroTarjeta.length !== 5) return;
     setTarjetaValidando(true);
     setTarjetaDisponible(null);
-    await new Promise(resolve => setTimeout(resolve, 1000));
     try {
       const response = await fetch(`https://culturallaccess.com/api/usuario/verificar-tarjeta/${numeroTarjeta}`, {
         method: 'GET', headers: { 'Content-Type': 'application/json' }

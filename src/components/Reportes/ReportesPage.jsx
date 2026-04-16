@@ -113,11 +113,9 @@ const ReportesPage = () => {
           const listAll = dataAll.data || dataAll.usuarios || dataAll.rows || [];
           if (Array.isArray(listAll) && listAll.length > 100) {
             todosLosUsuarios = listAll;
-            console.log('Usuarios cargados con all=1:', listAll.length);
           }
         }
       } catch (e) {
-        console.log('all=1 no funcionó para usuarios, usando paginación');
       }
 
       // Si no obtuvimos suficientes, usar paginación
@@ -133,14 +131,12 @@ const ReportesPage = () => {
           try {
             const res = await fetch(`/api/usuario?limit=${limit}&offset=${offset}`);
             if (!res.ok) {
-              console.log('Error en paginación de usuarios:', res.status);
               break;
             }
 
             const data = await res.json();
             const list = data.data || data.usuarios || data.rows || [];
 
-            console.log(`Usuarios página ${intentos}: offset=${offset}, recibidos=${Array.isArray(list) ? list.length : 0}`);
 
             if (Array.isArray(list) && list.length > 0) {
               todosLosUsuarios = [...todosLosUsuarios, ...list];
@@ -154,7 +150,6 @@ const ReportesPage = () => {
               hayMas = false;
             }
           } catch (e) {
-            console.log('Error en paginación de usuarios:', e);
             hayMas = false;
           }
         }
@@ -177,7 +172,6 @@ const ReportesPage = () => {
         return true;
       });
 
-      console.log('TOTAL USUARIOS CARGADOS:', usuariosUnicos.length);
       setUsuarios(usuariosUnicos);
     } catch (err) {
       setErrorUsuarios('Error al cargar usuarios: ' + err.message);
@@ -201,11 +195,9 @@ const ReportesPage = () => {
           const listAll = dataAll.data || dataAll.datos || dataAll.rows || [];
           if (Array.isArray(listAll) && listAll.length > 100) {
             todasLasRedenciones = listAll;
-            console.log('Cargados con all=1:', listAll.length);
           }
         }
       } catch (e) {
-        console.log('all=1 no funcionó, usando paginación');
       }
 
       // Si no obtuvimos suficientes, usar paginación agresiva
@@ -221,14 +213,12 @@ const ReportesPage = () => {
           try {
             const res = await fetch(`/api/controlacceso?limit=${limit}&offset=${offset}`);
             if (!res.ok) {
-              console.log('Error en paginación:', res.status);
               break;
             }
             
             const data = await res.json();
             const list = data.data || data.datos || data.rows || [];
             
-            console.log(`Página ${intentos}: offset=${offset}, recibidos=${Array.isArray(list) ? list.length : 0}`);
             
             if (Array.isArray(list) && list.length > 0) {
               todasLasRedenciones = [...todasLasRedenciones, ...list];
@@ -242,7 +232,6 @@ const ReportesPage = () => {
               hayMas = false;
             }
           } catch (e) {
-            console.log('Error en paginación:', e);
             hayMas = false;
           }
         }
@@ -258,10 +247,8 @@ const ReportesPage = () => {
         return true;
       });
 
-      console.log('TOTAL REDENCIONES CARGADAS:', redencionesUnicas.length);
       setRedenciones(redencionesUnicas);
     } catch (err) {
-      console.error('Error al cargar redenciones:', err);
       setErrorRedenciones('Error al cargar redenciones: ' + err.message);
     } finally {
       setLoadingRedenciones(false);
@@ -330,7 +317,6 @@ const ReportesPage = () => {
       return true;
     });
 
-    console.log('Reporte generado:', filtradas.length, 'de', redenciones.length);
     setRedencionesFiltradas(filtradas);
     setReporteRedencionesGenerado(true);
   };
@@ -339,7 +325,6 @@ const ReportesPage = () => {
   const mostrarTodasRedenciones = () => {
     setRedencionesFiltradas(redenciones);
     setReporteRedencionesGenerado(true);
-    console.log('Mostrando TODAS las redenciones:', redenciones.length);
   };
 
   const limpiarFiltrosUsuarios = () => {

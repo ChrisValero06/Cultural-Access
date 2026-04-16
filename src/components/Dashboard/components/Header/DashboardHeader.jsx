@@ -215,11 +215,9 @@ const DashboardHeader = ({
           const listAll = dataAll.data || dataAll.usuarios || dataAll.rows || [];
           if (Array.isArray(listAll) && listAll.length > 100) {
             todosLosUsuarios = listAll;
-            console.log('Usuarios export cargados con all=1:', listAll.length);
           }
         }
       } catch (e) {
-        console.log('all=1 no funcionó para usuarios export, usando paginación');
       }
 
       // Si no obtuvimos suficientes, usar paginación
@@ -274,7 +272,6 @@ const DashboardHeader = ({
         return true;
       });
 
-      console.log('TOTAL USUARIOS PARA EXPORT:', list.length);
 
       const headers = [
         'id','nombre','apellido_paterno','apellido_materno','genero','email','telefono','calle_numero','municipio','estado','colonia','codigo_postal','edad','estado_civil','estudios','curp','estado_nacimiento','fecha_nacimiento','numero_tarjeta','acepta_info','registrado_por','fecha_registro'

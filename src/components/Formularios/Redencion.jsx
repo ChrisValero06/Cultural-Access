@@ -261,7 +261,6 @@ const Redencion = () => {
           const errorText = await response.text();
           responseData = errorText ? { message: errorText } : null;
         } catch (e2) {
-          console.error('❌ Frontend - Error al leer texto:', e2)
           responseData = null;
         }
       }
