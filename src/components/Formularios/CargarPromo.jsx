@@ -168,9 +168,31 @@ const CargarPromoFunctional = () => {
 
       
 
-      const result = await apiService.crearPromocion(promocionData)
-      
-      
+      // Verificar si ya existe una promoción para esta institución
+      let result;
+      let existingId = null;
+      try {
+        const existingRes = await fetch(`${API_CONFIG.BASE_URL}/promociones/obtener_promociones?institucion=${encodeURIComponent(formData.institucion)}`);
+        if (existingRes.ok) {
+          const existingData = await existingRes.json();
+          const lista = Array.isArray(existingData) ? existingData :
+            (existingData.promociones || existingData.data || existingData.resultado || []);
+          if (Array.isArray(lista) && lista.length > 0) {
+            const sorted = lista.slice().sort((a, b) => (b.id || 0) - (a.id || 0));
+            existingId = sorted[0].id;
+          }
+        }
+      } catch (_) {}
+
+      if (existingId) {
+        const formDataUpdate = new FormData();
+        Object.entries(promocionData).forEach(([k, v]) => { if (v !== undefined && v !== null) formDataUpdate.append(k, v); });
+        const updateRes = await fetch(`${API_CONFIG.BASE_URL}/promociones/${existingId}`, { method: 'PUT', body: formDataUpdate });
+        const updateData = await updateRes.json().catch(() => ({}));
+        result = updateData.estado === 'exito' || updateData.success ? { ...updateData, success: true, estado: 'exito' } : updateData;
+      } else {
+        result = await apiService.crearPromocion(promocionData);
+      }
 
       // ⭐⭐ MOSTRAR INFORMACIÓN DE CORREOS DESTINATARIOS EN EL FRONTEND
       if (result?.email_info) {

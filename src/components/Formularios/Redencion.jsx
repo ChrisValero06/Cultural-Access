@@ -82,7 +82,7 @@ const Redencion = () => {
     const tipos = tiposPromocionCatalogo
       .filter(tipo => {
         const insts = Array.isArray(tipo.instituciones) ? tipo.instituciones : []
-        return insts.some(inst => normalizar(inst) === normalInst)
+        return insts.length === 0 || insts.some(inst => normalizar(inst) === normalInst)
       })
       .map(tipo => tipo.nombre || tipo)
       .filter(Boolean)
@@ -195,6 +195,29 @@ const Redencion = () => {
       // Validar tipo de promoción si es requerido
       if (mostrarTipoPromocion && !formData.tipoPromocion) {
         return
+      }
+
+      // Verificar si la tarjeta ya fue usada en esta institución con este tipo de promoción
+      if (formData.tipoPromocion) {
+        try {
+          const checkUrl = import.meta.env.DEV
+            ? `/api/controlacceso/tarjeta/${encodeURIComponent(formData.numeroTarjeta)}`
+            : `https://culturallaccess.com/api/controlacceso/tarjeta/${encodeURIComponent(formData.numeroTarjeta)}`
+          const checkRes = await fetch(checkUrl)
+          if (checkRes.ok) {
+            const checkData = await checkRes.json()
+            const registros = Array.isArray(checkData) ? checkData : (checkData.data || checkData.datos || checkData.rows || [])
+            const normalizar = (s) => (s || '').toLowerCase().trim()
+            const yaUsada = registros.some(r =>
+              normalizar(r.institucion) === normalizar(formData.institucion) &&
+              normalizar(r.tipo_promocion || r.tipoPromocion) === normalizar(formData.tipoPromocion)
+            )
+            if (yaUsada) {
+              alert('Esta tarjeta ya fue utilizada en esta promoción para esta institución.')
+              return
+            }
+          }
+        } catch (_) {}
       }
 
       // Normalizar fecha a YYYY-MM-DD

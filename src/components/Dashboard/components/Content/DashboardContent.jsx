@@ -5,6 +5,7 @@ import EstadisticasPerfiles from '../EstadisticasPerfiles';
 import InstitucionesAdmin from '../InstitucionesAdmin';
 import TiposPromocionAdmin from '../TiposPromocionAdmin';
 import ConfiguracionCarrusel from '../ConfiguracionCarrusel';
+import TarjetasAdmin from '../TarjetasAdmin';
 
 const DashboardContent = ({ 
   tabActiva,
@@ -53,6 +54,7 @@ const DashboardContent = ({
       {tabActiva === 'instituciones' && <InstitucionesAdmin />}
       {tabActiva === 'tipos-promocion' && <TiposPromocionAdmin />}
       {tabActiva === 'configuracion' && <ConfiguracionCarrusel />}
+      {tabActiva === 'tarjetas' && <TarjetasAdmin />}
     </div>
   );
 };

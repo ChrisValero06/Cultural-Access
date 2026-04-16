@@ -281,8 +281,9 @@ const ReportesPage = () => {
     }
 
     const filtrados = usuarios.filter(usuario => {
-      if (!usuario.fecha_registro) return false;
-      const fechaRegistroISO = extraerFechaISO(usuario.fecha_registro);
+      const fechaBase = usuario.fecha_registro || usuario.created_at || usuario.fecha_creacion;
+      if (!fechaBase) return false;
+      const fechaRegistroISO = extraerFechaISO(fechaBase);
       if (!fechaRegistroISO) return false;
       if (fechaRegistroISO < fechaInicioUsuarios || fechaRegistroISO > fechaFinUsuarios) return false;
       if (perfilSeleccionado) {
