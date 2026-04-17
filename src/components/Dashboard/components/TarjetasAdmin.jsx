@@ -16,9 +16,11 @@ const TarjetasAdmin = () => {
     setCargando(true);
     setTarjetaInfo(null);
     setMensaje('');
+    // Normalizar: quitar ceros al inicio para coincidir con BD
+    const numeroNormalizado = busqueda.trim().replace(/^0+/, '') || busqueda.trim();
     try {
       // Buscar redenciones de esta tarjeta
-      const res = await fetch(`${API_BASE}/controlacceso/tarjeta/${encodeURIComponent(busqueda.trim())}`);
+      const res = await fetch(`${API_BASE}/controlacceso/tarjeta/${encodeURIComponent(numeroNormalizado)}`);
       const data = await res.json();
       const redenciones = Array.isArray(data) ? data : (data.data || data.datos || data.rows || []);
 
@@ -28,7 +30,7 @@ const TarjetasAdmin = () => {
         const resU = await fetch(`${API_BASE}/usuario/verificar-tarjeta`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ numero_tarjeta: busqueda.trim() })
+          body: JSON.stringify({ numero_tarjeta: numeroNormalizado })
         });
         if (resU.ok) {
           const dataU = await resU.json();
@@ -40,7 +42,7 @@ const TarjetasAdmin = () => {
       setTarjetaInfo({ redenciones, usuario, numero: busqueda.trim() });
 
       // Verificar si ya está dada de baja
-      const resBaja = await fetch(`${API_BASE}/tarjetas-baja/${encodeURIComponent(busqueda.trim())}`).catch(() => null);
+      const resBaja = await fetch(`${API_BASE}/tarjetas-baja/${encodeURIComponent(numeroNormalizado)}`).catch(() => null);
       if (resBaja && resBaja.ok) {
         const dataBaja = await resBaja.json();
         if (dataBaja.activo === false || dataBaja.baja === true) {

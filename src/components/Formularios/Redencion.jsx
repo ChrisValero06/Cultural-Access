@@ -197,24 +197,39 @@ const Redencion = () => {
         return
       }
 
-      // Verificar si la tarjeta ya fue usada en esta institución con este tipo de promoción
+      // Verificar límite de uso mensual si la promoción lo requiere
       if (formData.tipoPromocion) {
         try {
-          const checkUrl = import.meta.env.DEV
-            ? `/api/controlacceso/tarjeta/${encodeURIComponent(formData.numeroTarjeta)}`
-            : `https://culturallaccess.com/api/controlacceso/tarjeta/${encodeURIComponent(formData.numeroTarjeta)}`
-          const checkRes = await fetch(checkUrl)
-          if (checkRes.ok) {
-            const checkData = await checkRes.json()
-            const registros = Array.isArray(checkData) ? checkData : (checkData.data || checkData.datos || checkData.rows || [])
+          const API_BASE = import.meta.env.DEV ? '/api' : 'https://culturallaccess.com/api'
+          // Obtener la promoción de esta institución para saber si tiene limitar_uso
+          const promoRes = await fetch(`${API_BASE}/promociones/obtener_promociones?institucion=${encodeURIComponent(formData.institucion)}`)
+          if (promoRes.ok) {
+            const promoData = await promoRes.json()
+            const promociones = Array.isArray(promoData) ? promoData : (promoData.data || promoData.promociones || [])
             const normalizar = (s) => (s || '').toLowerCase().trim()
-            const yaUsada = registros.some(r =>
-              normalizar(r.institucion) === normalizar(formData.institucion) &&
-              normalizar(r.tipo_promocion || r.tipoPromocion) === normalizar(formData.tipoPromocion)
+            const promo = promociones.find(p =>
+              normalizar(p.tipo_promocion || p.tipoPromocion) === normalizar(formData.tipoPromocion)
             )
-            if (yaUsada) {
-              alert('Esta tarjeta ya fue utilizada en esta promoción para esta institución.')
-              return
+            if (promo && (promo.limitar_uso == 1 || promo.limitar_uso === true)) {
+              // Revisar si la tarjeta ya se usó este mes en esta institución+tipo
+              const checkRes = await fetch(`${API_BASE}/controlacceso/tarjeta/${encodeURIComponent(formData.numeroTarjeta)}`)
+              if (checkRes.ok) {
+                const checkData = await checkRes.json()
+                const registros = Array.isArray(checkData) ? checkData : (checkData.data || checkData.datos || checkData.rows || [])
+                const ahora = new Date()
+                const mesActual = ahora.getMonth()
+                const anioActual = ahora.getFullYear()
+                const yaUsadaEsteMes = registros.some(r => {
+                  if (normalizar(r.institucion) !== normalizar(formData.institucion)) return false
+                  if (normalizar(r.tipo_promocion || r.tipoPromocion) !== normalizar(formData.tipoPromocion)) return false
+                  const fechaUso = new Date(r.fecha || r.fecha_uso || r.created_at)
+                  return fechaUso.getMonth() === mesActual && fechaUso.getFullYear() === anioActual
+                })
+                if (yaUsadaEsteMes) {
+                  alert('Esta tarjeta ya fue utilizada en esta promoción este mes.')
+                  return
+                }
+              }
             }
           }
         } catch (_) {}

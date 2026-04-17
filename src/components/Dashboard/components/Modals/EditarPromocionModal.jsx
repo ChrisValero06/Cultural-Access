@@ -441,6 +441,21 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
             rows="3" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-black" />
         </div>
 
+        <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+          <label className="flex items-start space-x-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={!!editandoForm.limitar_uso}
+              onChange={(e) => setEditandoForm({...editandoForm, limitar_uso: e.target.checked ? 1 : 0})}
+              className="mt-0.5 h-4 w-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+            />
+            <div>
+              <span className="text-sm font-medium text-gray-800">Limitar uso a 1 vez por mes</span>
+              <p className="text-xs text-gray-500 mt-0.5">Si se activa, cada tarjeta solo podrá usarse una vez por mes en esta promoción. El contador se reinicia automáticamente al inicio de cada mes.</p>
+            </div>
+          </label>
+        </div>
+
         <div className="mt-6 border-t pt-6">
           <h4 className="text-lg font-medium text-gray-800 mb-2">🖼️ Imágenes de la Promoción</h4>
           <p className="text-sm text-gray-600 mb-4">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 30MB por imagen.</p>
