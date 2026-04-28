@@ -16,13 +16,18 @@ const TarjetasAdmin = () => {
     setCargando(true);
     setTarjetaInfo(null);
     setMensaje('');
-    // Normalizar: quitar ceros al inicio para coincidir con BD
-    const numeroNormalizado = busqueda.trim().replace(/^0+/, '') || busqueda.trim();
+    const numeroOriginal = busqueda.trim();
+    const numeroNormalizado = numeroOriginal.replace(/^0+/, '') || numeroOriginal;
     try {
-      // Buscar redenciones de esta tarjeta
-      const res = await fetch(`${API_BASE}/controlacceso/tarjeta/${encodeURIComponent(numeroNormalizado)}`);
-      const data = await res.json();
-      const redenciones = Array.isArray(data) ? data : (data.data || data.datos || data.rows || []);
+      // Buscar redenciones — intentar con número original y normalizado
+      let redenciones = [];
+      for (const num of [...new Set([numeroOriginal, numeroNormalizado])]) {
+        const res = await fetch(`${API_BASE}/controlacceso/tarjeta/${encodeURIComponent(num)}?limit=100`);
+        const data = await res.json();
+        console.log(`[TarjetasAdmin] tarjeta=${num} status=${res.status} response=`, data);
+        const found = Array.isArray(data) ? data : (data.data || data.datos || data.rows || []);
+        if (found.length > 0) { redenciones = found; break; }
+      }
 
       // Buscar usuario por tarjeta (verificar-tarjeta endpoint)
       let usuario = null;
@@ -30,7 +35,7 @@ const TarjetasAdmin = () => {
         const resU = await fetch(`${API_BASE}/usuario/verificar-tarjeta`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ numero_tarjeta: numeroNormalizado })
+          body: JSON.stringify({ numero_tarjeta: busqueda.trim() })
         });
         if (resU.ok) {
           const dataU = await resU.json();

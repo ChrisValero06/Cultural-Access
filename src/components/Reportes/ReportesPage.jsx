@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Footer from '../Footer';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
 import { apiService } from '../../apis';
+import { tiposPromocionService } from '../../apis/tipos-promocion/tiposPromocionService';
 
 // Extrae una fecha en formato YYYY-MM-DD desde distintos formatos posibles
 const extraerFechaISO = (valor) => {
@@ -53,6 +54,8 @@ const ReportesPage = () => {
   const [fechaInicioRedenciones, setFechaInicioRedenciones] = useState('');
   const [fechaFinRedenciones, setFechaFinRedenciones] = useState('');
   const [institucionSeleccionada, setInstitucionSeleccionada] = useState('');
+  const [tipoPromocionSeleccionada, setTipoPromocionSeleccionada] = useState('');
+  const [tiposPromocionCatalogo, setTiposPromocionCatalogo] = useState([]);
   const [redenciones, setRedenciones] = useState([]);
   const [redencionesFiltradas, setRedencionesFiltradas] = useState([]);
   const [loadingRedenciones, setLoadingRedenciones] = useState(false);
@@ -96,6 +99,9 @@ const ReportesPage = () => {
   useEffect(() => {
     cargarUsuarios();
     cargarRedenciones();
+    tiposPromocionService.obtenerTiposPromocion()
+      .then(tipos => setTiposPromocionCatalogo(Array.isArray(tipos) ? tipos : []))
+      .catch(() => {});
   }, []);
 
   const cargarUsuarios = async () => {
@@ -306,6 +312,14 @@ const ReportesPage = () => {
         }
       }
 
+      // Filtrar por tipo de promoción si está seleccionado
+      if (tipoPromocionSeleccionada) {
+        const tipoRed = normalizar(redencion.tipo_promocion || redencion.tipoPromocion || '');
+        if (tipoRed !== normalizar(tipoPromocionSeleccionada)) {
+          return false;
+        }
+      }
+
       // Solo filtrar por fecha si AMBAS fechas están seleccionadas
       if (fechaInicioRedenciones && fechaFinRedenciones) {
         const fechaBase = redencion.fecha || redencion.fecha_redencion || redencion.created_at || redencion.fecha_registro;
@@ -339,6 +353,7 @@ const ReportesPage = () => {
     setFechaInicioRedenciones('');
     setFechaFinRedenciones('');
     setInstitucionSeleccionada('');
+    setTipoPromocionSeleccionada('');
     setRedencionesFiltradas([]);
     setReporteRedencionesGenerado(false);
   };
@@ -352,6 +367,19 @@ const ReportesPage = () => {
       if (!mapa[clave]) mapa[clave] = r.institucion.trim();
     });
     return Object.values(mapa).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  })();
+
+  const tiposPromocionFiltrados = (() => {
+    const normalizar = (str) => (str || '').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
+    return tiposPromocionCatalogo
+      .filter(tipo => {
+        if (!institucionSeleccionada) return true;
+        const insts = Array.isArray(tipo.instituciones) ? tipo.instituciones : [];
+        return insts.length === 0 || insts.some(inst => normalizar(inst) === normalizar(institucionSeleccionada));
+      })
+      .map(tipo => tipo.nombre || tipo)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
   })();
 
   const exportarUsuarios = async () => {
@@ -878,7 +906,7 @@ const ReportesPage = () => {
                     </label>
                     <select
                       value={institucionSeleccionada}
-                      onChange={(e) => setInstitucionSeleccionada(e.target.value)}
+                      onChange={(e) => { setInstitucionSeleccionada(e.target.value); setTipoPromocionSeleccionada(''); }}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
@@ -892,6 +920,29 @@ const ReportesPage = () => {
                       <option value="">Todas las instituciones</option>
                       {institucionesUnicas.map(inst => (
                         <option key={inst} value={inst}>{inst}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                      Tipo de Promoción
+                    </label>
+                    <select
+                      value={tipoPromocionSeleccionada}
+                      onChange={(e) => setTipoPromocionSeleccionada(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box',
+                        backgroundColor: 'white'
+                      }}
+                    >
+                      <option value="">Todos los tipos</option>
+                      {tiposPromocionFiltrados.map(tipo => (
+                        <option key={tipo} value={tipo}>{tipo}</option>
                       ))}
                     </select>
                   </div>
