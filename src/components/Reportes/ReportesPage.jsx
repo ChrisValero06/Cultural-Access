@@ -4,15 +4,41 @@ import Footer from '../Footer';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
 import { apiService } from '../../apis';
 import { tiposPromocionService } from '../../apis/tipos-promocion/tiposPromocionService';
+import { controlAccesoService } from '../../apis/control-acceso/controlAccesoService';
 
 // Extrae una fecha en formato YYYY-MM-DD desde distintos formatos posibles
 const extraerFechaISO = (valor) => {
   if (!valor) return '';
-  const str = String(valor);
-  const match = str.match(/(\d{4})-(\d{2})-(\d{2})/);
+  const str = String(valor).trim();
+
+  // YYYY-MM-DD (ISO estándar, también cubre YYYY-MM-DDTHH:mm:ss)
+  let match = str.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (match) return `${match[1]}-${match[2]}-${match[3]}`;
+
+  // DD/MM/YYYY (formato Wix / México)
+  match = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (match) {
-    return `${match[1]}-${match[2]}-${match[3]}`;
+    return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
   }
+
+  // DD-MM-YYYY
+  match = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+  if (match) {
+    return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
+  }
+
+  // Fecha cero de MySQL (inválida)
+  if (str.startsWith('0000-00-00')) return '';
+
+  // Timestamp Unix en milisegundos (número)
+  const num = Number(str);
+  if (!isNaN(num) && num > 1e10) {
+    const d = new Date(num);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().slice(0, 10);
+    }
+  }
+
   return '';
 };
 
@@ -61,6 +87,7 @@ const ReportesPage = () => {
   const [loadingRedenciones, setLoadingRedenciones] = useState(false);
   const [errorRedenciones, setErrorRedenciones] = useState(null);
   const [reporteRedencionesGenerado, setReporteRedencionesGenerado] = useState(false);
+  const [sinFechaValida, setSinFechaValida] = useState(0);
 
   const perfilMap = {
     'francisco_murga': 'Francisco Murga',
@@ -243,6 +270,16 @@ const ReportesPage = () => {
         }
       }
 
+      // Fallback al servicio de API si no se obtuvieron registros
+      if (todasLasRedenciones.length === 0) {
+        try {
+          const response = await controlAccesoService.obtenerControlAcceso({ limit: 500 });
+          const data = response.data || response.datos || response.rows || [];
+          todasLasRedenciones = Array.isArray(data) ? data : [];
+        } catch (e) {
+        }
+      }
+
       // Eliminar duplicados por ID
       const idsVistos = new Set();
       const redencionesUnicas = todasLasRedenciones.filter(r => {
@@ -304,6 +341,7 @@ const ReportesPage = () => {
     }
 
     const normalizar = (str) => (str || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
+    let contSinFecha = 0;
     const filtradas = redenciones.filter(redencion => {
       // Filtrar por institución si está seleccionada
       if (institucionSeleccionada) {
@@ -323,7 +361,12 @@ const ReportesPage = () => {
       // Solo filtrar por fecha si AMBAS fechas están seleccionadas
       if (fechaInicioRedenciones && fechaFinRedenciones) {
         const fechaBase = redencion.fecha || redencion.fecha_redencion || redencion.created_at || redencion.fecha_registro;
-        if (!fechaEnRango(fechaBase, fechaInicioRedenciones, fechaFinRedenciones)) {
+        const iso = extraerFechaISO(fechaBase);
+        if (!iso) {
+          contSinFecha++;
+          return false;
+        }
+        if (!fechaEnRango(iso, fechaInicioRedenciones, fechaFinRedenciones)) {
           return false;
         }
       }
@@ -331,6 +374,7 @@ const ReportesPage = () => {
       return true;
     });
 
+    setSinFechaValida(contSinFecha);
     setRedencionesFiltradas(filtradas);
     setReporteRedencionesGenerado(true);
   };
@@ -371,15 +415,34 @@ const ReportesPage = () => {
 
   const tiposPromocionFiltrados = (() => {
     const normalizar = (str) => (str || '').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
-    return tiposPromocionCatalogo
+
+    // Tipos activos del cat\u00e1logo filtrados por instituci\u00f3n
+    const tiposActivos = tiposPromocionCatalogo
       .filter(tipo => {
         if (!institucionSeleccionada) return true;
         const insts = Array.isArray(tipo.instituciones) ? tipo.instituciones : [];
         return insts.length === 0 || insts.some(inst => normalizar(inst) === normalizar(institucionSeleccionada));
       })
       .map(tipo => tipo.nombre || tipo)
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+      .filter(Boolean);
+
+    // Tipos hist\u00f3ricos extra\u00eddos de las redenciones cargadas
+    const tiposHistoricos = redenciones
+      .filter(r => {
+        if (!institucionSeleccionada) return true;
+        return normalizar(r.institucion) === normalizar(institucionSeleccionada);
+      })
+      .map(r => r.tipo_promocion || r.tipoPromocion)
+      .filter(Boolean);
+
+    // Combinar y deduplicar por nombre normalizado
+    const mapaFinal = {};
+    [...tiposActivos, ...tiposHistoricos].forEach(nombre => {
+      const clave = normalizar(nombre);
+      if (!mapaFinal[clave]) mapaFinal[clave] = nombre;
+    });
+
+    return Object.values(mapaFinal).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
   })();
 
   const exportarUsuarios = async () => {
@@ -1031,12 +1094,12 @@ const ReportesPage = () => {
                 )}
 
                 {reporteRedencionesGenerado && (
-                  <div style={{ 
-                    backgroundColor: '#eff6ff', 
-                    border: '1px solid #bfdbfe', 
-                    padding: '16px', 
-                    borderRadius: '8px', 
-                    marginBottom: '20px' 
+                  <div style={{
+                    backgroundColor: '#eff6ff',
+                    border: '1px solid #bfdbfe',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    marginBottom: '20px'
                   }}>
                     <p style={{ color: '#1e40af', fontWeight: '500', margin: 0, fontSize: '15px' }}>
                       Reporte generado: <strong>{redencionesFiltradas.length}</strong> redención(es) encontrada(s)
@@ -1044,6 +1107,11 @@ const ReportesPage = () => {
                     {institucionSeleccionada && (
                       <p style={{ color: '#3b82f6', fontSize: '13px', marginTop: '4px' }}>
                         Institución: {institucionSeleccionada}
+                      </p>
+                    )}
+                    {sinFechaValida > 0 && (
+                      <p style={{ color: '#b45309', fontSize: '13px', marginTop: '6px', backgroundColor: '#fef3c7', padding: '6px 10px', borderRadius: '6px' }}>
+                        ⚠️ <strong>{sinFechaValida}</strong> registro(s) excluido(s) por tener fecha inválida (0000-00-00). Probablemente datos migrados de Wix sin fecha. Para verlos, usa "Mostrar Todas" sin filtro de fecha.
                       </p>
                     )}
                   </div>

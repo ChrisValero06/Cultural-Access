@@ -42,6 +42,17 @@ const CulturalAccessForm = () => {
   const [tarjetaValidando, setTarjetaValidando] = useState(false)
   const [tarjetaDisponible, setTarjetaDisponible] = useState(null)
 
+  const perfilNombre = localStorage.getItem('perfilNombre') || localStorage.getItem('userUsuario') || 'Usuario'
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userUsuario');
+    localStorage.removeItem('perfilId');
+    localStorage.removeItem('perfilNombre');
+    navigate('/login', { replace: true });
+  }
+
   // Proteger el formulario - solo usuarios autenticados pueden acceder
   useEffect(() => {
     // Verificar autenticación
@@ -404,6 +415,20 @@ const CulturalAccessForm = () => {
       
       {/* Header fijo */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-orange-500 backdrop-blur-sm shadow-lg">
+        {/* Barra de sesión */}
+        <div className="bg-orange-500 px-4 py-1.5">
+          <div className="max-w-[1090px] mx-auto flex justify-between items-center">
+            <span className="text-orange-200 text-sm">
+              Registrando como: <strong className="text-white">{perfilNombre}</strong>
+            </span>
+            <button
+              onClick={handleLogout}
+              className="text-xs text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition duration-150"
+            >
+              Cerrar Sesión
+            </button>
+          </div>
+        </div>
         <div className="max-w-[1090px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center py-6 space-x-8">
             {/* Logo izquierdo */}
@@ -433,7 +458,7 @@ const CulturalAccessForm = () => {
         </div>
       </header>
 
-      <div className="relative z-10 min-h-screen flex flex-col pt-36">
+      <div className="relative z-10 min-h-screen flex flex-col pt-48">
         <div className="flex-1 flex items-center justify-center px-6 py-8">
           <div className="bg-orange-500 rounded-2xl p-8 shadow-2xl max-w-[1090px] w-full max-h-full overflow-y-auto">
             <form onSubmit={handleSubmit} className="space-y-6">

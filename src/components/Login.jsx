@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { apiService } from '../apis';
+import { authService } from '../apis/auth/authService';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const Login = () => {
@@ -41,20 +41,7 @@ const Login = () => {
     };
   }, []);
 
-  // Credenciales fijas con perfiles
-  const FIXED_CREDENTIALS = [
-    { usuario: 'franciscomurga', password: 'francisco2025', perfilId: 'francisco_murga', nombre: 'Francisco Murga' },
-    { usuario: 'alejandrolachea', password: 'alejandro2025', perfilId: 'alejandro_olachea', nombre: 'Alejandro Olachea' },
-    { usuario: 'raymundoibarra', password: 'raymundo2025', perfilId: 'raymundo_ibarra', nombre: 'Raymundo Ibarra' },
-    { usuario: 'karlaacevedo', password: 'karla2025', perfilId: 'karla_acevedo', nombre: 'Karla Acevedo' },
-    { usuario: 'pepe', password: '7373', perfilId: 'pepe', nombre: 'Pepe' },
-    { usuario: 'jose', password: '7373', perfilId: 'jose', nombre: 'Jose' },
-    { usuario: 'labnl', password: 'labnl2025', perfilId: 'labnl', nombre: 'LABNL' },
-    { usuario: 'francisco', password: '7421', perfilId: 'francisco', nombre: 'Francisco' },
-    { usuario: 'planeacion', password: 'planeacion2026', perfilId: 'planeacion', nombre: 'Planeación' },
-  ];
-
-  const handleSubmit = async (e) => { 
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -66,21 +53,14 @@ const Login = () => {
         return;
       }
 
-      // Validar contra credenciales fijas
-      const usuarioTrimmed = usuario.trim();
-      const passwordTrimmed = password.trim();
-      const match = FIXED_CREDENTIALS.find(c => c.usuario === usuarioTrimmed && c.password === passwordTrimmed);
-      if (!match) {
-        throw new Error('Credenciales inválidas');
-      }
+      const data = await authService.login(usuario.trim(), password.trim());
 
-      localStorage.setItem('authToken', `${usuarioTrimmed}-token`);
-      localStorage.setItem('userUsuario', usuarioTrimmed);
-      localStorage.setItem('perfilId', match.perfilId);
-      localStorage.setItem('perfilNombre', match.nombre);
-      
-      // Redirigir según el perfil del usuario
-      const perfilId = match.perfilId?.trim().toLowerCase();
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('userUsuario', data.usuario);
+      localStorage.setItem('perfilId', data.perfilId);
+      localStorage.setItem('perfilNombre', data.nombre);
+
+      const perfilId = data.perfilId?.trim().toLowerCase();
       if (perfilId === 'pepe' || perfilId === 'francisco') {
         navigate('/AdminDashboard');
       } else if (perfilId === 'planeacion') {
