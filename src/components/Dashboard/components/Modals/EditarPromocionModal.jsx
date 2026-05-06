@@ -445,8 +445,8 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
           <label className="flex items-start space-x-3 cursor-pointer">
             <input
               type="checkbox"
-              checked={!!editandoForm.limitar_uso}
-              onChange={(e) => setEditandoForm({...editandoForm, limitar_uso: e.target.checked ? 1 : 0})}
+              checked={!!(editandoForm.limitar_uso || editandoForm.limite_uso === 'mensual' || editandoForm.limite_uso === 'una_vez')}
+              onChange={(e) => setEditandoForm({...editandoForm, limitar_uso: e.target.checked ? 1 : 0, limite_uso: e.target.checked ? 'mensual' : null})}
               className="mt-0.5 h-4 w-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
             />
             <div>

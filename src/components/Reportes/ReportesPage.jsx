@@ -70,6 +70,7 @@ const ReportesPage = () => {
   const [fechaInicioUsuarios, setFechaInicioUsuarios] = useState('');
   const [fechaFinUsuarios, setFechaFinUsuarios] = useState('');
   const [perfilSeleccionado, setPerfilSeleccionado] = useState('');
+  const [nombreFiltro, setNombreFiltro] = useState('');
   const [usuarios, setUsuarios] = useState([]);
   const [usuariosFiltrados, setUsuariosFiltrados] = useState([]);
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
@@ -88,6 +89,11 @@ const ReportesPage = () => {
   const [errorRedenciones, setErrorRedenciones] = useState(null);
   const [reporteRedencionesGenerado, setReporteRedencionesGenerado] = useState(false);
   const [sinFechaValida, setSinFechaValida] = useState(0);
+
+  // Estados para Promociones
+  const [promociones, setPromociones] = useState([]);
+  const [loadingPromociones, setLoadingPromociones] = useState(false);
+  const [reportePromocionesGenerado, setReportePromocionesGenerado] = useState(false);
 
   const perfilMap = {
     'francisco_murga': 'Francisco Murga',
@@ -293,30 +299,79 @@ const ReportesPage = () => {
     }
   };
 
+  const cargarPromociones = async () => {
+    setLoadingPromociones(true);
+    try {
+      const res = await fetch('/api/promociones?all=1');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const list = data.data || data.promociones || data.rows || [];
+      setPromociones(Array.isArray(list) ? list : []);
+      setReportePromocionesGenerado(true);
+    } catch (e) {
+      alert('No se pudo cargar promociones: ' + e.message);
+    } finally {
+      setLoadingPromociones(false);
+    }
+  };
+
+  const exportarPromociones = async () => {
+    if (promociones.length === 0) { alert('No hay datos para exportar'); return; }
+    try {
+      const loadXLSX = () => new Promise((resolve, reject) => {
+        if (window.XLSX) return resolve(window.XLSX);
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.onload = () => resolve(window.XLSX);
+        script.onerror = reject;
+        document.body.appendChild(script);
+      });
+      const XLSX = await loadXLSX();
+      const headers = ['ID', 'Institución', 'Tipo Promoción', 'Disciplina', 'Beneficios', 'Comentarios/Restricciones', 'Fecha Inicio', 'Fecha Fin', 'Estado'];
+      const rows = promociones.map(p => [p.id, p.institucion, p.tipo_promocion, p.disciplina, p.beneficios, p.comentarios_restricciones, p.fecha_inicio, p.fecha_fin, p.estado]);
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Promociones');
+      XLSX.writeFile(wb, `reporte_promociones_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } catch (e) {
+      alert('Error al exportar: ' + e.message);
+    }
+  };
+
   const generarReporteUsuarios = () => {
-    if (!fechaInicioUsuarios || !fechaFinUsuarios) {
-      alert('Por favor, selecciona ambas fechas');
+    const tieneFechas = fechaInicioUsuarios && fechaFinUsuarios;
+    const tieneNombre = nombreFiltro.trim().length > 0;
+
+    if (!tieneFechas && !tieneNombre) {
+      alert('Por favor, selecciona fechas o escribe un nombre para buscar');
       return;
     }
 
-    // Las fechas del input vienen en formato YYYY-MM-DD, se pueden comparar como cadenas
-    if (fechaInicioUsuarios > fechaFinUsuarios) {
+    if (tieneFechas && fechaInicioUsuarios > fechaFinUsuarios) {
       alert('La fecha de inicio no puede ser posterior a la fecha de fin');
       return;
     }
 
+    const normNombre = nombreFiltro.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     const filtrados = usuarios.filter(usuario => {
-      const fechaBase = usuario.fecha_registro || usuario.created_at || usuario.fecha_creacion;
-      if (!fechaBase) return false;
-      const fechaRegistroISO = extraerFechaISO(fechaBase);
-      if (!fechaRegistroISO) return false;
-      if (fechaRegistroISO < fechaInicioUsuarios || fechaRegistroISO > fechaFinUsuarios) return false;
+      if (tieneFechas) {
+        const fechaBase = usuario.fecha_registro || usuario.created_at || usuario.fecha_creacion;
+        if (!fechaBase) return false;
+        const fechaRegistroISO = extraerFechaISO(fechaBase);
+        if (!fechaRegistroISO) return false;
+        if (fechaRegistroISO < fechaInicioUsuarios || fechaRegistroISO > fechaFinUsuarios) return false;
+      }
       if (perfilSeleccionado) {
         if (perfilSeleccionado === 'sin_perfil') {
           if (usuario.registrado_por) return false;
         } else {
           if (usuario.registrado_por !== perfilSeleccionado) return false;
         }
+      }
+      if (normNombre) {
+        const nombreCompleto = `${usuario.nombre || ''} ${usuario.apellido_paterno || ''} ${usuario.apellido_materno || ''}`
+          .toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+        if (!nombreCompleto.includes(normNombre)) return false;
       }
       return true;
     });
@@ -384,6 +439,7 @@ const ReportesPage = () => {
     setFechaInicioUsuarios('');
     setFechaFinUsuarios('');
     setPerfilSeleccionado('');
+    setNombreFiltro('');
     setUsuariosFiltrados([]);
     setReporteUsuariosGenerado(false);
   };
@@ -646,6 +702,22 @@ const ReportesPage = () => {
               >
                 Redenciones
               </button>
+              <button
+                onClick={() => { setTipoReporte('promociones'); if (promociones.length === 0) cargarPromociones(); }}
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  backgroundColor: tipoReporte === 'promociones' ? 'white' : 'transparent',
+                  color: '#1f2937',
+                  boxShadow: tipoReporte === 'promociones' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                }}
+              >
+                Promociones
+              </button>
             </div>
           </div>
         </div>
@@ -715,6 +787,24 @@ const ReportesPage = () => {
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                      Buscar por Nombre
+                    </label>
+                    <input
+                      type="text"
+                      value={nombreFiltro}
+                      onChange={(e) => setNombreFiltro(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
                       Usuario/Perfil
                     </label>
                     <select
@@ -740,15 +830,15 @@ const ReportesPage = () => {
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <button
                     onClick={generarReporteUsuarios}
-                    disabled={loadingUsuarios || !fechaInicioUsuarios || !fechaFinUsuarios}
+                    disabled={loadingUsuarios || (!fechaInicioUsuarios && !fechaFinUsuarios && !nombreFiltro.trim())}
                     style={{
-                      backgroundColor: (!fechaInicioUsuarios || !fechaFinUsuarios) ? '#fdba74' : '#f97316',
+                      backgroundColor: (!fechaInicioUsuarios && !fechaFinUsuarios && !nombreFiltro.trim()) ? '#fdba74' : '#f97316',
                       color: 'white',
                       padding: '10px 24px',
                       borderRadius: '8px',
                       border: 'none',
                       fontWeight: '500',
-                      cursor: (!fechaInicioUsuarios || !fechaFinUsuarios) ? 'not-allowed' : 'pointer',
+                      cursor: (!fechaInicioUsuarios && !fechaFinUsuarios && !nombreFiltro.trim()) ? 'not-allowed' : 'pointer',
                       fontSize: '14px'
                     }}
                   >
@@ -1152,6 +1242,111 @@ const ReportesPage = () => {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {tipoReporte === 'promociones' && (
+            <div style={{ backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+              <div style={{ padding: '20px 24px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
+                  Catálogo de Promociones
+                  {reportePromocionesGenerado && (
+                    <span style={{ fontSize: '14px', fontWeight: '400', color: '#6b7280', marginLeft: '8px' }}>
+                      ({promociones.length} promoción(es))
+                    </span>
+                  )}
+                </h2>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={cargarPromociones}
+                    disabled={loadingPromociones}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#6366f1',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: loadingPromociones ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      opacity: loadingPromociones ? 0.7 : 1
+                    }}
+                  >
+                    {loadingPromociones ? 'Cargando...' : 'Actualizar'}
+                  </button>
+                  {reportePromocionesGenerado && promociones.length > 0 && (
+                    <button
+                      onClick={exportarPromociones}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#16a34a',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '14px'
+                      }}
+                    >
+                      Exportar Excel
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {reportePromocionesGenerado && promociones.length > 0 && (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f9fafb' }}>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>ID</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Institución</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Tipo de Promoción</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Disciplina</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Beneficios</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Fecha Inicio</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Fecha Fin</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {promociones.map((p, idx) => (
+                        <tr key={p.id || idx} style={{ backgroundColor: idx % 2 === 0 ? 'white' : '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                          <td style={{ padding: '12px 16px', color: '#6b7280' }}>{p.id || '-'}</td>
+                          <td style={{ padding: '12px 16px', fontWeight: '500' }}>{p.institucion || '-'}</td>
+                          <td style={{ padding: '12px 16px' }}>{p.tipo_promocion || '-'}</td>
+                          <td style={{ padding: '12px 16px' }}>{p.disciplina || '-'}</td>
+                          <td style={{ padding: '12px 16px' }}>{p.beneficios || '-'}</td>
+                          <td style={{ padding: '12px 16px' }}>{p.fecha_inicio ? formatearFechaCorta(p.fecha_inicio) : '-'}</td>
+                          <td style={{ padding: '12px 16px' }}>{p.fecha_fin ? formatearFechaCorta(p.fecha_fin) : '-'}</td>
+                          <td style={{ padding: '12px 16px' }}>
+                            <span style={{
+                              padding: '2px 8px',
+                              borderRadius: '9999px',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              backgroundColor: p.estado === 'activo' ? '#dcfce7' : '#f3f4f6',
+                              color: p.estado === 'activo' ? '#16a34a' : '#6b7280'
+                            }}>
+                              {p.estado || '-'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {reportePromocionesGenerado && promociones.length === 0 && (
+                <div style={{ backgroundColor: '#fefce8', border: '1px solid #fef08a', padding: '24px', borderRadius: '8px', textAlign: 'center', margin: '16px' }}>
+                  <p style={{ color: '#a16207', fontWeight: '500', margin: 0 }}>No se encontraron promociones.</p>
+                </div>
+              )}
+
+              {!reportePromocionesGenerado && (
+                <div style={{ backgroundColor: '#f3f4f6', padding: '40px', borderRadius: '8px', textAlign: 'center', margin: '16px' }}>
+                  <p style={{ color: '#6b7280', margin: 0 }}>Las promociones se cargan automáticamente. Haz clic en "Actualizar" para refrescar los datos.</p>
+                </div>
+              )}
             </div>
           )}
         </div>
