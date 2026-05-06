@@ -2,51 +2,54 @@ import React, { useState } from 'react';
 
 const API_BASE = import.meta.env.DEV ? '/api' : 'https://culturallaccess.com/api';
 
+const esNumero = (str) => /^\d+$/.test(str.trim());
+
 const TarjetasAdmin = () => {
   const [busqueda, setBusqueda] = useState('');
   const [tarjetaInfo, setTarjetaInfo] = useState(null);
+  const [resultadosNombre, setResultadosNombre] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [tarjetasBaja, setTarjetasBaja] = useState([]);
   const [cargandoBaja, setCargandoBaja] = useState(false);
   const [tabActiva, setTabActiva] = useState('buscar');
+  const [busquedaAcceso, setBusquedaAcceso] = useState('');
+  const [registrosAcceso, setRegistrosAcceso] = useState([]);
+  const [cargandoAcceso, setCargandoAcceso] = useState(false);
+  const [mensajeAcceso, setMensajeAcceso] = useState('');
 
-  const buscarTarjeta = async () => {
-    if (!busqueda.trim()) return;
+  const buscarPorNumero = async (numero) => {
     setCargando(true);
     setTarjetaInfo(null);
+    setResultadosNombre([]);
     setMensaje('');
-    const numeroOriginal = busqueda.trim();
-    const numeroNormalizado = numeroOriginal.replace(/^0+/, '') || numeroOriginal;
+    const numeroNormalizado = numero.replace(/^0+/, '') || numero;
     try {
-      // Buscar redenciones — intentar con número original y normalizado
       let redenciones = [];
-      for (const num of [...new Set([numeroOriginal, numeroNormalizado])]) {
-        const res = await fetch(`${API_BASE}/controlacceso/tarjeta/${encodeURIComponent(num)}?limit=100`);
-        const data = await res.json();
-        console.log(`[TarjetasAdmin] tarjeta=${num} status=${res.status} response=`, data);
-        const found = Array.isArray(data) ? data : (data.data || data.datos || data.rows || []);
-        if (found.length > 0) { redenciones = found; break; }
-      }
+      const res = await fetch(`${API_BASE}/controlacceso/tarjeta/${encodeURIComponent(numero)}?limit=100`);
+      const data = await res.json();
+      redenciones = Array.isArray(data) ? data : (data.data || data.datos || data.rows || []);
 
-      // Buscar usuario por tarjeta (verificar-tarjeta endpoint)
       let usuario = null;
       try {
-        const resU = await fetch(`${API_BASE}/usuario/verificar-tarjeta`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ numero_tarjeta: busqueda.trim() })
-        });
+        const resU = await fetch(`${API_BASE}/usuario?limit=2000&offset=0`);
         if (resU.ok) {
           const dataU = await resU.json();
-          usuario = dataU.usuario || dataU.data || dataU || null;
-          if (usuario && !usuario.nombre) usuario = null;
+          const todos = Array.isArray(dataU) ? dataU : (dataU.data || dataU.usuarios || dataU.rows || []);
+          usuario = todos.find(u =>
+            u.numero_tarjeta === numero || u.numero_tarjeta === numeroNormalizado
+          ) || null;
         }
       } catch (_) {}
 
-      setTarjetaInfo({ redenciones, usuario, numero: busqueda.trim() });
+      if (redenciones.length === 0 && !usuario) {
+        setMensaje('⚠️ No se encontró ningún registro para esta tarjeta.');
+        setCargando(false);
+        return;
+      }
 
-      // Verificar si ya está dada de baja
+      setTarjetaInfo({ redenciones, usuario, numero });
+
       const resBaja = await fetch(`${API_BASE}/tarjetas-baja/${encodeURIComponent(numeroNormalizado)}`).catch(() => null);
       if (resBaja && resBaja.ok) {
         const dataBaja = await resBaja.json();
@@ -55,9 +58,48 @@ const TarjetasAdmin = () => {
         }
       }
     } catch (err) {
-      setMensaje('Error al buscar la tarjeta: ' + err.message);
+      setMensaje('❌ Error al buscar la tarjeta: ' + err.message);
     } finally {
       setCargando(false);
+    }
+  };
+
+  const buscarPorNombre = async (nombre) => {
+    setCargando(true);
+    setTarjetaInfo(null);
+    setResultadosNombre([]);
+    setMensaje('');
+    try {
+      const res = await fetch(`${API_BASE}/usuario?limit=1000&offset=0`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const todos = Array.isArray(data) ? data : (data.data || data.usuarios || data.rows || []);
+      const nombreNorm = nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      const usuarios = todos.filter(u => {
+        const nombreCompleto = `${u.nombre || ''} ${u.apellido_paterno || ''} ${u.apellido_materno || ''}`;
+        return nombreCompleto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(nombreNorm);
+      });
+      if (usuarios.length === 0) {
+        setMensaje('⚠️ No se encontraron usuarios con ese nombre.');
+      } else if (usuarios.length === 1 && usuarios[0].numero_tarjeta) {
+        await buscarPorNumero(usuarios[0].numero_tarjeta);
+        return;
+      } else {
+        setResultadosNombre(usuarios);
+      }
+    } catch (err) {
+      setMensaje('❌ Error al buscar por nombre: ' + err.message);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const handleBuscar = () => {
+    if (!busqueda.trim()) return;
+    if (esNumero(busqueda)) {
+      buscarPorNumero(busqueda.trim());
+    } else {
+      buscarPorNombre(busqueda.trim());
     }
   };
 
@@ -117,10 +159,9 @@ const TarjetasAdmin = () => {
     <div style={{ backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
       <div style={{ padding: '20px 24px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#fafafa' }}>
         <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#1f2937', margin: 0 }}>Gestión de Tarjetas</h2>
-        <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>Busca, consulta y da de baja números de tarjeta</p>
+        <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>Busca por número de tarjeta o por nombre de usuario</p>
       </div>
 
-      {/* Tabs internas */}
       <div style={{ display: 'flex', gap: '4px', padding: '16px 24px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
         {[['buscar', 'Buscar Tarjeta'], ['lista', 'Tarjetas Dadas de Baja']].map(([key, label]) => (
           <button key={key} onClick={() => { setTabActiva(key); if (key === 'lista') cargarTarjetasBaja(); }}
@@ -142,24 +183,55 @@ const TarjetasAdmin = () => {
           </div>
         )}
 
-        {/* TAB: BUSCAR */}
         {tabActiva === 'buscar' && (
           <div>
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
               <input type="text" value={busqueda} onChange={e => setBusqueda(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && buscarTarjeta()}
-                placeholder="Número de tarjeta..."
+                onKeyDown={e => e.key === 'Enter' && handleBuscar()}
+                placeholder="Número de tarjeta o nombre del usuario..."
                 style={{ flex: 1, padding: '10px 14px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }} />
-              <button onClick={buscarTarjeta} disabled={cargando}
+              <button onClick={handleBuscar} disabled={cargando}
                 style={{ padding: '10px 24px', backgroundColor: '#f97316', color: 'white', border: 'none',
                   borderRadius: '8px', fontWeight: '500', cursor: cargando ? 'not-allowed' : 'pointer', fontSize: '14px' }}>
                 {cargando ? 'Buscando...' : 'Buscar'}
               </button>
             </div>
+            <p style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '24px' }}>
+              Escribe un número para buscar por tarjeta, o un nombre para buscar por usuario
+            </p>
 
+            {/* Resultados de búsqueda por nombre */}
+            {resultadosNombre.length > 0 && (
+              <div style={{ marginBottom: '24px' }}>
+                <h3 style={{ fontWeight: '600', color: '#374151', marginBottom: '12px', fontSize: '15px' }}>
+                  Usuarios encontrados ({resultadosNombre.length}) — selecciona uno para ver su tarjeta
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {resultadosNombre.map((u, i) => (
+                    <button key={i} onClick={() => u.numero_tarjeta && buscarPorNumero(u.numero_tarjeta)}
+                      disabled={!u.numero_tarjeta}
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '12px 16px', borderRadius: '8px', border: '1px solid #e5e7eb',
+                        backgroundColor: u.numero_tarjeta ? '#f9fafb' : '#f3f4f6',
+                        cursor: u.numero_tarjeta ? 'pointer' : 'default', textAlign: 'left' }}>
+                      <div>
+                        <span style={{ fontWeight: '500', color: '#1f2937', fontSize: '14px' }}>
+                          {u.nombre} {u.apellido_paterno} {u.apellido_materno}
+                        </span>
+                        {u.email && <span style={{ color: '#6b7280', fontSize: '13px', marginLeft: '12px' }}>{u.email}</span>}
+                      </div>
+                      <span style={{ fontSize: '13px', color: u.numero_tarjeta ? '#f97316' : '#9ca3af', fontWeight: '500' }}>
+                        {u.numero_tarjeta ? `Tarjeta: ${u.numero_tarjeta}` : 'Sin tarjeta'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Resultado de tarjeta encontrada */}
             {tarjetaInfo && (
               <div>
-                {/* Info del usuario */}
                 <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
                   <h3 style={{ fontWeight: '600', color: '#1e40af', marginBottom: '8px', fontSize: '15px' }}>
                     Tarjeta: {tarjetaInfo.numero}
@@ -176,7 +248,6 @@ const TarjetasAdmin = () => {
                   )}
                 </div>
 
-                {/* Historial de redenciones */}
                 <div style={{ marginBottom: '20px' }}>
                   <h3 style={{ fontWeight: '600', color: '#374151', marginBottom: '12px', fontSize: '15px' }}>
                     Historial de Redenciones ({tarjetaInfo.redenciones.length})
@@ -208,7 +279,6 @@ const TarjetasAdmin = () => {
                   )}
                 </div>
 
-                {/* Botón dar de baja */}
                 <button onClick={darDeBaja} disabled={cargando}
                   style={{ padding: '10px 24px', backgroundColor: '#dc2626', color: 'white', border: 'none',
                     borderRadius: '8px', fontWeight: '500', cursor: cargando ? 'not-allowed' : 'pointer', fontSize: '14px' }}>
@@ -219,7 +289,6 @@ const TarjetasAdmin = () => {
           </div>
         )}
 
-        {/* TAB: LISTA DE BAJAS */}
         {tabActiva === 'lista' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>

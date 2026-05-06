@@ -45,6 +45,7 @@ const Redencion = () => {
     tipoPromocion: ''
   })
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showInstituciones, setShowInstituciones] = useState(false)
   const [filteredInstituciones, setFilteredInstituciones] = useState([])
   const autocompleteRef = useRef(null)
@@ -82,7 +83,7 @@ const Redencion = () => {
     const tipos = tiposPromocionCatalogo
       .filter(tipo => {
         const insts = Array.isArray(tipo.instituciones) ? tipo.instituciones : []
-        return insts.length === 0 || insts.some(inst => normalizar(inst) === normalInst)
+        return insts.length > 0 && insts.some(inst => normalizar(inst) === normalInst)
       })
       .map(tipo => tipo.nombre || tipo)
       .filter(Boolean)
@@ -185,7 +186,9 @@ const Redencion = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+    if (isSubmitting) return
+    setIsSubmitting(true)
+
     try {
       // Validar que todos los campos estén llenos
       if (!formData.institucion || !formData.numeroTarjeta || !formData.fecha) {
@@ -212,7 +215,8 @@ const Redencion = () => {
             )
             if (promo && (promo.limitar_uso == 1 || promo.limitar_uso === true)) {
               // Revisar si la tarjeta ya se usó este mes en esta institución+tipo
-              const checkRes = await fetch(`${API_BASE}/controlacceso/tarjeta/${encodeURIComponent(formData.numeroTarjeta)}`)
+              const numNorm = formData.numeroTarjeta.replace(/\D/g, '').padStart(5, '0')
+              const checkRes = await fetch(`${API_BASE}/controlacceso/tarjeta/${encodeURIComponent(numNorm)}`)
               if (checkRes.ok) {
                 const checkData = await checkRes.json()
                 const registros = Array.isArray(checkData) ? checkData : (checkData.data || checkData.datos || checkData.rows || [])
@@ -252,9 +256,10 @@ const Redencion = () => {
 
       // Enviar datos al backend
       const url = import.meta.env.DEV ? '/api/controlacceso' : 'https://culturallaccess.com/api/controlacceso'
+      const numeroTarjetaNormalizado = formData.numeroTarjeta.replace(/\D/g, '').padStart(5, '0')
       const payload = {
         institucion: formData.institucion,
-        numero_tarjeta: formData.numeroTarjeta,
+        numero_tarjeta: numeroTarjetaNormalizado,
         fecha: fechaISO,
         ...(formData.tipoPromocion ? { tipo_promocion: formData.tipoPromocion } : {})
       }
@@ -352,7 +357,7 @@ const Redencion = () => {
       }
       
     } catch (error) {
-      
+
       // Mostrar error más específico
       if (error.message.includes('Failed to fetch')) {
         alert('Error de conexión: No se puede conectar al servidor. Verifica que el backend esté corriendo.')
@@ -361,6 +366,8 @@ const Redencion = () => {
       } else {
         alert('Error al enviar el formulario: ' + error.message)
       }
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -573,9 +580,10 @@ const Redencion = () => {
               <div className="pt-4">
                 <button
                   type="submit"
-                  className="w-full bg-orange-500 text-white font-bold py-4 px-6 rounded-lg hover:bg-orange-400 focus:ring-4 focus:ring-orange-200 transition duration-200 transform hover:scale-105 shadow-lg"
+                  disabled={isSubmitting}
+                  className={`w-full text-white font-bold py-4 px-6 rounded-lg focus:ring-4 focus:ring-orange-200 transition duration-200 shadow-lg ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-400 transform hover:scale-105'}`}
                 >
-                  Enviar
+                  {isSubmitting ? 'Enviando...' : 'Enviar'}
                 </button>
               </div>
             </form>

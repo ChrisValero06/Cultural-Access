@@ -97,8 +97,6 @@ const ReportesPage = () => {
     'pepe': 'Pepe',
     'jose': 'Jose',
     'labnl': 'LABNL',
-    'francisco': 'Francisco',
-    'planeacion': 'Planeación',
     'admin': 'Pepe',
     '': 'Todos los usuarios'
   };
@@ -106,14 +104,11 @@ const ReportesPage = () => {
   const perfiles = [
     { value: '', label: 'Todos los usuarios' },
     { value: 'alejandro_olachea', label: 'Alejandro Olachea' },
-    { value: 'francisco', label: 'Francisco' },
     { value: 'francisco_murga', label: 'Francisco Murga' },
     { value: 'jose', label: 'Jose' },
     { value: 'karla_acevedo', label: 'Karla Acevedo' },
     { value: 'labnl', label: 'LABNL' },
-    { value: 'planeacion', label: 'Planeación' },
     { value: 'raymundo_ibarra', label: 'Raymundo Ibarra' },
-    { value: 'sin_perfil', label: 'Sin Perfil' }
   ];
 
   useEffect(() => {
@@ -416,33 +411,15 @@ const ReportesPage = () => {
   const tiposPromocionFiltrados = (() => {
     const normalizar = (str) => (str || '').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
 
-    // Tipos activos del cat\u00e1logo filtrados por instituci\u00f3n
-    const tiposActivos = tiposPromocionCatalogo
+    return tiposPromocionCatalogo
       .filter(tipo => {
         if (!institucionSeleccionada) return true;
         const insts = Array.isArray(tipo.instituciones) ? tipo.instituciones : [];
         return insts.length === 0 || insts.some(inst => normalizar(inst) === normalizar(institucionSeleccionada));
       })
       .map(tipo => tipo.nombre || tipo)
-      .filter(Boolean);
-
-    // Tipos hist\u00f3ricos extra\u00eddos de las redenciones cargadas
-    const tiposHistoricos = redenciones
-      .filter(r => {
-        if (!institucionSeleccionada) return true;
-        return normalizar(r.institucion) === normalizar(institucionSeleccionada);
-      })
-      .map(r => r.tipo_promocion || r.tipoPromocion)
-      .filter(Boolean);
-
-    // Combinar y deduplicar por nombre normalizado
-    const mapaFinal = {};
-    [...tiposActivos, ...tiposHistoricos].forEach(nombre => {
-      const clave = normalizar(nombre);
-      if (!mapaFinal[clave]) mapaFinal[clave] = nombre;
-    });
-
-    return Object.values(mapaFinal).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
   })();
 
   const exportarUsuarios = async () => {

@@ -54,7 +54,7 @@ const CargarPromoFunctional = () => {
   const [todosLosTipos, setTodosLosTipos] = useState([])
   const [formData, setFormData] = useState({
     institucion: '', tipoPromocion: '', disciplina: '', beneficios: '',
-    comentariosRestricciones: '', fechaInicio: '', fechaFin: ''
+    comentariosRestricciones: '', fechaInicio: '', fechaFin: '', limiteUso: ''
   })
 
   useEffect(() => {
@@ -73,14 +73,16 @@ const CargarPromoFunctional = () => {
       const tiposFiltrados = todosLosTipos
         .filter(t => {
           const instituciones = t.instituciones || [];
-          // Si no tiene instituciones asignadas, se muestra en todas
-          return instituciones.length === 0 || instituciones.includes(institucionSeleccionada);
+          return instituciones.length > 0 && instituciones.includes(institucionSeleccionada);
         })
         .map(t => t.nombre || t)
         .sort((a, b) => a.localeCompare(b, 'es'));
       setTiposPromocion(tiposFiltrados);
     } else {
-      const nombres = todosLosTipos.map(t => t.nombre || t).sort((a, b) => a.localeCompare(b, 'es'));
+      const nombres = todosLosTipos
+        .filter(t => (t.instituciones || []).length > 0)
+        .map(t => t.nombre || t)
+        .sort((a, b) => a.localeCompare(b, 'es'));
       setTiposPromocion(nombres);
     }
   }, [formData.institucion, todosLosTipos]);
@@ -134,13 +136,14 @@ const CargarPromoFunctional = () => {
       }
 
       const promocionData = {
-        institucion: formData.institucion, 
-        tipo_promocion: formData.tipoPromocion, 
+        institucion: formData.institucion,
+        tipo_promocion: formData.tipoPromocion,
         disciplina: formData.disciplina,
-        beneficios: formData.beneficios, 
+        beneficios: formData.beneficios,
         comentarios_restricciones: formData.comentariosRestricciones,
-        fecha_inicio: formData.fechaInicio, 
-        fecha_fin: formData.fechaFin
+        fecha_inicio: formData.fechaInicio,
+        fecha_fin: formData.fechaFin,
+        limite_uso: formData.limiteUso || null
       }
 
       // ⭐⭐ JSON COMPLETO QUE SE ESTÁ ENVIANDO
@@ -177,8 +180,9 @@ const CargarPromoFunctional = () => {
           const existingData = await existingRes.json();
           const lista = Array.isArray(existingData) ? existingData :
             (existingData.promociones || existingData.data || existingData.resultado || []);
-          if (Array.isArray(lista) && lista.length > 0) {
-            const sorted = lista.slice().sort((a, b) => (b.id || 0) - (a.id || 0));
+          const matching = lista.filter(p => p.institucion === formData.institucion);
+          if (matching.length > 0) {
+            const sorted = matching.slice().sort((a, b) => (b.id || 0) - (a.id || 0));
             existingId = sorted[0].id;
           }
         }
@@ -232,7 +236,7 @@ const CargarPromoFunctional = () => {
 
       if (result?.success || result?.estado === 'exito') {
         setMessage('¡Promoción cargada exitosamente!')
-        setFormData({ institucion: '', tipoPromocion: '', disciplina: '', beneficios: '', comentariosRestricciones: '', fechaInicio: '', fechaFin: '' })
+        setFormData({ institucion: '', tipoPromocion: '', disciplina: '', beneficios: '', comentariosRestricciones: '', fechaInicio: '', fechaFin: '', limiteUso: '' })
       } else {
         setMessage('Error al crear la promoción: ' + (result?.message || result?.error || ''))
       }
@@ -373,6 +377,24 @@ const CargarPromoFunctional = () => {
                   <DateField name="fechaFin" label="FIN DE LA PROMOCIÓN" value={formData.fechaFin} onChange={handleChange} />
                 </div>
 
+                <div>
+                  <label className="block text-base font-bold text-white mb-2">LÍMITE DE USO POR TARJETA</label>
+                  <div className="relative">
+                    <select
+                      name="limiteUso"
+                      value={formData.limiteUso}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base appearance-none"
+                    >
+                      <option value="">Sin límite (ilimitada)</option>
+                      <option value="una_vez">Una vez por tarjeta</option>
+                      <option value="mensual">Una vez al mes</option>
+                    </select>
+                    <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-orange-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
 
                 <p className="text-sm text-orange-100 italic">*Campo obligatorio</p>
 
