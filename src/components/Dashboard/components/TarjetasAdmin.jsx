@@ -4,6 +4,28 @@ const API_BASE = import.meta.env.DEV ? '/api' : 'https://culturallaccess.com/api
 
 const esNumero = (str) => /^\d+$/.test(str.trim());
 
+// La API devuelve nombres con encoding Latin-1 interpretado como UTF-8 (mojibake).
+// Esta función revierte ese problema tratando cada carácter como un byte y
+// redecodificando la secuencia como UTF-8.
+const fixEncoding = (str) => {
+  if (!str) return str;
+  try {
+    const bytes = Uint8Array.from(str, c => c.charCodeAt(0));
+    return new TextDecoder('utf-8').decode(bytes);
+  } catch {
+    return str;
+  }
+};
+
+const fixUsuario = (u) => ({
+  ...u,
+  nombre: fixEncoding(u.nombre),
+  apellido_paterno: fixEncoding(u.apellido_paterno),
+  apellido_materno: fixEncoding(u.apellido_materno),
+  email: fixEncoding(u.email),
+  registrado_por: fixEncoding(u.registrado_por),
+});
+
 const TarjetasAdmin = () => {
   const [busqueda, setBusqueda] = useState('');
   const [tarjetaInfo, setTarjetaInfo] = useState(null);
@@ -36,7 +58,7 @@ const TarjetasAdmin = () => {
         if (resU.ok) {
           const dataU = await resU.json();
           const todos = Array.isArray(dataU) ? dataU : (dataU.data || dataU.usuarios || dataU.rows || []);
-          usuario = todos.find(u =>
+          usuario = todos.map(fixUsuario).find(u =>
             u.numero_tarjeta === numero || u.numero_tarjeta === numeroNormalizado
           ) || null;
         }
@@ -73,11 +95,12 @@ const TarjetasAdmin = () => {
       const res = await fetch(`${API_BASE}/usuario?limit=1000&offset=0`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const todos = Array.isArray(data) ? data : (data.data || data.usuarios || data.rows || []);
-      const nombreNorm = nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      const todos = (Array.isArray(data) ? data : (data.data || data.usuarios || data.rows || [])).map(fixUsuario);
+      const quitarAcentos = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+      const nombreNorm = quitarAcentos(nombre.toLowerCase());
       const usuarios = todos.filter(u => {
         const nombreCompleto = `${u.nombre || ''} ${u.apellido_paterno || ''} ${u.apellido_materno || ''}`;
-        return nombreCompleto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(nombreNorm);
+        return quitarAcentos(nombreCompleto.toLowerCase()).includes(nombreNorm);
       });
       if (usuarios.length === 0) {
         setMensaje('⚠️ No se encontraron usuarios con ese nombre.');

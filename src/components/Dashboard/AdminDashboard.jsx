@@ -230,17 +230,12 @@ const AdminDashboard = () => {
   const handleEliminar = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta promoción?')) {
       try {
-        const response = await apiService.eliminarPromocion(id);
-
-        // Aceptar varias formas de éxito (estado: 'exito', success: true o 204 ya manejado por el servicio)
-        if (!response || response.estado === 'exito' || response.success === true) {
-          setPromociones(prev => prev.filter(p => p.id !== id));
-          // Forzar sincronización por si hay dependencias
-          cargarPromociones();
-          alert('✅ Promoción eliminada correctamente');
-        } else {
-          alert('❌ No se pudo eliminar la promoción');
-        }
+        // eliminarPromocion lanza excepción en cualquier error HTTP,
+        // por lo que llegar aquí sin excepción significa éxito.
+        await apiService.eliminarPromocion(id);
+        setPromociones(prev => prev.filter(p => p.id !== id));
+        alert('✅ Promoción eliminada correctamente');
+        cargarPromociones();
       } catch (error) {
         alert('❌ Error al eliminar la promoción: ' + error.message);
       }
