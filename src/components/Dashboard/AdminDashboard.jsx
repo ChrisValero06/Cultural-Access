@@ -18,7 +18,8 @@ const AdminDashboard = () => {
   const [filterDisciplina, setFilterDisciplina] = useState('');
   const [filterEstado, setFilterEstado] = useState(''); // Nuevo filtro de estado
   const [lastUpdate, setLastUpdate] = useState(null);
-  
+  const [mensajeOperacion, setMensajeOperacion] = useState(null); // { tipo: 'exito'|'error', texto: '' }
+
   // Estados para edición de promociones
   const [modalEditarAbierto, setModalEditarAbierto] = useState(false);
   const [editandoForm, setEditandoForm] = useState(null);
@@ -226,19 +227,19 @@ const AdminDashboard = () => {
     }
   };
 
-  // Función para manejar eliminación
+  const mostrarMensaje = (tipo, texto) => {
+    setMensajeOperacion({ tipo, texto });
+    setTimeout(() => setMensajeOperacion(null), 4000);
+  };
+
+  // Función para manejar eliminación (la confirmación ocurre en PromocionesTable)
   const handleEliminar = async (id) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta promoción?')) {
-      try {
-        // eliminarPromocion lanza excepción en cualquier error HTTP,
-        // por lo que llegar aquí sin excepción significa éxito.
-        await apiService.eliminarPromocion(id);
-        setPromociones(prev => prev.filter(p => p.id !== id));
-        alert('✅ Promoción eliminada correctamente');
-        cargarPromociones();
-      } catch (error) {
-        alert('❌ Error al eliminar la promoción: ' + error.message);
-      }
+    try {
+      await apiService.eliminarPromocion(id);
+      setPromociones(prev => prev.filter(p => p.id !== id));
+      mostrarMensaje('exito', 'Promoción eliminada correctamente');
+    } catch (error) {
+      mostrarMensaje('error', 'Error al eliminar la promoción: ' + error.message);
     }
   };
 
@@ -251,38 +252,23 @@ const AdminDashboard = () => {
   // Función para guardar cambios de edición
   const handleGuardarCambios = async () => {
     try {
-      // Usar la función simple para actualizar solo los datos
-      const response = await apiService.actualizarPromocion(editandoForm.id, editandoForm);
-      
-      if (response.estado === 'exito' || response.success === true) {
-        // Actualizar la lista local
-        setPromociones(prev => prev.map(p => 
-          p.id === editandoForm.id ? { ...editandoForm } : p
-        ));
-        
-        setModalEditarAbierto(false);
-        setEditandoForm(null);
-        alert('✅ Promoción actualizada correctamente');
-        
-        // Recargar para asegurar sincronización
-        cargarPromociones();
-      } else {
-        alert('❌ No se pudo actualizar la promoción');
-      }
+      await apiService.actualizarPromocion(editandoForm.id, editandoForm);
+      setPromociones(prev => prev.map(p =>
+        p.id === editandoForm.id ? { ...editandoForm } : p
+      ));
+      setModalEditarAbierto(false);
+      setEditandoForm(null);
+      mostrarMensaje('exito', 'Promoción actualizada correctamente');
     } catch (error) {
-      alert('❌ Error al actualizar la promoción: ' + error.message);
+      mostrarMensaje('error', 'Error al actualizar la promoción: ' + error.message);
     }
   };
 
   // Función para manejar cuando una promoción es actualizada con archivos
   const handlePromocionActualizada = (promocionActualizada) => {
-    // Actualizar la lista local con la promoción actualizada
-    setPromociones(prev => prev.map(p => 
+    setPromociones(prev => prev.map(p =>
       p.id === promocionActualizada.id ? promocionActualizada : p
     ));
-    
-    // Recargar para asegurar sincronización
-    cargarPromociones();
   };
 
 
@@ -348,7 +334,6 @@ const AdminDashboard = () => {
 
       <DashboardContent
         tabActiva={tabActiva}
-        // Estados de promociones
         promocionesFiltradas={promocionesFiltradas}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -363,6 +348,7 @@ const AdminDashboard = () => {
         onEliminar={handleEliminar}
         getStatusBadge={getStatusBadge}
         onClearFiltersPromociones={handleClearFiltersPromociones}
+        mensajeOperacion={mensajeOperacion}
       />
 
       {/* Modal de edición de promociones */}

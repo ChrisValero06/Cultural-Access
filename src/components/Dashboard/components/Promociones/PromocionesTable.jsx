@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 // Normaliza URLs de imágenes a tu servidor en Plesk y aplica fallback local
 const BASE_HOST = 'https://culturallaccess.com';
@@ -15,13 +15,20 @@ function normalizeImageUrl(url) {
   return `${BASE_HOST}${UPLOADS_PREFIX}${url}`;
 }
 
-const PromocionesTable = ({ 
-  promocionesFiltradas, 
-  onCambiarEstado, 
-  onEliminar, 
+const PromocionesTable = ({
+  promocionesFiltradas,
+  onCambiarEstado,
+  onEliminar,
   onEditar,
-  getStatusBadge 
+  getStatusBadge
 }) => {
+  const [confirmandoId, setConfirmandoId] = useState(null);
+
+  const handleConfirmarEliminar = (id) => {
+    onEliminar(id);
+    setConfirmandoId(null);
+  };
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
       <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
@@ -130,12 +137,30 @@ const PromocionesTable = ({
                           </>
                         )}
                       </button>
-                      <button 
-                        onClick={() => onEliminar(promocion.id)}
-                        className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors"
-                      >
-                        Eliminar
-                      </button>
+                      {confirmandoId === promocion.id ? (
+                        <div className="flex items-center space-x-1">
+                          <span className="text-xs text-gray-600 whitespace-nowrap">¿Eliminar?</span>
+                          <button
+                            onClick={() => handleConfirmarEliminar(promocion.id)}
+                            className="bg-red-600 text-white px-2 py-2 rounded-lg hover:bg-red-700 transition-colors text-xs cursor-pointer"
+                          >
+                            Sí
+                          </button>
+                          <button
+                            onClick={() => setConfirmandoId(null)}
+                            className="bg-gray-400 text-white px-2 py-2 rounded-lg hover:bg-gray-500 transition-colors text-xs cursor-pointer"
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmandoId(promocion.id)}
+                          className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
+                        >
+                          Eliminar
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
