@@ -469,9 +469,11 @@ const ReportesPage = () => {
 
     return tiposPromocionCatalogo
       .filter(tipo => {
-        if (!institucionSeleccionada) return true;
+        if (tipo.activo === 0) return false;
         const insts = Array.isArray(tipo.instituciones) ? tipo.instituciones : [];
-        return insts.length === 0 || insts.some(inst => normalizar(inst) === normalizar(institucionSeleccionada));
+        if (insts.length === 0) return false;
+        if (!institucionSeleccionada) return true;
+        return insts.some(inst => normalizar(inst) === normalizar(institucionSeleccionada));
       })
       .map(tipo => tipo.nombre || tipo)
       .filter(Boolean)

@@ -51,6 +51,7 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
     if (institucionSeleccionada) {
       const tiposFiltrados = todosLosTipos
         .filter(t => {
+          if (t.activo === 0) return false;
           const instituciones = t.instituciones || [];
           // Si no tiene instituciones asignadas, se muestra en todas
           return instituciones.length === 0 || instituciones.includes(institucionSeleccionada);
@@ -59,7 +60,7 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
         .sort((a, b) => a.localeCompare(b, 'es'));
       setTiposPromocion(tiposFiltrados);
     } else {
-      const nombres = todosLosTipos.map(t => t.nombre || t).sort((a, b) => a.localeCompare(b, 'es'));
+      const nombres = todosLosTipos.filter(t => t.activo !== 0).map(t => t.nombre || t).sort((a, b) => a.localeCompare(b, 'es'));
       setTiposPromocion(nombres);
     }
   }, [editandoForm?.institucion, todosLosTipos]);

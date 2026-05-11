@@ -72,6 +72,7 @@ const CargarPromoFunctional = () => {
     if (institucionSeleccionada) {
       const tiposFiltrados = todosLosTipos
         .filter(t => {
+          if (t.activo === 0) return false;
           const instituciones = t.instituciones || [];
           return instituciones.length > 0 && instituciones.includes(institucionSeleccionada);
         })
@@ -80,7 +81,7 @@ const CargarPromoFunctional = () => {
       setTiposPromocion(tiposFiltrados);
     } else {
       const nombres = todosLosTipos
-        .filter(t => (t.instituciones || []).length > 0)
+        .filter(t => t.activo !== 0 && (t.instituciones || []).length > 0)
         .map(t => t.nombre || t)
         .sort((a, b) => a.localeCompare(b, 'es'));
       setTiposPromocion(nombres);

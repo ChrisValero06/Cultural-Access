@@ -64,14 +64,14 @@ export const tiposPromocionService = {
   },
 
   // Actualizar tipo de promoción
-  async actualizarTipoPromocion(id, nombre, instituciones = []) {
+  async actualizarTipoPromocion(id, nombre, instituciones = [], activo = true) {
     try {
       const response = await fetch(`${API_BASE_URL}/tipos-promocion/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ nombre, instituciones }),
+        body: JSON.stringify({ nombre, instituciones, activo }),
       });
 
       if (!response.ok) {
@@ -81,6 +81,24 @@ export const tiposPromocionService = {
 
       const data = await response.json();
       return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Activar o desactivar tipo de promoción
+  async setActivo(id, activo) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tipos-promocion/${id}/activo`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activo }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
     } catch (error) {
       throw error;
     }

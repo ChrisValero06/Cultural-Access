@@ -82,6 +82,7 @@ const Redencion = () => {
     const normalInst = normalizar(formData.institucion)
     const tipos = tiposPromocionCatalogo
       .filter(tipo => {
+        if (tipo.activo === 0) return false
         const insts = Array.isArray(tipo.instituciones) ? tipo.instituciones : []
         return insts.length > 0 && insts.some(inst => normalizar(inst) === normalInst)
       })

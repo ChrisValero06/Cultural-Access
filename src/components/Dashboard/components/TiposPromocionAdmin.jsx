@@ -158,6 +158,7 @@ const TiposPromocionAdmin = () => {
   const [nombreEditado, setNombreEditado] = useState('');
   const [institucionesEditadas, setInstitucionesEditadas] = useState([]);
   const [guardando, setGuardando] = useState(false);
+  const [mostrarInactivos, setMostrarInactivos] = useState(false);
 
   useEffect(() => {
     cargarTipos();
@@ -217,23 +218,53 @@ const TiposPromocionAdmin = () => {
     }
   };
 
-  const handleEliminar = async (tipo) => {
+  const handleDesactivar = async (tipo) => {
     const nombre = tipo.nombre || tipo;
     const id = tipo.id;
 
     if (!id) {
-      alert('No se puede eliminar: ID no disponible');
+      alert('No se puede desactivar: ID no disponible');
       return;
     }
 
-    if (window.confirm(`¿Estás seguro de que quieres eliminar "${nombre}"?`)) {
+    if (window.confirm(`¿Desactivar "${nombre}"?\n\nYa no aparecerá en los formularios, pero las redenciones existentes quedarán intactas.`)) {
       try {
-        await tiposPromocionService.eliminarTipoPromocion(id);
+        await tiposPromocionService.setActivo(id, false);
         await cargarTipos();
-        alert('Tipo de promoción eliminado correctamente');
       } catch (err) {
-        alert('Error al eliminar: ' + err.message);
+        alert('Error al desactivar: ' + err.message);
       }
+    }
+  };
+
+  const handleActivar = async (tipo) => {
+    const id = tipo.id;
+    if (!id) return;
+    try {
+      await tiposPromocionService.setActivo(id, true);
+      await cargarTipos();
+    } catch (err) {
+      alert('Error al activar: ' + err.message);
+    }
+  };
+
+  const handleEliminarPermanente = async (tipo) => {
+    const nombre = tipo.nombre || tipo;
+    const id = tipo.id;
+
+    if (!id) return;
+
+    const confirmado = window.confirm(
+      `¿Eliminar permanentemente "${nombre}"?\n\nEsto solo borra el tipo del catálogo. Las redenciones históricas que usaron este tipo NO se eliminan — quedan guardadas en los reportes.\n\nEsta acción no se puede deshacer.`
+    );
+
+    if (!confirmado) return;
+
+    try {
+      await tiposPromocionService.eliminarTipoPromocion(id);
+      await cargarTipos();
+    } catch (err) {
+      alert('Error al eliminar: ' + err.message);
     }
   };
 
@@ -283,7 +314,14 @@ const TiposPromocionAdmin = () => {
 
   const tiposFiltrados = tipos.filter(tipo => {
     const nombre = tipo.nombre || tipo;
-    return nombre.toLowerCase().includes(busqueda.toLowerCase());
+    const coincide = nombre.toLowerCase().includes(busqueda.toLowerCase());
+    return coincide && tipo.activo !== 0;
+  });
+
+  const tiposInactivos = tipos.filter(tipo => {
+    const nombre = tipo.nombre || tipo;
+    const coincide = nombre.toLowerCase().includes(busqueda.toLowerCase());
+    return coincide && tipo.activo === 0;
   });
 
   if (loading) {
@@ -391,7 +429,7 @@ const TiposPromocionAdmin = () => {
         </div>
       </div>
 
-      {/* Lista */}
+      {/* Lista activos */}
       <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800">
@@ -460,11 +498,11 @@ const TiposPromocionAdmin = () => {
                             Editar
                           </button>
                           <button
-                            onClick={() => handleEliminar(tipo)}
-                            className="px-3 py-1 bg-red-100 text-red-700 text-sm rounded hover:bg-red-200 transition-colors"
-                            title="Eliminar"
+                            onClick={() => handleDesactivar(tipo)}
+                            className="px-3 py-1 bg-yellow-100 text-yellow-700 text-sm rounded hover:bg-yellow-200 transition-colors"
+                            title="Desactivar"
                           >
-                            Eliminar
+                            Desactivar
                           </button>
                         </>
                       )}
@@ -508,6 +546,72 @@ const TiposPromocionAdmin = () => {
           )}
         </div>
       </div>
+
+      {/* Lista inactivos */}
+      {tiposInactivos.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+          <button
+            onClick={() => setMostrarInactivos(!mostrarInactivos)}
+            className="w-full px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between hover:bg-gray-100 transition-colors"
+          >
+            <h3 className="text-base font-semibold text-gray-500">
+              Tipos desactivados ({tiposInactivos.length})
+            </h3>
+            <svg className={`w-4 h-4 text-gray-400 transition-transform ${mostrarInactivos ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {mostrarInactivos && (
+            <div className="divide-y divide-gray-100">
+              {tiposInactivos.map((tipo) => {
+                const nombre = tipo.nombre || tipo;
+                const id = tipo.id;
+                const institucionesAsignadas = tipo.instituciones || [];
+
+                return (
+                  <div key={id} className="px-6 py-4 bg-gray-50 opacity-70">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 flex-1">
+                        <span className="text-gray-800 font-medium line-through">{nombre}</span>
+                        <span className="text-xs text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">inactivo</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleActivar(tipo)}
+                          className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded hover:bg-green-200 transition-colors"
+                        >
+                          Activar
+                        </button>
+                        <button
+                          onClick={() => handleEliminarPermanente(tipo)}
+                          className="px-3 py-1 bg-red-100 text-red-700 text-sm rounded hover:bg-red-200 transition-colors"
+                        >
+                          Eliminar permanentemente
+                        </button>
+                      </div>
+                    </div>
+                    {institucionesAsignadas.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {institucionesAsignadas.slice(0, 4).map((inst) => (
+                          <span key={inst} className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full border border-gray-200">
+                            {inst}
+                          </span>
+                        ))}
+                        {institucionesAsignadas.length > 4 && (
+                          <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full">
+                            +{institucionesAsignadas.length - 4} más
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
