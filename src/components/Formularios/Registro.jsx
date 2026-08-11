@@ -441,7 +441,7 @@ const CulturalAccessForm = () => {
             </div>
             
             {/* Título central */}
-            <h1 className="uppercase text-[clamp(0.8rem,4.2vw,4.2rem)] leading-tight font-bold text-center px-5" style={{ fontFamily: "'Neue Haas Grotesk Display', sans-serif", fontWeight: 700 }}>
+            <h1 className="uppercase text-[clamp(0.8rem,4.2vw,4.2rem)] leading-tight font-bold text-center px-5" style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700 }}>
               <span className="text-white">CULTUR</span>
               <span className="text-black ml-1">ALL ACCESS</span>
             </h1>

@@ -1,42 +1,137 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* Custom font faces */
+
+/* Montserrat */
 @font-face {
-  font-family: 'Futura';
-  src: url("./fonts/Futura.woff2") format("woff2");
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-Thin.otf") format("opentype");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-ThinItalic.otf") format("opentype");
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-ExtraLight.otf") format("opentype");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-ExtraLightItalic.otf") format("opentype");
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-Light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-LightItalic.otf") format("opentype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-Regular.otf") format("opentype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
-
-/* Mont: si falla la carga (OTS/sfntversion), el navegador usará la fuente del stack (ej. Futura). */
 @font-face {
-  font-family: 'Mont';
-  src: url("./fonts/AnyConv.com__Fontfabric%20-%20Mont%20Bold.woff2") format("woff2");
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-Italic.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-MediumItalic.otf") format("opentype");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-SemiBold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-SemiBoldItalic.otf") format("opentype");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-Bold.otf") format("opentype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
-
 @font-face {
-  font-family: 'Mont';
-  src: url("./fonts/AnyConv.com__Fontfabric%20-%20Mont%20Heavy.woff2") format("woff2");
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-BoldItalic.otf") format("opentype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-ExtraBold.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-ExtraBoldItalic.otf") format("opentype");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-Black.otf") format("opentype");
   font-weight: 900;
   font-style: normal;
   font-display: swap;
 }
-
 @font-face {
-  font-family: 'Neue Haas Grotesk Display';
-  src: url("./fonts/Neue Haas Grotesk Display W02 Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-style: normal;
+  font-family: 'Montserrat';
+  src: url("./fonts/Montserrat-BlackItalic.otf") format("opentype");
+  font-weight: 900;
+  font-style: italic;
   font-display: swap;
 }
 
 :root {
-  font-family: 'Futura', 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Montserrat', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
