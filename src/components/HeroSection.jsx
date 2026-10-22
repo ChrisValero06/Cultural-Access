@@ -7,7 +7,7 @@ const HeroSection = () => {
   return (
     <section className="relative w-full">
       {/* <img 
-        src="/images/BannerCA_paginaweb.png" 
+        src="https://culturallaccess.com/images/BannerCA_paginaweb.png" 
         alt="Banner Cultural Access"
         className="w-full h-auto object-cover"
       /> */}
@@ -17,7 +17,7 @@ const HeroSection = () => {
         
         <div className="absolute inset-0">
           <img 
-            src="/images/Header.jpg" 
+            src="https://culturallaccess.com/images/Header.jpg" 
             alt="Fondo Cultural Access"
             className="w-full h-full object-cover"
           />
@@ -32,7 +32,7 @@ const HeroSection = () => {
            
             <div className="mb-6 flex justify-center lg:justify-start">
               <img 
-                src="/images/culturaaaaaaaaaalaccesssssslogo-04.png" 
+                src="https://culturallaccess.com/images/culturaaaaaaaaaalaccesssssslogo-04.png" 
                 alt="Cultural Access Logo"
                 className="h-20 w-auto"
               />
@@ -53,7 +53,7 @@ const HeroSection = () => {
           <div className="lg:w-1/2 flex justify-center lg:justify-end">
             <div className="relative w-96 h-96 lg:w-[28rem] lg:h-[28rem] -mt-8 lg:mt-0 p-8">
               <img 
-                src="/images/Arco Milarca_Home 2.png" 
+                src="https://culturallaccess.com/images/Arco Milarca_Home 2.png" 
                 alt="Logo Cultural Access"
                 className="w-full h-full object-contain"
               />

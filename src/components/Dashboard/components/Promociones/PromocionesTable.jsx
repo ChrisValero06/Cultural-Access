@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 // Normaliza URLs de imágenes a tu servidor en Plesk y aplica fallback local
 const BASE_HOST = 'https://culturallaccess.com';
 const UPLOADS_PREFIX = '/images/uploads/';
-const FALLBACK_IMAGE = '/images/LogoDerecho.png';
+const FALLBACK_IMAGE = 'https://culturallaccess.com/images/LogoDerecho.png';
 
 function normalizeImageUrl(url) {
   if (!url) return FALLBACK_IMAGE;
+  if (url.startsWith('data:') || url.startsWith('blob:')) return url;
   // Ya es absoluta
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   // Si ya viene con /images/... solo anteponer host

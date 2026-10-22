@@ -408,7 +408,7 @@ const Redencion = () => {
       {/* Fondo naranja con rayas diagonales */}
       <div className="absolute inset-0">
         <img 
-          src="/images/BACKGROUND-06.png" 
+          src="https://culturallaccess.com/images/BACKGROUND-06.png" 
           alt="Fondo Cultural Access"
           className="w-full h-full object-cover"
         />

@@ -1,65 +1,6 @@
 // Servicio para manejar las operaciones de promociones
 import { API_CONFIG } from '../../config/api.js';
 
-const HOST_IMAGENES = 'https://culturallaccess.com';
-
-function urlAbsolutaImagen(url) {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  if (url.startsWith('/')) return `${HOST_IMAGENES}${url}`;
-  return `${HOST_IMAGENES}/images/uploads/${url}`;
-}
-
-function confirmarImagenPublica(url) {
-  const absoluta = urlAbsolutaImagen(url);
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const timer = setTimeout(() => reject(new Error('La imagen no cargó. Intenta de nuevo.')), 20000);
-    img.onload = () => {
-      clearTimeout(timer);
-      resolve(absoluta);
-    };
-    img.onerror = () => {
-      clearTimeout(timer);
-      reject(new Error('El servidor no guardó el archivo. Usa un JPG o PNG más liviano e inténtalo de nuevo.'));
-    };
-    img.src = `${absoluta}${absoluta.includes('?') ? '&' : '?'}t=${Date.now()}`;
-  });
-}
-
-async function comprimirImagen(file) {
-  if (!file || file.type === 'image/gif' || !String(file.type || '').startsWith('image/')) return file;
-  if (file.size < 700 * 1024) return file;
-
-  const dataUrl = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
-    reader.readAsDataURL(file);
-  });
-
-  const img = await new Promise((resolve, reject) => {
-    const imagen = new Image();
-    imagen.onload = () => resolve(imagen);
-    imagen.onerror = () => reject(new Error('No se pudo procesar la imagen'));
-    imagen.src = dataUrl;
-  });
-
-  const maxLado = 1600;
-  const escala = Math.min(1, maxLado / Math.max(img.width, img.height));
-  const ancho = Math.max(1, Math.round(img.width * escala));
-  const alto = Math.max(1, Math.round(img.height * escala));
-  const canvas = document.createElement('canvas');
-  canvas.width = ancho;
-  canvas.height = alto;
-  canvas.getContext('2d').drawImage(img, 0, 0, ancho, alto);
-
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.82));
-  if (!blob) return file;
-  const nombre = (file.name || 'imagen').replace(/\.\w+$/, '') + '.jpg';
-  return new File([blob], nombre, { type: 'image/jpeg' });
-}
-
 const API_BASE_URL = API_CONFIG.BASE_URL;
 
 export const promocionesService = {
@@ -155,7 +96,7 @@ export const promocionesService = {
       formData.append('fecha_fin', promocionData.fecha_fin);
       formData.append('estado', 'activa'); // Estado por defecto
       
-      // Agregar URLs de imágenes si existen
+      // El archivo viaja en el mismo alta. /promociones/subir_imagen no existe.
       if (promocionData.imagen_principal) {
         formData.append('imagen_principal', promocionData.imagen_principal);
       }
@@ -180,34 +121,8 @@ export const promocionesService = {
     }
   },
 
-  // Subir imagen de promoción. Comprime antes de enviar: en Plesk un archivo
-  // grande deja la ruta en la base y el archivo nunca se escribe.
-  async subirImagen(imagen, nombreArchivo) {
-    try {
-      const archivo = await comprimirImagen(imagen);
-      const formData = new FormData();
-      formData.append('imagen', archivo);
-      formData.append('nombre', nombreArchivo);
-
-      const response = await fetch(`${API_BASE_URL}/promociones/subir_imagen`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
-      }
-
-      const url = data.url || data.data?.url || data.ruta || data.path || data.imagen;
-      if (!url) {
-        throw new Error('El servidor no devolvió la ruta de la imagen');
-      }
-      await confirmarImagenPublica(url);
-      return { ...data, url };
-    } catch (error) {
-      throw error;
-    }
+  async subirImagen() {
+    throw new Error('La ruta de subida de imágenes no existe en el servidor.');
   },
 
   // Buscar promociones por institución

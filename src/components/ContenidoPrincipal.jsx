@@ -32,7 +32,11 @@ const ContenidoPrincipal = () => {
         const BASE_HOST = 'https://culturallaccess.com';
         const normalizeUrl = (url) => {
           if (!url) return url;
-          return url.startsWith('http') ? url : `${BASE_HOST}${url}`;
+          if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+          if (url.startsWith('http')) return url;
+          if (url.startsWith('/images/')) return `${BASE_HOST}${url}`;
+          if (url.startsWith('images/')) return `${BASE_HOST}/${url}`;
+          return `${BASE_HOST}/images/uploads/${url.replace(/^\/?(uploads\/)?/, '')}`;
         };
 
         // Obtener promociones del endpoint completo
@@ -280,7 +284,7 @@ const ContenidoPrincipal = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8 items-center mb-6 sm:mb-8 md:mb-10 lg:mb-12">
           <div className="flex justify-center">
             <img 
-              src="/images/culturaaaaaaaaaalaccesssssslogo-04.png" 
+              src="https://culturallaccess.com/images/culturaaaaaaaaaalaccesssssslogo-04.png" 
               alt="Logo CULTURALL ACCESS - Nuevo León"
               className="rounded-lg max-w-[200px] sm:max-w-[250px] md:max-w-xs h-auto"
             />

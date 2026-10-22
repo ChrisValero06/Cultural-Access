@@ -72,7 +72,7 @@ const Footer = () => {
           <div>
             <div className="flex items-center justify-center">
               <img 
-                src="/images/logo footer.png" 
+                src="https://culturallaccess.com/images/logo footer.png" 
                 alt="Logo Gobierno Nuevo León"
                 className="h-10 md:h-16 w-auto object-contain"
               />

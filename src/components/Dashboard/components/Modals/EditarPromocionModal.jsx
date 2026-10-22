@@ -11,10 +11,11 @@ const OPCIONES_DROPDOWN = {
 // Normaliza URLs de imágenes a tu servidor en Plesk y aplica fallback local
 const BASE_HOST = 'https://culturallaccess.com';
 const UPLOADS_PREFIX = '/images/uploads/';
-const FALLBACK_IMAGE = '/images/LogoDerecho.png';
+const FALLBACK_IMAGE = 'https://culturallaccess.com/images/LogoDerecho.png';
 
 function normalizeImageUrl(url) {
   if (!url) return FALLBACK_IMAGE;
+  if (url.startsWith('data:') || url.startsWith('blob:')) return url;
   // Ya es absoluta
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   // Si ya viene con /images/... solo anteponer host
@@ -232,27 +233,14 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
         datosPromocion.imagen_secundaria = null;
       }
 
-      // Subir primero y guardar solo la ruta que sí responde como imagen.
-      if (imagenPrincipalFile) {
-        const subida = await apiService.subirImagen(imagenPrincipalFile, `principal_${Date.now()}`);
-        datosPromocion.imagen_principal = subida.url;
-      }
-      if (imagenSecundariaFile) {
-        const subida = await apiService.subirImagen(imagenSecundariaFile, `secundaria_${Date.now()}`);
-        datosPromocion.imagen_secundaria = subida.url;
-      }
-      
       // Si hay archivos nuevos O imágenes eliminadas, usar actualizarPromocionConArchivos
       if (imagenPrincipalFile || imagenSecundariaFile || imagenPrincipalEliminada || imagenSecundariaEliminada) {
-        
-        
-        // La imagen ya se subió: aquí solo viaja la ruta, no el archivo otra vez.
         try {
           const response = await apiService.actualizarPromocionConArchivos(
             editandoForm.id,
             datosPromocion,
-            null,
-            null
+            imagenPrincipalFile,
+            imagenSecundariaFile
           );
           
           if (response.estado === 'exito' || response.success === true) {

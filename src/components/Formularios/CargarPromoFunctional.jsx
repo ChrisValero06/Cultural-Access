@@ -211,35 +211,7 @@ const CargarPromoFunctional = () => {
         return
       }
 
-      // Subir imágenes si existen
-      let imagenPrincipalUrl = null
-      let imagenSecundariaUrl = null
-
-      try {
-        // Subir imagen principal si existe
-        if (formData.imagenPrincipal) {
-          const principalResult = await apiService.subirImagen(
-            formData.imagenPrincipal, 
-            `principal_${Date.now()}`
-          )
-          imagenPrincipalUrl = principalResult.url
-        }
-
-        // Subir imagen secundaria si existe
-        if (formData.imagenSecundaria) {
-          const secundariaResult = await apiService.subirImagen(
-            formData.imagenSecundaria, 
-            `secundaria_${Date.now()}`
-          )
-          imagenSecundariaUrl = secundariaResult.url
-        }
-      } catch (imageError) {
-        setMessage('Error al subir las imágenes: ' + (imageError.message || 'Error desconocido'))
-        setIsSubmitting(false)
-        return
-      }
-
-      // Crear promoción con las URLs de las imágenes
+      // Crear promoción. Las fotos van como archivo, no por una ruta aparte.
       const promocionData = {
         institucion: formData.institucion, 
         tipo_promocion: formData.tipoPromocion, 
@@ -248,8 +220,8 @@ const CargarPromoFunctional = () => {
         comentarios_restricciones: formData.comentariosRestricciones,
         fecha_inicio: formData.fechaInicio, 
         fecha_fin: formData.fechaFin,
-        imagen_principal: imagenPrincipalUrl,
-        imagen_secundaria: imagenSecundariaUrl
+        imagen_principal: formData.imagenPrincipal,
+        imagen_secundaria: formData.imagenSecundaria
       }
 
       const result = await apiService.crearPromocion(promocionData)
@@ -360,7 +332,7 @@ const CargarPromoFunctional = () => {
   return (
     <div className="relative overflow-hidden min-h-screen">
       <div className="absolute inset-0">
-        <img src="/images/BACKGROUND-06.png" alt="Fondo Cultural Access" className="w-full h-full object-cover" />
+        <img src="https://culturallaccess.com/images/BACKGROUND-06.png" alt="Fondo Cultural Access" className="w-full h-full object-cover" />
       </div>
 
       {/* Header fijo */}

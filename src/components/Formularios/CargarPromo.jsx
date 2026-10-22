@@ -295,7 +295,7 @@ const CargarPromoFunctional = () => {
   return (
     <div className="relative overflow-hidden min-h-screen">
       <div className="absolute inset-0">
-        <img src="/images/BACKGROUND-06.png" alt="Fondo Cultural Access" className="w-full h-full object-cover" />
+        <img src="https://culturallaccess.com/images/BACKGROUND-06.png" alt="Fondo Cultural Access" className="w-full h-full object-cover" />
       </div>
 
       {/* Header fijo */}

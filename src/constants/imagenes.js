@@ -6,8 +6,8 @@ export const imagenes = {
   logoPrincipal: "https://culturallaccess.com/images/culturaaaaaaaaaalaccesssssslogo-04.png",
   
   // Logos del header
-  logoIzquierdo: "/images/LogoIzquiero.png",
-  logoDerecho: "/images/LogoDerecho.png",
+  logoIzquierdo: "https://culturallaccess.com/images/LogoIzquiero.png",
+  logoDerecho: "https://culturallaccess.com/images/LogoDerecho.png",
   
   // Imágenes de fondo y elementos
   fondoEstrellado: "https://estrellasdenuevoleon.com.mx/fotos/fotos-estaticas/componente-cultural/fondo-estrellado-completo.jpg",
