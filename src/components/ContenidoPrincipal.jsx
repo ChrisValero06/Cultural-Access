@@ -182,6 +182,9 @@ const ContenidoPrincipal = () => {
                  index < currentImage ? '-translate-x-full' : 'translate-x-full'
                }`}
                style={{ objectFit: 'cover', objectPosition: 'center' }}
+               onError={(e) => {
+                 e.currentTarget.style.visibility = 'hidden';
+               }}
                />
               ))}
               

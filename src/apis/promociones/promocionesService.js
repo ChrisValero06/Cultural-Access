@@ -1,6 +1,65 @@
 // Servicio para manejar las operaciones de promociones
 import { API_CONFIG } from '../../config/api.js';
 
+const HOST_IMAGENES = 'https://culturallaccess.com';
+
+function urlAbsolutaImagen(url) {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/')) return `${HOST_IMAGENES}${url}`;
+  return `${HOST_IMAGENES}/images/uploads/${url}`;
+}
+
+function confirmarImagenPublica(url) {
+  const absoluta = urlAbsolutaImagen(url);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const timer = setTimeout(() => reject(new Error('La imagen no cargó. Intenta de nuevo.')), 20000);
+    img.onload = () => {
+      clearTimeout(timer);
+      resolve(absoluta);
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error('El servidor no guardó el archivo. Usa un JPG o PNG más liviano e inténtalo de nuevo.'));
+    };
+    img.src = `${absoluta}${absoluta.includes('?') ? '&' : '?'}t=${Date.now()}`;
+  });
+}
+
+async function comprimirImagen(file) {
+  if (!file || file.type === 'image/gif' || !String(file.type || '').startsWith('image/')) return file;
+  if (file.size < 700 * 1024) return file;
+
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+    reader.readAsDataURL(file);
+  });
+
+  const img = await new Promise((resolve, reject) => {
+    const imagen = new Image();
+    imagen.onload = () => resolve(imagen);
+    imagen.onerror = () => reject(new Error('No se pudo procesar la imagen'));
+    imagen.src = dataUrl;
+  });
+
+  const maxLado = 1600;
+  const escala = Math.min(1, maxLado / Math.max(img.width, img.height));
+  const ancho = Math.max(1, Math.round(img.width * escala));
+  const alto = Math.max(1, Math.round(img.height * escala));
+  const canvas = document.createElement('canvas');
+  canvas.width = ancho;
+  canvas.height = alto;
+  canvas.getContext('2d').drawImage(img, 0, 0, ancho, alto);
+
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+  if (!blob) return file;
+  const nombre = (file.name || 'imagen').replace(/\.\w+$/, '') + '.jpg';
+  return new File([blob], nombre, { type: 'image/jpeg' });
+}
+
 const API_BASE_URL = API_CONFIG.BASE_URL;
 
 export const promocionesService = {
@@ -121,11 +180,13 @@ export const promocionesService = {
     }
   },
 
-  // Subir imagen de promoción
+  // Subir imagen de promoción. Comprime antes de enviar: en Plesk un archivo
+  // grande deja la ruta en la base y el archivo nunca se escribe.
   async subirImagen(imagen, nombreArchivo) {
     try {
+      const archivo = await comprimirImagen(imagen);
       const formData = new FormData();
-      formData.append('imagen', imagen);
+      formData.append('imagen', archivo);
       formData.append('nombre', nombreArchivo);
 
       const response = await fetch(`${API_BASE_URL}/promociones/subir_imagen`, {
@@ -133,13 +194,17 @@ export const promocionesService = {
         body: formData,
       });
 
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      return data;
+      const url = data.url || data.data?.url || data.ruta || data.path || data.imagen;
+      if (!url) {
+        throw new Error('El servidor no devolvió la ruta de la imagen');
+      }
+      await confirmarImagenPublica(url);
+      return { ...data, url };
     } catch (error) {
       throw error;
     }
@@ -331,11 +396,15 @@ export const promocionesService = {
     try {
       const formData = new FormData();
       
-      // Agregar datos de la promoción
+      // Si hay archivo nuevo, solo se envía el archivo. Mandar también la ruta
+      // anterior (o un string vacío) con el mismo nombre hace que PHP se quede
+      // con el texto y descarte la imagen.
       Object.keys(promocionData).forEach(key => {
+        if (key === 'imagen_principal' && imagenPrincipalFile) return;
+        if (key === 'imagen_secundaria' && imagenSecundariaFile) return;
         if (key === 'imagen_principal' || key === 'imagen_secundaria') {
           if (promocionData[key] === null || promocionData[key] === '') {
-            formData.append(key, ''); // Enviar string vacío para eliminar
+            formData.append(key, '');
           } else if (promocionData[key] !== undefined) {
             formData.append(key, promocionData[key]);
           }
@@ -344,7 +413,6 @@ export const promocionesService = {
         }
       });
 
-      // Agregar archivos si existen
       if (imagenPrincipalFile) {
         formData.append('imagen_principal', imagenPrincipalFile);
       }

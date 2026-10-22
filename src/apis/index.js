@@ -6,6 +6,7 @@ export { authService } from './auth/authService.js';
 export { institucionesService } from './instituciones/institucionesService.js';
 export { tiposPromocionService } from './tipos-promocion/tiposPromocionService.js';
 export { configService } from './config/configService.js';
+export { newsletterService } from './newsletter/newsletterService.js';
 
 // Servicio unificado que combina todos los servicios (para compatibilidad con código existente)
 import { promocionesService } from './promociones/promocionesService.js';

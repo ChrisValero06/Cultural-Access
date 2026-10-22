@@ -33,6 +33,7 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
   const [previewSecundaria, setPreviewSecundaria] = useState(null);
   const [imagenPrincipalError, setImagenPrincipalError] = useState(false);
   const [imagenSecundariaError, setImagenSecundariaError] = useState(false);
+  const [errorGuardado, setErrorGuardado] = useState('');
   
   const [todosLosTipos, setTodosLosTipos] = useState([]);
 
@@ -214,6 +215,7 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
     }
 
     setGuardando(true);
+    setErrorGuardado('');
     try {
       // Preparar datos para envío
       const datosPromocion = { ...editandoForm };
@@ -229,18 +231,28 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
       if (imagenSecundariaEliminada) {
         datosPromocion.imagen_secundaria = null;
       }
+
+      // Subir primero y guardar solo la ruta que sí responde como imagen.
+      if (imagenPrincipalFile) {
+        const subida = await apiService.subirImagen(imagenPrincipalFile, `principal_${Date.now()}`);
+        datosPromocion.imagen_principal = subida.url;
+      }
+      if (imagenSecundariaFile) {
+        const subida = await apiService.subirImagen(imagenSecundariaFile, `secundaria_${Date.now()}`);
+        datosPromocion.imagen_secundaria = subida.url;
+      }
       
       // Si hay archivos nuevos O imágenes eliminadas, usar actualizarPromocionConArchivos
       if (imagenPrincipalFile || imagenSecundariaFile || imagenPrincipalEliminada || imagenSecundariaEliminada) {
         
         
-        // ⭐⭐ USAR actualizarPromocionConArchivos() que envía todo junto
+        // La imagen ya se subió: aquí solo viaja la ruta, no el archivo otra vez.
         try {
           const response = await apiService.actualizarPromocionConArchivos(
             editandoForm.id,
             datosPromocion,
-            imagenPrincipalFile, // null si no hay archivo nuevo
-            imagenSecundariaFile // null si no hay archivo nuevo
+            null,
+            null
           );
           
           if (response.estado === 'exito' || response.success === true) {
@@ -281,6 +293,7 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
         await onGuardarCambios();
       }
     } catch (error) {
+      setErrorGuardado(error?.message || 'No se pudieron guardar las imágenes');
     } finally {
       setGuardando(false);
     }
@@ -546,6 +559,10 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
           </div>
         </div>
         
+        {errorGuardado && (
+          <p className="mt-4 text-sm text-red-600">{errorGuardado}</p>
+        )}
+
         <div className="flex justify-end space-x-3 mt-6">
           <button onClick={() => setModalAbierto(false)} disabled={guardando}
             className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
