@@ -513,7 +513,15 @@ const CampanaEditor = ({ campanaId, onVolver }) => {
     if (cargando) return;
     clearTimeout(previewTimer.current);
     previewTimer.current = setTimeout(() => {
-      newsletterService.previewCampana(form).then(setPreviewHtml).catch(() => {});
+      newsletterService.previewCampana(form)
+        .then(setPreviewHtml)
+        .catch((err) => {
+          setPreviewHtml(`<div style="padding:24px;font-family:sans-serif;color:#b91c1c;">
+            <strong>No se pudo generar la vista previa.</strong><br>
+            ${String(err?.message || err)}<br><br>
+            Si editas el diseño editorial y no cambia nada, el servidor API aún no tiene la plantilla nueva (hay que desplegar/reiniciar el backend).
+          </div>`);
+        });
     }, 600);
     return () => clearTimeout(previewTimer.current);
   }, [form, cargando]);
