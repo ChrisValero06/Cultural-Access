@@ -218,8 +218,14 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
     setGuardando(true);
     setErrorGuardado('');
     try {
-      // Preparar datos para envío
-      const datosPromocion = { ...editandoForm };
+      // Preparar datos para envío (normalizar límite por tarjeta)
+      const limiteUso = editandoForm.limite_uso || null;
+      const limiteNormalizado = (limiteUso === 'una_vez' || limiteUso === 'mensual') ? limiteUso : null;
+      const datosPromocion = {
+        ...editandoForm,
+        limite_uso: limiteNormalizado,
+        limitar_uso: limiteNormalizado ? 1 : 0,
+      };
       
       // ⭐⭐ MANEJAR ELIMINACIÓN DE IMÁGENES
       // Si la imagen fue eliminada (string vacío), enviar null explícitamente
@@ -444,18 +450,30 @@ const EditarPromocionModal = ({ modalAbierto, setModalAbierto, editandoForm, set
         </div>
 
         <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-          <label className="flex items-start space-x-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={!!(editandoForm.limitar_uso || editandoForm.limite_uso === 'mensual' || editandoForm.limite_uso === 'una_vez')}
-              onChange={(e) => setEditandoForm({...editandoForm, limitar_uso: e.target.checked ? 1 : 0, limite_uso: e.target.checked ? 'mensual' : null})}
-              className="mt-0.5 h-4 w-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
-            />
-            <div>
-              <span className="text-sm font-medium text-gray-800">Limitar uso a 1 vez por mes</span>
-              <p className="text-xs text-gray-500 mt-0.5">Si se activa, cada tarjeta solo podrá usarse una vez por mes en esta promoción. El contador se reinicia automáticamente al inicio de cada mes.</p>
-            </div>
-          </label>
+          <label className="block text-sm font-medium text-gray-800 mb-2">Límite de uso por tarjeta</label>
+          <select
+            value={editandoForm.limite_uso || (editandoForm.limitar_uso ? 'mensual' : '')}
+            onChange={(e) => {
+              const valor = e.target.value
+              setEditandoForm({
+                ...editandoForm,
+                limite_uso: valor || null,
+                limitar_uso: valor ? 1 : 0
+              })
+            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-black bg-white"
+          >
+            <option value="">Sin límite (ilimitada)</option>
+            <option value="una_vez">Una vez por tarjeta</option>
+            <option value="mensual">Una vez al mes por tarjeta</option>
+          </select>
+          <p className="text-xs text-gray-500 mt-1.5">
+            {editandoForm.limite_uso === 'una_vez'
+              ? 'Cada tarjeta solo podrá redimir esta promoción una vez (en total).'
+              : (editandoForm.limite_uso === 'mensual' || (!editandoForm.limite_uso && editandoForm.limitar_uso))
+                ? 'Cada tarjeta solo podrá usarse una vez por mes. El contador se reinicia al inicio de cada mes.'
+                : 'Sin restricción por tarjeta.'}
+          </p>
         </div>
 
         <div className="mt-6 border-t pt-6">

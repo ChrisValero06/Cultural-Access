@@ -95,6 +95,16 @@ export const promocionesService = {
       formData.append('fecha_inicio', promocionData.fecha_inicio);
       formData.append('fecha_fin', promocionData.fecha_fin);
       formData.append('estado', 'activa'); // Estado por defecto
+
+      // Límite por tarjeta: '' | 'una_vez' | 'mensual'
+      const limiteUso = promocionData.limite_uso || promocionData.limiteUso || '';
+      if (limiteUso) {
+        formData.append('limite_uso', limiteUso);
+        formData.append('limitar_uso', limiteUso === 'mensual' || limiteUso === 'una_vez' ? '1' : '0');
+      } else {
+        formData.append('limite_uso', '');
+        formData.append('limitar_uso', '0');
+      }
       
       // El archivo viaja en el mismo alta. /promociones/subir_imagen no existe.
       if (promocionData.imagen_principal) {
@@ -286,12 +296,20 @@ export const promocionesService = {
   // Actualizar promoción (versión simple sin archivos)
   async actualizarPromocion(id, promocionData) {
     try {
+      const limiteUso = promocionData.limite_uso || promocionData.limiteUso || null;
+      const limiteNormalizado = (limiteUso === 'una_vez' || limiteUso === 'mensual') ? limiteUso : null;
+      const payload = {
+        ...promocionData,
+        limite_uso: limiteNormalizado,
+        limitar_uso: limiteNormalizado ? 1 : 0,
+      };
+
       const response = await fetch(`${API_BASE_URL}/promociones/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(promocionData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -310,11 +328,14 @@ export const promocionesService = {
   async actualizarPromocionConArchivos(id, promocionData, imagenPrincipalFile = null, imagenSecundariaFile = null) {
     try {
       const formData = new FormData();
+      const limiteUso = promocionData.limite_uso || promocionData.limiteUso || null;
+      const limiteNormalizado = (limiteUso === 'una_vez' || limiteUso === 'mensual') ? limiteUso : null;
       
       // Si hay archivo nuevo, solo se envía el archivo. Mandar también la ruta
       // anterior (o un string vacío) con el mismo nombre hace que PHP se quede
       // con el texto y descarte la imagen.
       Object.keys(promocionData).forEach(key => {
+        if (key === 'limite_uso' || key === 'limiteUso' || key === 'limitar_uso') return;
         if (key === 'imagen_principal' && imagenPrincipalFile) return;
         if (key === 'imagen_secundaria' && imagenSecundariaFile) return;
         if (key === 'imagen_principal' || key === 'imagen_secundaria') {
@@ -327,6 +348,10 @@ export const promocionesService = {
           formData.append(key, promocionData[key]);
         }
       });
+
+      // Siempre enviar límite (también al quitarlo: string vacío + limitar_uso 0)
+      formData.append('limite_uso', limiteNormalizado || '');
+      formData.append('limitar_uso', limiteNormalizado ? '1' : '0');
 
       if (imagenPrincipalFile) {
         formData.append('imagen_principal', imagenPrincipalFile);

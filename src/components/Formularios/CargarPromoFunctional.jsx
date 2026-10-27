@@ -76,7 +76,7 @@ const CargarPromoFunctional = () => {
 
   const [formData, setFormData] = useState({
     institucion: '', tipoPromocion: '', disciplina: '', beneficios: '',
-    comentariosRestricciones: '', fechaInicio: '', fechaFin: '',
+    comentariosRestricciones: '', fechaInicio: '', fechaFin: '', limiteUso: '',
     imagenPrincipal: null, imagenSecundaria: null
   })
   const [previewPrincipal, setPreviewPrincipal] = useState(null)
@@ -220,6 +220,7 @@ const CargarPromoFunctional = () => {
         comentarios_restricciones: formData.comentariosRestricciones,
         fecha_inicio: formData.fechaInicio, 
         fecha_fin: formData.fechaFin,
+        limite_uso: formData.limiteUso || null,
         imagen_principal: formData.imagenPrincipal,
         imagen_secundaria: formData.imagenSecundaria
       }
@@ -230,7 +231,7 @@ const CargarPromoFunctional = () => {
         setMessage('¡Promoción cargada exitosamente!')
         setFormData({ 
           institucion: '', tipoPromocion: '', disciplina: '', beneficios: '', 
-          comentariosRestricciones: '', fechaInicio: '', fechaFin: '',
+          comentariosRestricciones: '', fechaInicio: '', fechaFin: '', limiteUso: '',
           imagenPrincipal: null, imagenSecundaria: null
         })
         setPreviewPrincipal(null)
@@ -461,6 +462,25 @@ const CargarPromoFunctional = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <DateField name="fechaInicio" label="INICIO DE LA PROMOCIÓN" value={formData.fechaInicio} onChange={handleChange} />
                   <DateField name="fechaFin" label="FIN DE LA PROMOCIÓN" value={formData.fechaFin} onChange={handleChange} />
+                </div>
+
+                <div>
+                  <label className="block text-base font-bold text-white mb-2">LÍMITE DE USO POR TARJETA</label>
+                  <div className="relative">
+                    <select
+                      name="limiteUso"
+                      value={formData.limiteUso}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border-2 border-orange-400 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent transition duration-200 bg-white text-black text-base appearance-none"
+                    >
+                      <option value="">Sin límite (ilimitada)</option>
+                      <option value="una_vez">Una vez por tarjeta</option>
+                      <option value="mensual">Una vez al mes</option>
+                    </select>
+                    <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-orange-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </div>
 
                 <p className="text-sm text-orange-100 italic">*Campo obligatorio</p>

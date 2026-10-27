@@ -201,43 +201,74 @@ const Redencion = () => {
         return
       }
 
-      // Verificar límite de uso mensual si la promoción lo requiere
+      // Verificar límite de uso por tarjeta (una_vez o mensual) si la promoción lo requiere
       if (formData.tipoPromocion) {
+        const API_BASE = import.meta.env.DEV ? '/api' : 'https://culturallaccess.com/api'
+        const normalizar = (s) => (s || '').toLowerCase().trim()
+
+        let promo = null
         try {
-          const API_BASE = import.meta.env.DEV ? '/api' : 'https://culturallaccess.com/api'
-          // Obtener la promoción de esta institución para saber si tiene limitar_uso
           const promoRes = await fetch(`${API_BASE}/promociones/obtener_promociones?institucion=${encodeURIComponent(formData.institucion)}`)
           if (promoRes.ok) {
             const promoData = await promoRes.json()
             const promociones = Array.isArray(promoData) ? promoData : (promoData.data || promoData.promociones || [])
-            const normalizar = (s) => (s || '').toLowerCase().trim()
-            const promo = promociones.find(p =>
+            promo = promociones.find(p =>
               normalizar(p.tipo_promocion || p.tipoPromocion) === normalizar(formData.tipoPromocion)
             )
-            if (promo && (promo.limitar_uso == 1 || promo.limitar_uso === true)) {
-              // Revisar si la tarjeta ya se usó este mes en esta institución+tipo
-              const numNorm = formData.numeroTarjeta.replace(/\D/g, '').padStart(5, '0')
-              const checkRes = await fetch(`${API_BASE}/controlacceso/tarjeta/${encodeURIComponent(numNorm)}`)
-              if (checkRes.ok) {
-                const checkData = await checkRes.json()
-                const registros = Array.isArray(checkData) ? checkData : (checkData.data || checkData.datos || checkData.rows || [])
-                const ahora = new Date()
-                const mesActual = ahora.getMonth()
-                const anioActual = ahora.getFullYear()
-                const yaUsadaEsteMes = registros.some(r => {
-                  if (normalizar(r.institucion) !== normalizar(formData.institucion)) return false
-                  if (normalizar(r.tipo_promocion || r.tipoPromocion) !== normalizar(formData.tipoPromocion)) return false
-                  const fechaUso = new Date(r.fecha || r.fecha_uso || r.created_at)
-                  return fechaUso.getMonth() === mesActual && fechaUso.getFullYear() === anioActual
-                })
-                if (yaUsadaEsteMes) {
-                  alert('Esta tarjeta ya fue utilizada en esta promoción este mes.')
-                  return
-                }
+          }
+        } catch (_) {
+          alert('No se pudo verificar el límite de la promoción. Intenta de nuevo.')
+          return
+        }
+
+        const limiteUso = (promo?.limite_uso || promo?.limiteUso || '').toString().toLowerCase().trim()
+        const tieneLimiteMensual =
+          limiteUso === 'mensual' ||
+          promo?.limitar_uso == 1 ||
+          promo?.limitar_uso === true
+        const tieneLimiteUnaVez = limiteUso === 'una_vez'
+        const debeValidarLimite = tieneLimiteUnaVez || tieneLimiteMensual
+
+        if (debeValidarLimite) {
+          try {
+            const numNorm = formData.numeroTarjeta.replace(/\D/g, '').padStart(5, '0')
+            const checkRes = await fetch(`${API_BASE}/controlacceso/tarjeta/${encodeURIComponent(numNorm)}`)
+            if (!checkRes.ok) {
+              alert('No se pudo verificar el historial de esta tarjeta. Intenta de nuevo.')
+              return
+            }
+
+            const checkData = await checkRes.json()
+            const registros = Array.isArray(checkData) ? checkData : (checkData.data || checkData.datos || checkData.rows || [])
+            const mismosRegistros = registros.filter(r =>
+              normalizar(r.institucion) === normalizar(formData.institucion) &&
+              normalizar(r.tipo_promocion || r.tipoPromocion) === normalizar(formData.tipoPromocion)
+            )
+
+            if (tieneLimiteUnaVez && mismosRegistros.length > 0) {
+              alert('Esta tarjeta ya fue utilizada en esta promoción. Solo se permite una redención por tarjeta.')
+              return
+            }
+
+            if (tieneLimiteMensual) {
+              const ahora = new Date()
+              const mesActual = ahora.getMonth()
+              const anioActual = ahora.getFullYear()
+              const yaUsadaEsteMes = mismosRegistros.some(r => {
+                const fechaUso = new Date(r.fecha || r.fecha_uso || r.created_at)
+                if (isNaN(fechaUso.getTime())) return false
+                return fechaUso.getMonth() === mesActual && fechaUso.getFullYear() === anioActual
+              })
+              if (yaUsadaEsteMes) {
+                alert('Esta tarjeta ya fue utilizada en esta promoción este mes.')
+                return
               }
             }
+          } catch (_) {
+            alert('No se pudo verificar el historial de esta tarjeta. Intenta de nuevo.')
+            return
           }
-        } catch (_) {}
+        }
       }
 
       // Normalizar fecha a YYYY-MM-DD
