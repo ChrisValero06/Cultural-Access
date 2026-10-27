@@ -1,6 +1,34 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { apiService, newsletterService } from '../../../../apis';
 
+const BLOQUE_EDITORIAL_NUEVO = () => ({
+  tipo: 'editorial',
+  titulo: 'CulturAll Access',
+  subtitulo: 'Cultura, acceso y promociones',
+  intro_caja: '',
+  cta1_texto: 'Leer más',
+  cta1_link: 'https://culturallaccess.com',
+  etiqueta_dia: 'SÁBADO',
+  imagen_1: '',
+  meta_label: 'NEWSLETTER',
+  fecha_display: '',
+  imagen_2: '',
+  seccion2_titulo: '',
+  seccion2_texto: '',
+  cta2_texto: 'Leer más',
+  cta2_link: 'https://culturallaccess.com',
+  galeria_titulo: 'ALGO ESPECIAL HOY',
+  imagen_3: '',
+  imagen_4: '',
+  imagen_5: '',
+  cierre_titulo: 'PERMÍTETE SER FELIZ',
+  cierre_texto: '',
+  follow_texto: 'SÍGUENOS',
+  social_facebook: '',
+  social_x: '',
+  social_instagram: '',
+});
+
 const FORM_INICIAL = {
   nombre: '',
   asunto: '',
@@ -8,11 +36,16 @@ const FORM_INICIAL = {
   titulo: '',
   intro_texto: '',
   footer_texto: 'Secretaría de Cultura de Nuevo León',
-  color_primario: '#F97316',
-  bloques: [],
+  color_primario: '#8D6E63',
+  // Nueva campaña ya trae el diseño del mockup abierto (mapa + Imagen 1–5)
+  bloques: [BLOQUE_EDITORIAL_NUEVO()],
 };
 
 const TIPOS_BLOQUE = {
+  editorial: {
+    label: 'Diseño editorial (mockup)',
+    nuevo: BLOQUE_EDITORIAL_NUEVO,
+  },
   portada: { label: 'Imagen de portada', nuevo: () => ({ tipo: 'portada', url: '', link: '' }) },
   promociones: { label: 'Promociones', nuevo: () => ({ tipo: 'promociones', titulo: 'Promociones del mes', cta_texto: 'Ver todas las promociones', cta_link: 'https://culturallaccess.com', items: [] }) },
   texto: { label: 'Texto', nuevo: () => ({ tipo: 'texto', titulo: '', texto: '', alineacion: 'izquierda' }) },
@@ -22,6 +55,7 @@ const TIPOS_BLOQUE = {
 };
 
 const inputClase = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400';
+const SITE_URL = 'https://culturallaccess.com';
 
 const Campo = ({ label, children }) => (
   <label className="block">
@@ -29,6 +63,22 @@ const Campo = ({ label, children }) => (
     {children}
   </label>
 );
+
+function urlPreviewImagen(ruta) {
+  if (!ruta) return '';
+  const limpia = String(ruta).trim();
+  if (!limpia) return '';
+  if (limpia.startsWith('http://') || limpia.startsWith('https://') || limpia.startsWith('blob:')) return limpia;
+  // En localhost /images/... no existe: siempre previsualizar desde el sitio público
+  if (limpia.startsWith('/')) return `${SITE_URL}${limpia}`;
+  return `${SITE_URL}/images/uploads/${limpia.replace(/^images\/uploads\//, '')}`;
+}
+
+function asegurarBloqueEditorial(bloques) {
+  const lista = Array.isArray(bloques) ? [...bloques] : [];
+  if (lista.some((b) => b?.tipo === 'editorial')) return lista;
+  return [BLOQUE_EDITORIAL_NUEVO(), ...lista];
+}
 
 // La respuesta de promociones cambia de forma según el endpoint que conteste
 function extraerPromociones(data) {
@@ -44,8 +94,14 @@ function promocionVigente(p) {
   return fin >= new Date();
 }
 
-const CampoImagen = ({ valor, onChange }) => {
+const CampoImagen = ({ valor, onChange, altoPreview = 'h-28' }) => {
   const [subiendo, setSubiendo] = useState(false);
+  const [rota, setRota] = useState(false);
+  const preview = urlPreviewImagen(valor);
+
+  useEffect(() => {
+    setRota(false);
+  }, [valor]);
 
   const subir = async (e) => {
     const file = e.target.files?.[0];
@@ -62,21 +118,77 @@ const CampoImagen = ({ valor, onChange }) => {
   };
 
   return (
-    <div className="flex gap-2">
-      <input
-        type="text"
-        value={valor}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="URL de la imagen o súbela →"
-        className={inputClase}
-      />
-      <label className={`shrink-0 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer ${subiendo ? 'bg-gray-200 text-gray-500' : 'bg-orange-100 text-orange-700 hover:bg-orange-200'}`}>
-        {subiendo ? 'Subiendo...' : 'Subir'}
-        <input type="file" accept="image/*" onChange={subir} disabled={subiendo} className="hidden" />
-      </label>
+    <div className="space-y-2">
+      <div className={`${altoPreview} w-full rounded-lg border border-dashed border-gray-300 bg-gray-50 overflow-hidden flex items-center justify-center`}>
+        {preview && !rota ? (
+          <img
+            src={preview}
+            alt="Vista previa"
+            className="w-full h-full object-cover"
+            onError={() => setRota(true)}
+          />
+        ) : (
+          <span className="text-xs text-gray-400 px-3 text-center">
+            {valor ? 'No se pudo cargar la vista previa · vuelve a Subir' : 'Sin imagen · usa Subir'}
+          </span>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={valor || ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="URL de la imagen o súbela →"
+          className={inputClase}
+        />
+        <label className={`shrink-0 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer ${subiendo ? 'bg-gray-200 text-gray-500' : 'bg-orange-100 text-orange-700 hover:bg-orange-200'}`}>
+          {subiendo ? 'Subiendo...' : 'Subir'}
+          <input type="file" accept="image/*" onChange={subir} disabled={subiendo} className="hidden" />
+        </label>
+        {valor ? (
+          <button type="button" onClick={() => onChange('')} className="shrink-0 px-2 text-xs text-red-600 hover:bg-red-50 rounded-lg">
+            Quitar
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 };
+
+/** Slot visual para cada foto del diseño editorial */
+const SlotImagenEditorial = ({ numero, titulo, ayuda, valor, onChange, forma = 'cuadrada' }) => (
+  <div className="rounded-xl border-2 border-orange-200 bg-orange-50/40 p-3 space-y-2">
+    <div className="flex items-start gap-2">
+      <span className="shrink-0 w-8 h-8 rounded-full bg-orange-500 text-white text-sm font-bold flex items-center justify-center">
+        {numero}
+      </span>
+      <div>
+        <p className="text-sm font-semibold text-gray-800">{titulo}</p>
+        <p className="text-xs text-gray-500">{ayuda}</p>
+      </div>
+    </div>
+    <CampoImagen valor={valor} onChange={onChange} altoPreview={forma === 'horizontal' ? 'h-24' : forma === 'vertical' ? 'h-40' : 'h-32'} />
+  </div>
+);
+
+const MapaLayoutEditorial = () => (
+  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 space-y-1.5">
+    <p className="text-xs font-semibold text-amber-900 mb-2">Mapa del correo — dónde va cada imagen</p>
+    <div className="grid grid-cols-2 gap-1.5 text-[10px] leading-tight text-center font-semibold">
+      <div className="rounded bg-white border border-amber-100 p-3 text-gray-500 flex items-center justify-center">Textos cabecera</div>
+      <div className="rounded bg-orange-500 text-white p-3">① IMG 1 · arriba derecha</div>
+      <div className="rounded bg-orange-400 text-white p-3">② IMG 2 · horizontal</div>
+      <div className="rounded bg-white border border-amber-100 p-3 text-gray-500 flex items-center justify-center">Título + texto 2</div>
+    </div>
+    <p className="text-[10px] text-amber-800/80 text-center pt-1">Galería (3 fotos)</p>
+    <div className="grid grid-cols-3 gap-1.5 text-[10px] leading-tight text-center font-semibold">
+      <div className="rounded bg-orange-300 text-white p-3">③ IMG 3</div>
+      <div className="rounded bg-orange-400 text-white p-3">④ IMG 4</div>
+      <div className="rounded bg-orange-500 text-white p-3">⑤ IMG 5</div>
+    </div>
+    <div className="rounded bg-white border border-amber-100 p-2 text-[10px] text-gray-400 text-center">Cierre + Síguenos</div>
+  </div>
+);
 
 const SelectorPromociones = ({ promociones, seleccionadas, onAgregar }) => {
   const [busqueda, setBusqueda] = useState('');
@@ -118,6 +230,136 @@ const EditorBloque = ({ bloque, onChange, promociones }) => {
   const set = (campo) => (e) => onChange({ ...bloque, [campo]: e.target.value });
 
   switch (bloque.tipo) {
+    case 'editorial':
+      return (
+        <div className="space-y-4">
+          <MapaLayoutEditorial />
+
+          <div className="border border-gray-200 rounded-lg p-3 space-y-3">
+            <h4 className="text-sm font-semibold text-gray-800">Zona 1 — Cabecera (textos)</h4>
+            <Campo label="Título (ej. Inspirational Blog / CulturAll Access)">
+              <input type="text" value={bloque.titulo || ''} onChange={set('titulo')} className={inputClase} />
+            </Campo>
+            <Campo label="Subtítulo">
+              <input type="text" value={bloque.subtitulo || ''} onChange={set('subtitulo')} className={inputClase} />
+            </Campo>
+            <Campo label="Texto de la caja beige (intro)">
+              <textarea rows={4} value={bloque.intro_caja || ''} onChange={set('intro_caja')} className={inputClase} />
+            </Campo>
+            <div className="grid grid-cols-2 gap-3">
+              <Campo label="Botón 1 — texto">
+                <input type="text" value={bloque.cta1_texto || ''} onChange={set('cta1_texto')} className={inputClase} />
+              </Campo>
+              <Campo label="Botón 1 — link">
+                <input type="text" value={bloque.cta1_link || ''} onChange={set('cta1_link')} className={inputClase} />
+              </Campo>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Campo label="Etiqueta día (ej. SÁBADO)">
+                <input type="text" value={bloque.etiqueta_dia || ''} onChange={set('etiqueta_dia')} className={inputClase} />
+              </Campo>
+              <Campo label="Fecha (ej. 17 / 09)">
+                <input type="text" value={bloque.fecha_display || ''} onChange={set('fecha_display')} className={inputClase} />
+              </Campo>
+            </div>
+            <Campo label="Etiqueta debajo de imagen 1 (NEWSLETTER)">
+              <input type="text" value={bloque.meta_label || ''} onChange={set('meta_label')} className={inputClase} />
+            </Campo>
+          </div>
+
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-gray-800">Imágenes del diseño</h4>
+            <SlotImagenEditorial
+              numero="1"
+              titulo="Imagen 1 — arriba derecha"
+              ayuda="Foto vertical / cuadrada del hero (la del chocolate en el mockup)."
+              valor={bloque.imagen_1 || ''}
+              onChange={(url) => onChange({ ...bloque, imagen_1: url })}
+              forma="vertical"
+            />
+            <SlotImagenEditorial
+              numero="2"
+              titulo="Imagen 2 — mitad de página"
+              ayuda="Foto horizontal a la izquierda (cama / libro en el mockup)."
+              valor={bloque.imagen_2 || ''}
+              onChange={(url) => onChange({ ...bloque, imagen_2: url })}
+              forma="horizontal"
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <SlotImagenEditorial
+                numero="3"
+                titulo="Imagen 3"
+                ayuda="Galería · izquierda"
+                valor={bloque.imagen_3 || ''}
+                onChange={(url) => onChange({ ...bloque, imagen_3: url })}
+                forma="vertical"
+              />
+              <SlotImagenEditorial
+                numero="4"
+                titulo="Imagen 4"
+                ayuda="Galería · centro"
+                valor={bloque.imagen_4 || ''}
+                onChange={(url) => onChange({ ...bloque, imagen_4: url })}
+                forma="vertical"
+              />
+              <SlotImagenEditorial
+                numero="5"
+                titulo="Imagen 5"
+                ayuda="Galería · derecha"
+                valor={bloque.imagen_5 || ''}
+                onChange={(url) => onChange({ ...bloque, imagen_5: url })}
+                forma="vertical"
+              />
+            </div>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-3 space-y-3">
+            <h4 className="text-sm font-semibold text-gray-800">Zona 2 — Textos del destacado</h4>
+            <Campo label="Título (ej. New day)">
+              <input type="text" value={bloque.seccion2_titulo || ''} onChange={set('seccion2_titulo')} className={inputClase} />
+            </Campo>
+            <Campo label="Texto">
+              <textarea rows={3} value={bloque.seccion2_texto || ''} onChange={set('seccion2_texto')} className={inputClase} />
+            </Campo>
+            <div className="grid grid-cols-2 gap-3">
+              <Campo label="Botón 2 — texto">
+                <input type="text" value={bloque.cta2_texto || ''} onChange={set('cta2_texto')} className={inputClase} />
+              </Campo>
+              <Campo label="Botón 2 — link">
+                <input type="text" value={bloque.cta2_link || ''} onChange={set('cta2_link')} className={inputClase} />
+              </Campo>
+            </div>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-3 space-y-3">
+            <h4 className="text-sm font-semibold text-gray-800">Zona 3 y 4 — Galería y cierre</h4>
+            <Campo label="Título galería">
+              <input type="text" value={bloque.galeria_titulo || ''} onChange={set('galeria_titulo')} className={inputClase} />
+            </Campo>
+            <Campo label="Frase de cierre">
+              <input type="text" value={bloque.cierre_titulo || ''} onChange={set('cierre_titulo')} className={inputClase} />
+            </Campo>
+            <Campo label="Texto de cierre">
+              <textarea rows={2} value={bloque.cierre_texto || ''} onChange={set('cierre_texto')} className={inputClase} />
+            </Campo>
+            <Campo label="Texto barra inferior (SÍGUENOS)">
+              <input type="text" value={bloque.follow_texto || ''} onChange={set('follow_texto')} className={inputClase} />
+            </Campo>
+            <div className="grid grid-cols-1 gap-2">
+              <Campo label="Link Facebook (opcional)">
+                <input type="text" value={bloque.social_facebook || ''} onChange={set('social_facebook')} className={inputClase} />
+              </Campo>
+              <Campo label="Link X / Twitter (opcional)">
+                <input type="text" value={bloque.social_x || ''} onChange={set('social_x')} className={inputClase} />
+              </Campo>
+              <Campo label="Link Instagram (opcional)">
+                <input type="text" value={bloque.social_instagram || ''} onChange={set('social_instagram')} className={inputClase} />
+              </Campo>
+            </div>
+          </div>
+        </div>
+      );
+
     case 'portada':
       return (
         <div className="space-y-3">
@@ -248,6 +490,7 @@ const CampanaEditor = ({ campanaId, onVolver }) => {
     if (!campanaId) return;
     newsletterService.obtenerCampana(campanaId)
       .then((c) => {
+        const bloquesCargados = Array.isArray(c.bloques) ? c.bloques : [];
         setForm({
           nombre: c.nombre || '',
           asunto: c.asunto || '',
@@ -256,7 +499,8 @@ const CampanaEditor = ({ campanaId, onVolver }) => {
           intro_texto: c.intro_texto || '',
           footer_texto: c.footer_texto || '',
           color_primario: c.color_primario || FORM_INICIAL.color_primario,
-          bloques: Array.isArray(c.bloques) ? c.bloques : [],
+          // Siempre incluir el diseño editorial (mapa + Imagen 1–5) aunque haya otros bloques
+          bloques: asegurarBloqueEditorial(bloquesCargados),
         });
         setEstado(c.estado);
       })
@@ -436,13 +680,17 @@ const CampanaEditor = ({ campanaId, onVolver }) => {
 
           <section className="space-y-3">
             <h3 className="font-semibold text-gray-800">Contenido</h3>
+            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              El diseño del mockup está en el bloque <strong>Diseño editorial (mockup)</strong> (mapa + Imagen 1 a 5).
+              El bloque solo llamado <strong>Imagen</strong> es una foto suelta: puedes <strong>Quitar</strong>lo si no lo necesitas.
+            </p>
             {form.bloques.length === 0 && (
               <p className="text-sm text-gray-500 border border-dashed border-gray-300 rounded-lg p-4 text-center">
-                Agrega bloques con los botones de abajo.
+                No hay bloques. Agrega “Diseño editorial (mockup)” para el layout con 5 imágenes.
               </p>
             )}
             {form.bloques.map((bloque, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
+              <div key={index} className={`border rounded-lg p-4 ${bloque.tipo === 'editorial' ? 'border-orange-300 bg-orange-50/20' : 'border-gray-200'}`}>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-semibold text-orange-600">{TIPOS_BLOQUE[bloque.tipo]?.label || bloque.tipo}</span>
                   <div className="flex items-center gap-1 text-sm">
@@ -451,6 +699,11 @@ const CampanaEditor = ({ campanaId, onVolver }) => {
                     <button type="button" onClick={() => quitarBloque(index)} className="px-2 py-1 rounded text-red-600 hover:bg-red-50">Quitar</button>
                   </div>
                 </div>
+                {bloque.tipo === 'imagen' && (
+                  <p className="text-xs text-gray-500 mb-3">
+                    Esto no es el mockup. Baja o sube hasta <strong>Diseño editorial</strong> para las 5 fotos del layout.
+                  </p>
+                )}
                 <EditorBloque bloque={bloque} onChange={(b) => actualizarBloque(index, b)} promociones={promociones} />
               </div>
             ))}
@@ -460,7 +713,9 @@ const CampanaEditor = ({ campanaId, onVolver }) => {
                   key={tipo}
                   type="button"
                   onClick={() => agregarBloque(tipo)}
-                  className="text-sm border border-orange-300 text-orange-700 px-3 py-1.5 rounded-lg hover:bg-orange-50"
+                  className={tipo === 'editorial'
+                    ? 'text-sm bg-orange-500 text-white px-3 py-1.5 rounded-lg hover:bg-orange-600 font-semibold'
+                    : 'text-sm border border-orange-300 text-orange-700 px-3 py-1.5 rounded-lg hover:bg-orange-50'}
                 >
                   + {label}
                 </button>
