@@ -20,8 +20,10 @@ export default defineConfig({
     host: true,
     strictPort: true, // Falla si el puerto está ocupado
     proxy: {
+      // En local: VITE_API_PROXY=http://localhost:3002 npm run dev
+      // para probar plantilla newsletter sin esperar deploy en producción.
       '/api': {
-        target: 'https://culturallaccess.com',
+        target: process.env.VITE_API_PROXY || 'https://culturallaccess.com',
         changeOrigin: true,
         secure: true,
         rewrite: (path) => path.replace(/^\/api/, '/api')
