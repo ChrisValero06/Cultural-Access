@@ -12,8 +12,9 @@ description: >-
 Replicar el mockup lifestyle: título serif, caja crema, SÁBADO + Imagen 1,
 NEWSLETTER/fecha, Imagen 2 + “New day”, galería 3 cols, cierre, barra FOLLOW US.
 
-Paleta mockup: acento `#A67C65`, crema `#F5E6D3`. Si `color_primario` es `#F97316`,
-la plantilla editorial usa terracota del mockup automáticamente.
+Paleta viva: acento `#F97316` (naranja proyecto), crema `#F8EDE3`.
+Imágenes con alto fijo (`imgCover`) para que el collage no se vea vacío/triste.
+Las 5 fotos son obligatorias visualmente; sin ellas el correo se ve apagado.
 
 ## Cómo usarlo
 
