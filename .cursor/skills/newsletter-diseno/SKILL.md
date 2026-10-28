@@ -1,43 +1,34 @@
 ---
 name: newsletter-diseno
 description: >-
-  Diseño editorial del newsletter CulturAll Access (mockup con 5 imágenes).
+  Diseño editorial del newsletter CulturAll Access (mockup collage premium).
   Usar al editar campañas, preview HTML, bloques editorial, o plantilla de envío.
 ---
 
-# Newsletter — diseño editorial (mockup)
+# Newsletter — mockup editorial premium
 
-## Objetivo visual
+## Objetivo
 
-Replicar el mockup lifestyle: título serif, caja crema, SÁBADO + Imagen 1,
-NEWSLETTER/fecha, Imagen 2 + “New day”, galería 3 cols, cierre, barra FOLLOW US.
+Replicar el mockup lifestyle (no naranja chillón): blanco + crema + taupe + café,
+collage con capas detrás de fotos, tipografía serif, botones con sombra offset.
 
-Paleta viva: acento `#F97316` (naranja proyecto), crema `#F8EDE3`.
-Imágenes con alto fijo (`imgCover`) para que el collage no se vea vacío/triste.
-Las 5 fotos son obligatorias visualmente; sin ellas el correo se ve apagado.
+## Paleta fija en `renderEditorial`
 
-## Cómo usarlo
+| Uso | Hex |
+|-----|-----|
+| Acento / botones / footer | `#8B6F5C` |
+| Barra SÁBADO / capa centro | `#A89080` |
+| Caja texto | `#F3E8DB` |
+| Capas detrás de fotos | `#EAD9C8` |
 
-1. Campaña → bloque **Diseño editorial (mockup)** (viene por defecto)
-2. Completar textos e **Imagen 1…5**
-3. Color sugerido: `#A67C65`
-4. Guardar / preview / enviar
+La plantilla editorial **no** usa `#F97316` (se veía pobre junto al mockup).
 
 ## Archivos
 
-| Pieza | Ruta |
-|-------|------|
-| HTML | `Cultural-Access-Backend/backend/services/newsletterTemplate.js` → `renderEditorial` |
-| Mailchimp | `mailchimpService.js` → `imagen_1`…`imagen_5` |
-| Editor | `CampanaEditor.jsx` bloque `editorial` |
-
-## Mapa
-
-1. **Imagen 1** — arriba derecha (bajo SÁBADO)
-2. **Imagen 2** — mitad izquierda (fondo crema offset)
-3. **Imagen 3–5** — galería
-4. Textos en campos del bloque `editorial`
+- Backend HTML: `newsletterTemplate.js` → `renderEditorial`, `fotoConCapa`, `botonEditorial`
+- Front editor: `CampanaEditor.jsx` bloque `editorial`
+- Obligatorias visualmente: **Imagen 1…5** (sin fotos no se parece al mockup)
 
 ## Deploy
 
-Cambios de plantilla = **backend**. Tras push: `git pull` + reiniciar Node en el servidor.
+Cambios = **backend**. `git pull` + reiniciar Node en el servidor.
