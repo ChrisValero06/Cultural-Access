@@ -36,7 +36,7 @@ const FORM_INICIAL = {
   titulo: '',
   intro_texto: '',
   footer_texto: 'Secretaría de Cultura de Nuevo León',
-  color_primario: '#F97316',
+  color_primario: '#A67C65', // Terracota del mockup editorial
   // Nueva campaña ya trae el diseño del mockup abierto (mapa + Imagen 1–5)
   bloques: [BLOQUE_EDITORIAL_NUEVO()],
 };
