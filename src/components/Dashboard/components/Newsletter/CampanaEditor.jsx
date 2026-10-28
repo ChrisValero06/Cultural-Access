@@ -1,6 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { apiService, newsletterService } from '../../../../apis';
 
+const ESTILO_TEXTO_DEF = (fuente = 'serif', tamano = 14, extras = {}) => ({
+  fuente,
+  tamano,
+  negrita: false,
+  cursiva: false,
+  color: '',
+  ...extras,
+});
+
 const BLOQUE_EDITORIAL_NUEVO = () => ({
   tipo: 'editorial',
   titulo: 'CulturAll Access',
@@ -27,7 +36,29 @@ const BLOQUE_EDITORIAL_NUEVO = () => ({
   social_facebook: '',
   social_x: '',
   social_instagram: '',
+  // Tipografía editable por campo (se aplica en el HTML del correo)
+  estilos: {
+    titulo: ESTILO_TEXTO_DEF('serif', 34),
+    subtitulo: ESTILO_TEXTO_DEF('serif', 13, { cursiva: true }),
+    intro_caja: ESTILO_TEXTO_DEF('serif', 13),
+    seccion2_titulo: ESTILO_TEXTO_DEF('serif', 28),
+    seccion2_texto: ESTILO_TEXTO_DEF('serif', 13),
+    galeria_titulo: ESTILO_TEXTO_DEF('serif', 13),
+    cierre_titulo: ESTILO_TEXTO_DEF('serif', 18),
+    cierre_texto: ESTILO_TEXTO_DEF('serif', 12),
+  },
 });
+
+const OPCIONES_FUENTE = [
+  { value: 'serif', label: 'Serif (Georgia)' },
+  { value: 'sans', label: 'Sans (Helvetica)' },
+  { value: 'montserrat', label: 'Montserrat' },
+  { value: 'arial', label: 'Arial' },
+  { value: 'times', label: 'Times New Roman' },
+  { value: 'verdana', label: 'Verdana' },
+];
+
+const OPCIONES_TAMANO = [11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 32, 34, 38, 42];
 
 const FORM_INICIAL = {
   nombre: '',
@@ -64,6 +95,113 @@ const Campo = ({ label, children }) => (
   </label>
 );
 
+/** Texto + barra de tipografía (fuente, tamaño, negrita, cursiva, color) */
+const CampoTextoEstilable = ({
+  label,
+  valor,
+  onChangeTexto,
+  estilo = {},
+  onChangeEstilo,
+  multilinea = false,
+  filas = 3,
+  placeholder = '',
+}) => {
+  const e = { fuente: 'serif', tamano: 14, negrita: false, cursiva: false, color: '', ...estilo };
+  const setEstilo = (patch) => onChangeEstilo({ ...e, ...patch });
+  const previewFont = {
+    serif: 'Georgia, Times New Roman, serif',
+    sans: 'Helvetica Neue, Helvetica, Arial, sans-serif',
+    montserrat: 'Montserrat, Helvetica, Arial, sans-serif',
+    arial: 'Arial, Helvetica, sans-serif',
+    times: 'Times New Roman, Times, serif',
+    verdana: 'Verdana, Geneva, sans-serif',
+  }[e.fuente] || 'Georgia, serif';
+
+  return (
+    <div className="space-y-1.5">
+      <span className="block text-xs font-semibold text-gray-600">{label}</span>
+      <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-gray-50 border border-gray-200 rounded-lg">
+        <select
+          value={e.fuente}
+          onChange={(ev) => setEstilo({ fuente: ev.target.value })}
+          className="text-xs border border-gray-300 rounded px-1.5 py-1 bg-white"
+          title="Tipografía"
+        >
+          {OPCIONES_FUENTE.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+        <select
+          value={e.tamano}
+          onChange={(ev) => setEstilo({ tamano: Number(ev.target.value) })}
+          className="text-xs border border-gray-300 rounded px-1.5 py-1 bg-white"
+          title="Tamaño"
+        >
+          {OPCIONES_TAMANO.map((n) => (
+            <option key={n} value={n}>{n}px</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={() => setEstilo({ negrita: !e.negrita })}
+          className={`text-xs font-bold px-2 py-1 rounded border ${e.negrita ? 'bg-orange-500 text-white border-orange-500' : 'bg-white border-gray-300 text-gray-700'}`}
+          title="Negrita"
+        >
+          B
+        </button>
+        <button
+          type="button"
+          onClick={() => setEstilo({ cursiva: !e.cursiva })}
+          className={`text-xs italic px-2 py-1 rounded border ${e.cursiva ? 'bg-orange-500 text-white border-orange-500' : 'bg-white border-gray-300 text-gray-700'}`}
+          title="Cursiva"
+        >
+          I
+        </button>
+        <label className="flex items-center gap-1 text-xs text-gray-600 px-1" title="Color del texto">
+          <span>Color</span>
+          <input
+            type="color"
+            value={e.color && /^#[0-9a-f]{6}$/i.test(e.color) ? e.color : '#3A322C'}
+            onChange={(ev) => setEstilo({ color: ev.target.value })}
+            className="h-6 w-7 border border-gray-300 rounded cursor-pointer bg-white"
+          />
+        </label>
+      </div>
+      {multilinea ? (
+        <textarea
+          rows={filas}
+          value={valor || ''}
+          onChange={(ev) => onChangeTexto(ev.target.value)}
+          placeholder={placeholder}
+          className={inputClase}
+          style={{
+            fontFamily: previewFont,
+            fontSize: `${Math.min(18, e.tamano)}px`,
+            fontWeight: e.negrita ? 700 : 400,
+            fontStyle: e.cursiva ? 'italic' : 'normal',
+            color: e.color || undefined,
+          }}
+        />
+      ) : (
+        <input
+          type="text"
+          value={valor || ''}
+          onChange={(ev) => onChangeTexto(ev.target.value)}
+          placeholder={placeholder}
+          className={inputClase}
+          style={{
+            fontFamily: previewFont,
+            fontSize: `${Math.min(18, e.tamano)}px`,
+            fontWeight: e.negrita ? 700 : 400,
+            fontStyle: e.cursiva ? 'italic' : 'normal',
+            color: e.color || undefined,
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
 function urlPreviewImagen(ruta) {
   if (!ruta) return '';
   const limpia = String(ruta).trim();
@@ -76,8 +214,13 @@ function urlPreviewImagen(ruta) {
 
 function asegurarBloqueEditorial(bloques) {
   const lista = Array.isArray(bloques) ? [...bloques] : [];
-  if (lista.some((b) => b?.tipo === 'editorial')) return lista;
-  return [BLOQUE_EDITORIAL_NUEVO(), ...lista];
+  const defs = BLOQUE_EDITORIAL_NUEVO().estilos;
+  const normalizados = lista.map((b) => {
+    if (b?.tipo !== 'editorial') return b;
+    return { ...b, estilos: { ...defs, ...(b.estilos || {}) } };
+  });
+  if (normalizados.some((b) => b?.tipo === 'editorial')) return normalizados;
+  return [BLOQUE_EDITORIAL_NUEVO(), ...normalizados];
 }
 
 // La respuesta de promociones cambia de forma según el endpoint que conteste
@@ -230,22 +373,45 @@ const EditorBloque = ({ bloque, onChange, promociones }) => {
   const set = (campo) => (e) => onChange({ ...bloque, [campo]: e.target.value });
 
   switch (bloque.tipo) {
-    case 'editorial':
+    case 'editorial': {
+      const estilos = bloque.estilos || {};
+      const setEstiloCampo = (clave) => (nuevoEstilo) => onChange({
+        ...bloque,
+        estilos: { ...estilos, [clave]: nuevoEstilo },
+      });
+
       return (
         <div className="space-y-4">
           <MapaLayoutEditorial />
+          <p className="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            En cada texto puedes cambiar <strong>tipografía</strong>, <strong>tamaño</strong>, <strong>negrita</strong>, <strong>cursiva</strong> y <strong>color</strong>. Se refleja en la vista previa del correo.
+          </p>
 
           <div className="border border-gray-200 rounded-lg p-3 space-y-3">
             <h4 className="text-sm font-semibold text-gray-800">Zona 1 — Cabecera (textos)</h4>
-            <Campo label="Título (ej. Inspirational Blog / CulturAll Access)">
-              <input type="text" value={bloque.titulo || ''} onChange={set('titulo')} className={inputClase} />
-            </Campo>
-            <Campo label="Subtítulo">
-              <input type="text" value={bloque.subtitulo || ''} onChange={set('subtitulo')} className={inputClase} />
-            </Campo>
-            <Campo label="Texto de la caja beige (intro)">
-              <textarea rows={4} value={bloque.intro_caja || ''} onChange={set('intro_caja')} className={inputClase} />
-            </Campo>
+            <CampoTextoEstilable
+              label="Título (ej. Inspirational Blog / CulturAll Access)"
+              valor={bloque.titulo}
+              onChangeTexto={(v) => onChange({ ...bloque, titulo: v })}
+              estilo={estilos.titulo}
+              onChangeEstilo={setEstiloCampo('titulo')}
+            />
+            <CampoTextoEstilable
+              label="Subtítulo"
+              valor={bloque.subtitulo}
+              onChangeTexto={(v) => onChange({ ...bloque, subtitulo: v })}
+              estilo={estilos.subtitulo}
+              onChangeEstilo={setEstiloCampo('subtitulo')}
+            />
+            <CampoTextoEstilable
+              label="Texto de la caja beige (intro)"
+              valor={bloque.intro_caja}
+              onChangeTexto={(v) => onChange({ ...bloque, intro_caja: v })}
+              estilo={estilos.intro_caja}
+              onChangeEstilo={setEstiloCampo('intro_caja')}
+              multilinea
+              filas={4}
+            />
             <div className="grid grid-cols-2 gap-3">
               <Campo label="Botón 1 — texto">
                 <input type="text" value={bloque.cta1_texto || ''} onChange={set('cta1_texto')} className={inputClase} />
@@ -315,12 +481,22 @@ const EditorBloque = ({ bloque, onChange, promociones }) => {
 
           <div className="border border-gray-200 rounded-lg p-3 space-y-3">
             <h4 className="text-sm font-semibold text-gray-800">Zona 2 — Textos del destacado</h4>
-            <Campo label="Título (ej. New day)">
-              <input type="text" value={bloque.seccion2_titulo || ''} onChange={set('seccion2_titulo')} className={inputClase} />
-            </Campo>
-            <Campo label="Texto">
-              <textarea rows={3} value={bloque.seccion2_texto || ''} onChange={set('seccion2_texto')} className={inputClase} />
-            </Campo>
+            <CampoTextoEstilable
+              label="Título (ej. New day)"
+              valor={bloque.seccion2_titulo}
+              onChangeTexto={(v) => onChange({ ...bloque, seccion2_titulo: v })}
+              estilo={estilos.seccion2_titulo}
+              onChangeEstilo={setEstiloCampo('seccion2_titulo')}
+            />
+            <CampoTextoEstilable
+              label="Texto"
+              valor={bloque.seccion2_texto}
+              onChangeTexto={(v) => onChange({ ...bloque, seccion2_texto: v })}
+              estilo={estilos.seccion2_texto}
+              onChangeEstilo={setEstiloCampo('seccion2_texto')}
+              multilinea
+              filas={3}
+            />
             <div className="grid grid-cols-2 gap-3">
               <Campo label="Botón 2 — texto">
                 <input type="text" value={bloque.cta2_texto || ''} onChange={set('cta2_texto')} className={inputClase} />
@@ -333,15 +509,29 @@ const EditorBloque = ({ bloque, onChange, promociones }) => {
 
           <div className="border border-gray-200 rounded-lg p-3 space-y-3">
             <h4 className="text-sm font-semibold text-gray-800">Zona 3 y 4 — Galería y cierre</h4>
-            <Campo label="Título galería">
-              <input type="text" value={bloque.galeria_titulo || ''} onChange={set('galeria_titulo')} className={inputClase} />
-            </Campo>
-            <Campo label="Frase de cierre">
-              <input type="text" value={bloque.cierre_titulo || ''} onChange={set('cierre_titulo')} className={inputClase} />
-            </Campo>
-            <Campo label="Texto de cierre">
-              <textarea rows={2} value={bloque.cierre_texto || ''} onChange={set('cierre_texto')} className={inputClase} />
-            </Campo>
+            <CampoTextoEstilable
+              label="Título galería"
+              valor={bloque.galeria_titulo}
+              onChangeTexto={(v) => onChange({ ...bloque, galeria_titulo: v })}
+              estilo={estilos.galeria_titulo}
+              onChangeEstilo={setEstiloCampo('galeria_titulo')}
+            />
+            <CampoTextoEstilable
+              label="Frase de cierre"
+              valor={bloque.cierre_titulo}
+              onChangeTexto={(v) => onChange({ ...bloque, cierre_titulo: v })}
+              estilo={estilos.cierre_titulo}
+              onChangeEstilo={setEstiloCampo('cierre_titulo')}
+            />
+            <CampoTextoEstilable
+              label="Texto de cierre"
+              valor={bloque.cierre_texto}
+              onChangeTexto={(v) => onChange({ ...bloque, cierre_texto: v })}
+              estilo={estilos.cierre_texto}
+              onChangeEstilo={setEstiloCampo('cierre_texto')}
+              multilinea
+              filas={2}
+            />
             <Campo label="Texto barra inferior (SÍGUENOS)">
               <input type="text" value={bloque.follow_texto || ''} onChange={set('follow_texto')} className={inputClase} />
             </Campo>
@@ -359,6 +549,7 @@ const EditorBloque = ({ bloque, onChange, promociones }) => {
           </div>
         </div>
       );
+    }
 
     case 'portada':
       return (
