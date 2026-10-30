@@ -205,28 +205,48 @@ const Redencion = () => {
       if (formData.tipoPromocion) {
         const API_BASE = import.meta.env.DEV ? '/api' : 'https://culturallaccess.com/api'
         const normalizar = (s) => (s || '').toLowerCase().trim()
+        // Evita desfase UTC con fechas DATE 'YYYY-MM-DD' o Date de mysql
+        const partesFechaLocal = (val) => {
+          if (!val) return null
+          if (typeof val === 'string') {
+            const m = val.match(/^(\d{4})-(\d{2})-(\d{2})/)
+            if (m) return { y: +m[1], m: +m[2] - 1, d: +m[3] }
+          }
+          const d = val instanceof Date ? val : new Date(val)
+          if (isNaN(d.getTime())) return null
+          return { y: d.getFullYear(), m: d.getMonth(), d: d.getDate() }
+        }
 
         let promo = null
         try {
-          const promoRes = await fetch(`${API_BASE}/promociones/obtener_promociones?institucion=${encodeURIComponent(formData.institucion)}`)
-          if (promoRes.ok) {
-            const promoData = await promoRes.json()
-            const promociones = Array.isArray(promoData) ? promoData : (promoData.data || promoData.promociones || [])
-            promo = promociones.find(p =>
-              normalizar(p.tipo_promocion || p.tipoPromocion) === normalizar(formData.tipoPromocion)
-            )
+          // all=1: el límite vive en promociones aunque esté inactiva/vencida
+          const promoRes = await fetch(`${API_BASE}/promociones/obtener_promociones?institucion=${encodeURIComponent(formData.institucion)}&all=1`)
+          if (!promoRes.ok) {
+            alert('No se pudo verificar el límite de la promoción. Intenta de nuevo.')
+            return
           }
+          const promoData = await promoRes.json()
+          const promociones = Array.isArray(promoData) ? promoData : (promoData.data || promoData.promociones || [])
+          const mismas = promociones.filter(p =>
+            normalizar(p.institucion) === normalizar(formData.institucion) &&
+            normalizar(p.tipo_promocion || p.tipoPromocion) === normalizar(formData.tipoPromocion)
+          )
+          // Preferir fila con límite configurado
+          promo = mismas.find(p => {
+            const lim = (p.limite_uso || p.limiteUso || '').toString().toLowerCase().trim()
+            return lim === 'una_vez' || lim === 'mensual' || p.limitar_uso == 1 || p.limitar_uso === true || p.limitar_uso === '1'
+          }) || mismas[0] || null
         } catch (_) {
           alert('No se pudo verificar el límite de la promoción. Intenta de nuevo.')
           return
         }
 
         const limiteUso = (promo?.limite_uso || promo?.limiteUso || '').toString().toLowerCase().trim()
+        const tieneLimiteUnaVez = limiteUso === 'una_vez'
+        // Legacy: limitar_uso=1 sin limite_uso ⇒ mensual. No mezclar con una_vez.
         const tieneLimiteMensual =
           limiteUso === 'mensual' ||
-          promo?.limitar_uso == 1 ||
-          promo?.limitar_uso === true
-        const tieneLimiteUnaVez = limiteUso === 'una_vez'
+          (!limiteUso && (promo?.limitar_uso == 1 || promo?.limitar_uso === true || promo?.limitar_uso === '1'))
         const debeValidarLimite = tieneLimiteUnaVez || tieneLimiteMensual
 
         if (debeValidarLimite) {
@@ -255,9 +275,9 @@ const Redencion = () => {
               const mesActual = ahora.getMonth()
               const anioActual = ahora.getFullYear()
               const yaUsadaEsteMes = mismosRegistros.some(r => {
-                const fechaUso = new Date(r.fecha || r.fecha_uso || r.created_at)
-                if (isNaN(fechaUso.getTime())) return false
-                return fechaUso.getMonth() === mesActual && fechaUso.getFullYear() === anioActual
+                const p = partesFechaLocal(r.fecha || r.fecha_uso || r.created_at)
+                if (!p) return false
+                return p.m === mesActual && p.y === anioActual
               })
               if (yaUsadaEsteMes) {
                 alert('Esta tarjeta ya fue utilizada en esta promoción este mes.')
@@ -373,10 +393,14 @@ const Redencion = () => {
         return;
       }
 
-      // Si la respuesta fue exitosa
+      // Si la respuesta fue exitosa (incluye warning de correo fallido)
       if (responseData && (responseData.success === true || responseData.estado === 'exito')) {
-        alert('Registro de control de acceso creado exitosamente!')
-        
+        if (responseData.warning || responseData.email_error) {
+          alert(responseData.message || 'Registro creado; no se pudo enviar el correo')
+        } else {
+          alert('Registro de control de acceso creado exitosamente!')
+        }
+
         // Limpiar el formulario
         setFormData({
           institucion: '',
