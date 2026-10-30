@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { apiService, newsletterService } from '../../../../apis';
+import './newsletterFonts.css';
 
-const ESTILO_TEXTO_DEF = (fuente = 'serif', tamano = 14, extras = {}) => ({
+const ESTILO_TEXTO_DEF = (fuente = 'montserrat', tamano = 14, extras = {}) => ({
   fuente,
   tamano,
   negrita: false,
@@ -10,20 +11,23 @@ const ESTILO_TEXTO_DEF = (fuente = 'serif', tamano = 14, extras = {}) => ({
   ...extras,
 });
 
+const CAJA_CREMA_DEFAULT = '#FFF7ED';
+
 const BLOQUE_EDITORIAL_NUEVO = () => ({
   tipo: 'editorial',
   titulo: 'CulturAll Access',
   subtitulo: 'Cultura, acceso y promociones',
   intro_caja: '',
+  caja_bg: CAJA_CREMA_DEFAULT,
   cta1_texto: 'Leer más',
   cta1_link: 'https://culturallaccess.com',
   etiqueta_dia: 'SÁBADO',
   imagen_1: '',
-  meta_label: 'NEWSLETTER',
-  fecha_display: '',
   imagen_2: '',
   seccion2_titulo: '',
+  seccion2_subtitulo: '',
   seccion2_texto: '',
+  seccion2_caja_bg: CAJA_CREMA_DEFAULT,
   cta2_texto: 'Leer más',
   cta2_link: 'https://culturallaccess.com',
   galeria_titulo: 'ALGO ESPECIAL HOY',
@@ -38,27 +42,105 @@ const BLOQUE_EDITORIAL_NUEVO = () => ({
   social_instagram: '',
   // Tipografía editable por campo (se aplica en el HTML del correo)
   estilos: {
-    titulo: ESTILO_TEXTO_DEF('serif', 34),
-    subtitulo: ESTILO_TEXTO_DEF('serif', 13, { cursiva: true }),
-    intro_caja: ESTILO_TEXTO_DEF('serif', 13),
-    seccion2_titulo: ESTILO_TEXTO_DEF('serif', 28),
-    seccion2_texto: ESTILO_TEXTO_DEF('serif', 13),
-    galeria_titulo: ESTILO_TEXTO_DEF('serif', 13),
-    cierre_titulo: ESTILO_TEXTO_DEF('serif', 18),
-    cierre_texto: ESTILO_TEXTO_DEF('serif', 12),
+    titulo: ESTILO_TEXTO_DEF('montserrat', 34),
+    subtitulo: ESTILO_TEXTO_DEF('montserrat', 13, { cursiva: true }),
+    intro_caja: ESTILO_TEXTO_DEF('montserrat', 13),
+    seccion2_titulo: ESTILO_TEXTO_DEF('montserrat', 13),
+    seccion2_subtitulo: ESTILO_TEXTO_DEF('montserrat', 13, { cursiva: true }),
+    seccion2_texto: ESTILO_TEXTO_DEF('montserrat', 13),
+    galeria_titulo: ESTILO_TEXTO_DEF('montserrat', 13),
+    cierre_titulo: ESTILO_TEXTO_DEF('montserrat', 18),
+    cierre_texto: ESTILO_TEXTO_DEF('montserrat', 12),
   },
 });
 
 const OPCIONES_FUENTE = [
-  { value: 'serif', label: 'Serif (Georgia)' },
-  { value: 'sans', label: 'Sans (Helvetica)' },
+  { value: 'montserrat-thin', label: 'Montserrat Thin' },
+  { value: 'montserrat-extralight', label: 'Montserrat ExtraLight' },
+  { value: 'montserrat-light', label: 'Montserrat Light' },
   { value: 'montserrat', label: 'Montserrat' },
-  { value: 'arial', label: 'Arial' },
-  { value: 'times', label: 'Times New Roman' },
-  { value: 'verdana', label: 'Verdana' },
+  { value: 'montserrat-medium', label: 'Montserrat Medium' },
+  { value: 'montserrat-semibold', label: 'Montserrat SemiBold' },
+  { value: 'montserrat-bold', label: 'Montserrat Bold' },
+  { value: 'montserrat-extrabold', label: 'Montserrat ExtraBold' },
+  { value: 'montserrat-black', label: 'Montserrat Black' },
+  { value: 'poppins-thin', label: 'Poppins Thin' },
+  { value: 'poppins-extralight', label: 'Poppins ExtraLight' },
+  { value: 'poppins-light', label: 'Poppins Light' },
+  { value: 'poppins', label: 'Poppins' },
+  { value: 'poppins-medium', label: 'Poppins Medium' },
+  { value: 'poppins-semibold', label: 'Poppins SemiBold' },
+  { value: 'poppins-bold', label: 'Poppins Bold' },
+  { value: 'poppins-extrabold', label: 'Poppins ExtraBold' },
+  { value: 'poppins-black', label: 'Poppins Black' },
 ];
 
+/** Stack CSS + peso base (solo Montserrat y Poppins) */
+const PREVIEW_FUENTE = {
+  'montserrat-thin': { family: 'Montserrat, Helvetica, Arial, sans-serif', weight: 100 },
+  'montserrat-extralight': { family: 'Montserrat, Helvetica, Arial, sans-serif', weight: 200 },
+  'montserrat-light': { family: 'Montserrat, Helvetica, Arial, sans-serif', weight: 300 },
+  montserrat: { family: 'Montserrat, Helvetica, Arial, sans-serif', weight: 400 },
+  'montserrat-medium': { family: 'Montserrat, Helvetica, Arial, sans-serif', weight: 500 },
+  'montserrat-semibold': { family: 'Montserrat, Helvetica, Arial, sans-serif', weight: 600 },
+  'montserrat-bold': { family: 'Montserrat, Helvetica, Arial, sans-serif', weight: 700 },
+  'montserrat-extrabold': { family: 'Montserrat, Helvetica, Arial, sans-serif', weight: 800 },
+  'montserrat-black': { family: 'Montserrat, Helvetica, Arial, sans-serif', weight: 900 },
+  'poppins-thin': { family: 'Poppins, Helvetica, Arial, sans-serif', weight: 100 },
+  'poppins-extralight': { family: 'Poppins, Helvetica, Arial, sans-serif', weight: 200 },
+  'poppins-light': { family: 'Poppins, Helvetica, Arial, sans-serif', weight: 300 },
+  poppins: { family: 'Poppins, Helvetica, Arial, sans-serif', weight: 400 },
+  'poppins-medium': { family: 'Poppins, Helvetica, Arial, sans-serif', weight: 500 },
+  'poppins-semibold': { family: 'Poppins, Helvetica, Arial, sans-serif', weight: 600 },
+  'poppins-bold': { family: 'Poppins, Helvetica, Arial, sans-serif', weight: 700 },
+  'poppins-extrabold': { family: 'Poppins, Helvetica, Arial, sans-serif', weight: 800 },
+  'poppins-black': { family: 'Poppins, Helvetica, Arial, sans-serif', weight: 900 },
+};
+
 const OPCIONES_TAMANO = [11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 32, 34, 38, 42];
+
+/** Valor guardado (texto + <strong>) → HTML del contentEditable */
+function valorAHtmlEditor(valor) {
+  return String(valor ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/&lt;strong&gt;/gi, '<strong>')
+    .replace(/&lt;\/strong&gt;/gi, '</strong>')
+    .replace(/&lt;b&gt;/gi, '<strong>')
+    .replace(/&lt;\/b&gt;/gi, '</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+/** HTML del editor → valor con solo <strong> y saltos de línea */
+function htmlEditorAValor(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = String(html || '');
+
+  const walk = (node) => {
+    let out = '';
+    for (const child of node.childNodes) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        out += child.textContent || '';
+      } else if (child.nodeType === Node.ELEMENT_NODE) {
+        const tag = child.tagName.toLowerCase();
+        if (tag === 'br') {
+          out += '\n';
+        } else if (tag === 'strong' || tag === 'b') {
+          out += `<strong>${walk(child)}</strong>`;
+        } else if (tag === 'div' || tag === 'p') {
+          if (out && !out.endsWith('\n')) out += '\n';
+          out += walk(child);
+        } else {
+          out += walk(child);
+        }
+      }
+    }
+    return out;
+  };
+
+  return walk(tmp).replace(/\n+$/, '');
+}
 
 const FORM_INICIAL = {
   nombre: '',
@@ -67,10 +149,17 @@ const FORM_INICIAL = {
   titulo: '',
   intro_texto: '',
   footer_texto: 'Secretaría de Cultura de Nuevo León',
-  color_primario: '#8B6F5C', // Café del mockup editorial (premium)
+  color_primario: '#F97316', // Naranja CulturAll Access
   // Nueva campaña ya trae el diseño del mockup abierto (mapa + Imagen 1–5)
   bloques: [BLOQUE_EDITORIAL_NUEVO()],
 };
+
+const CAFES_VIEJOS = new Set(['#8B6F5C', '#A89080', '#8D7361', '#8D7663']);
+function colorPrimarioMarca(color) {
+  const c = String(color || '').toUpperCase();
+  if (!c || CAFES_VIEJOS.has(c)) return '#F97316';
+  return color || '#F97316';
+}
 
 const TIPOS_BLOQUE = {
   editorial: {
@@ -95,7 +184,32 @@ const Campo = ({ label, children }) => (
   </label>
 );
 
-/** Texto + barra de tipografía (fuente, tamaño, negrita, cursiva, color) */
+/** Color de fondo de la caja crema (intro / promoción 2) */
+const CampoColorCaja = ({ label, valor, onChange }) => {
+  const hex = valor && /^#[0-9a-f]{6}$/i.test(valor) ? valor : CAJA_CREMA_DEFAULT;
+  return (
+    <Campo label={label}>
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={hex}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-9 w-12 border border-gray-300 rounded cursor-pointer"
+        />
+        <input
+          type="text"
+          value={valor || CAJA_CREMA_DEFAULT}
+          onChange={(e) => onChange(e.target.value)}
+          className={inputClase}
+          placeholder={CAJA_CREMA_DEFAULT}
+        />
+      </div>
+    </Campo>
+  );
+};
+
+/** Texto + barra de tipografía (fuente, tamaño, negrita, cursiva, color).
+ *  Negrita: con selección → solo ese tramo (<strong>); sin selección → todo el campo. */
 const CampoTextoEstilable = ({
   label,
   valor,
@@ -106,16 +220,80 @@ const CampoTextoEstilable = ({
   filas = 3,
   placeholder = '',
 }) => {
-  const e = { fuente: 'serif', tamano: 14, negrita: false, cursiva: false, color: '', ...estilo };
+  const e = { fuente: 'montserrat', tamano: 14, negrita: false, cursiva: false, color: '', ...estilo };
   const setEstilo = (patch) => onChangeEstilo({ ...e, ...patch });
-  const previewFont = {
-    serif: 'Georgia, Times New Roman, serif',
-    sans: 'Helvetica Neue, Helvetica, Arial, sans-serif',
-    montserrat: 'Montserrat, Helvetica, Arial, sans-serif',
-    arial: 'Arial, Helvetica, sans-serif',
-    times: 'Times New Roman, Times, serif',
-    verdana: 'Verdana, Geneva, sans-serif',
-  }[e.fuente] || 'Georgia, serif';
+  const previewMeta = PREVIEW_FUENTE[e.fuente] || PREVIEW_FUENTE.montserrat;
+  const previewFont = previewMeta.family;
+  const previewWeight = e.negrita ? Math.max(previewMeta.weight, 700) : previewMeta.weight;
+  const editorRef = useRef(null);
+  const syncingRef = useRef(false);
+  const [negritaInlineActiva, setNegritaInlineActiva] = useState(false);
+
+  // Sincronizar HTML del editor cuando el valor llega desde fuera (carga / undo remoto)
+  useEffect(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    const actual = htmlEditorAValor(el.innerHTML);
+    if (actual === (valor || '')) return;
+    syncingRef.current = true;
+    el.innerHTML = valorAHtmlEditor(valor || '') || '';
+    syncingRef.current = false;
+  }, [valor]);
+
+  const emitirDesdeEditor = () => {
+    const el = editorRef.current;
+    if (!el || syncingRef.current) return;
+    onChangeTexto(htmlEditorAValor(el.innerHTML));
+  };
+
+  const haySeleccionEnEditor = () => {
+    const el = editorRef.current;
+    const sel = window.getSelection();
+    if (!el || !sel || sel.rangeCount === 0 || sel.isCollapsed) return false;
+    return el.contains(sel.anchorNode) && el.contains(sel.focusNode);
+  };
+
+  const actualizarEstadoNegritaInline = () => {
+    try {
+      setNegritaInlineActiva(!!document.queryCommandState('bold'));
+    } catch {
+      setNegritaInlineActiva(false);
+    }
+  };
+
+  const aplicarNegrita = () => {
+    const el = editorRef.current;
+    if (!el) {
+      setEstilo({ negrita: !e.negrita });
+      return;
+    }
+
+    if (haySeleccionEnEditor()) {
+      el.focus();
+      document.execCommand('bold', false);
+      // Solo el tramo seleccionado: apagar negrita de campo completo
+      if (e.negrita) setEstilo({ negrita: false });
+      emitirDesdeEditor();
+      actualizarEstadoNegritaInline();
+      return;
+    }
+
+    // Sin selección → negrita a todo el campo (CSS font-weight)
+    setEstilo({ negrita: !e.negrita });
+  };
+
+  const estiloEditor = {
+    fontFamily: previewFont,
+    fontSize: `${Math.min(18, e.tamano)}px`,
+    fontWeight: previewWeight,
+    fontStyle: e.cursiva ? 'italic' : 'normal',
+    color: e.color || undefined,
+    minHeight: multilinea ? `${Math.max(2, filas) * 1.5}rem` : undefined,
+    whiteSpace: multilinea ? 'pre-wrap' : 'nowrap',
+    overflowX: multilinea ? undefined : 'auto',
+  };
+
+  const botonNegritaActivo = e.negrita || negritaInlineActiva;
 
   return (
     <div className="space-y-1.5">
@@ -124,7 +302,7 @@ const CampoTextoEstilable = ({
         <select
           value={e.fuente}
           onChange={(ev) => setEstilo({ fuente: ev.target.value })}
-          className="text-xs border border-gray-300 rounded px-1.5 py-1 bg-white"
+          className="text-xs border border-gray-300 rounded px-1.5 py-1 bg-white max-w-[11rem]"
           title="Tipografía"
         >
           {OPCIONES_FUENTE.map((o) => (
@@ -143,9 +321,10 @@ const CampoTextoEstilable = ({
         </select>
         <button
           type="button"
-          onClick={() => setEstilo({ negrita: !e.negrita })}
-          className={`text-xs font-bold px-2 py-1 rounded border ${e.negrita ? 'bg-orange-500 text-white border-orange-500' : 'bg-white border-gray-300 text-gray-700'}`}
-          title="Negrita"
+          onMouseDown={(ev) => ev.preventDefault()}
+          onClick={aplicarNegrita}
+          className={`text-xs font-bold px-2 py-1 rounded border ${botonNegritaActivo ? 'bg-orange-500 text-white border-orange-500' : 'bg-white border-gray-300 text-gray-700'}`}
+          title="Negrita: selección = solo ese texto; sin selección = todo el campo"
         >
           B
         </button>
@@ -167,37 +346,27 @@ const CampoTextoEstilable = ({
           />
         </label>
       </div>
-      {multilinea ? (
-        <textarea
-          rows={filas}
-          value={valor || ''}
-          onChange={(ev) => onChangeTexto(ev.target.value)}
-          placeholder={placeholder}
-          className={inputClase}
-          style={{
-            fontFamily: previewFont,
-            fontSize: `${Math.min(18, e.tamano)}px`,
-            fontWeight: e.negrita ? 700 : 400,
-            fontStyle: e.cursiva ? 'italic' : 'normal',
-            color: e.color || undefined,
-          }}
-        />
-      ) : (
-        <input
-          type="text"
-          value={valor || ''}
-          onChange={(ev) => onChangeTexto(ev.target.value)}
-          placeholder={placeholder}
-          className={inputClase}
-          style={{
-            fontFamily: previewFont,
-            fontSize: `${Math.min(18, e.tamano)}px`,
-            fontWeight: e.negrita ? 700 : 400,
-            fontStyle: e.cursiva ? 'italic' : 'normal',
-            color: e.color || undefined,
-          }}
-        />
-      )}
+      <div
+        ref={editorRef}
+        role="textbox"
+        aria-label={label}
+        contentEditable
+        suppressContentEditableWarning
+        data-placeholder={placeholder}
+        className={`${inputClase} empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none`}
+        style={estiloEditor}
+        onInput={emitirDesdeEditor}
+        onBlur={emitirDesdeEditor}
+        onKeyUp={actualizarEstadoNegritaInline}
+        onMouseUp={actualizarEstadoNegritaInline}
+        onKeyDown={(ev) => {
+          if (!multilinea && ev.key === 'Enter') ev.preventDefault();
+          if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'b') {
+            ev.preventDefault();
+            aplicarNegrita();
+          }
+        }}
+      />
     </div>
   );
 };
@@ -214,10 +383,24 @@ function urlPreviewImagen(ruta) {
 
 function asegurarBloqueEditorial(bloques) {
   const lista = Array.isArray(bloques) ? [...bloques] : [];
-  const defs = BLOQUE_EDITORIAL_NUEVO().estilos;
+  const plantilla = BLOQUE_EDITORIAL_NUEVO();
+  const defsEstilos = plantilla.estilos;
   const normalizados = lista.map((b) => {
     if (b?.tipo !== 'editorial') return b;
-    return { ...b, estilos: { ...defs, ...(b.estilos || {}) } };
+    // Migrar bloques viejos: campos nuevos (p. ej. seccion2_subtitulo, caja_bg) + estilos faltantes
+    const estilosMerged = { ...defsEstilos, ...(b.estilos || {}) };
+    // Título zona 2: banner full-width como galería (antes default 28 en columna estrecha)
+    if (Number(estilosMerged.seccion2_titulo?.tamano) === 28) {
+      estilosMerged.seccion2_titulo = { ...estilosMerged.seccion2_titulo, tamano: 13 };
+    }
+    return {
+      ...plantilla,
+      ...b,
+      seccion2_subtitulo: typeof b.seccion2_subtitulo === 'string' ? b.seccion2_subtitulo : '',
+      caja_bg: /^#[0-9a-f]{6}$/i.test(b.caja_bg || '') ? b.caja_bg : CAJA_CREMA_DEFAULT,
+      seccion2_caja_bg: /^#[0-9a-f]{6}$/i.test(b.seccion2_caja_bg || '') ? b.seccion2_caja_bg : CAJA_CREMA_DEFAULT,
+      estilos: estilosMerged,
+    };
   });
   if (normalizados.some((b) => b?.tipo === 'editorial')) return normalizados;
   return [BLOQUE_EDITORIAL_NUEVO(), ...normalizados];
@@ -237,9 +420,14 @@ function promocionVigente(p) {
   return fin >= new Date();
 }
 
+const MAX_IMAGEN_MB = 10;
+const MAX_IMAGEN_BYTES = MAX_IMAGEN_MB * 1024 * 1024;
+const MSG_IMAGEN_PESADA = `La imagen es pesada. Máximo ${MAX_IMAGEN_MB} MB (mejor menos de 2 MB).`;
+
 const CampoImagen = ({ valor, onChange, altoPreview = 'h-28' }) => {
   const [subiendo, setSubiendo] = useState(false);
   const [rota, setRota] = useState(false);
+  const [errorSubida, setErrorSubida] = useState('');
   const preview = urlPreviewImagen(valor);
 
   useEffect(() => {
@@ -250,11 +438,18 @@ const CampoImagen = ({ valor, onChange, altoPreview = 'h-28' }) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
+    setErrorSubida('');
+    if (file.size > MAX_IMAGEN_BYTES) {
+      setErrorSubida(MSG_IMAGEN_PESADA);
+      return;
+    }
     setSubiendo(true);
     try {
       onChange(await newsletterService.subirImagenNewsletter(file));
     } catch (err) {
-      alert('Error al subir la imagen: ' + err.message);
+      const raw = String(err?.message || err || '');
+      const pesada = /file too large|LIMIT_FILE_SIZE|entity too large|413|pesada|demasiado grande/i.test(raw);
+      setErrorSubida(pesada ? MSG_IMAGEN_PESADA : (raw || 'No se pudo subir la imagen'));
     } finally {
       setSubiendo(false);
     }
@@ -280,7 +475,10 @@ const CampoImagen = ({ valor, onChange, altoPreview = 'h-28' }) => {
         <input
           type="text"
           value={valor || ''}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            setErrorSubida('');
+            onChange(e.target.value);
+          }}
           placeholder="URL de la imagen o súbela →"
           className={inputClase}
         />
@@ -289,11 +487,14 @@ const CampoImagen = ({ valor, onChange, altoPreview = 'h-28' }) => {
           <input type="file" accept="image/*" onChange={subir} disabled={subiendo} className="hidden" />
         </label>
         {valor ? (
-          <button type="button" onClick={() => onChange('')} className="shrink-0 px-2 text-xs text-red-600 hover:bg-red-50 rounded-lg">
+          <button type="button" onClick={() => { setErrorSubida(''); onChange(''); }} className="shrink-0 px-2 text-xs text-red-600 hover:bg-red-50 rounded-lg">
             Quitar
           </button>
         ) : null}
       </div>
+      {errorSubida ? (
+        <p className="text-xs font-medium text-red-600" role="alert">{errorSubida}</p>
+      ) : null}
     </div>
   );
 };
@@ -384,11 +585,11 @@ const EditorBloque = ({ bloque, onChange, promociones }) => {
         <div className="space-y-4">
           <MapaLayoutEditorial />
           <p className="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            En cada texto puedes cambiar <strong>tipografía</strong>, <strong>tamaño</strong>, <strong>negrita</strong>, <strong>cursiva</strong> y <strong>color</strong>. Se refleja en la vista previa del correo.
+            En cada texto puedes cambiar tipografía, tamaño, negrita, cursiva y color. Con negrita: si seleccionas texto solo se pone en negrita esa parte; si no hay selección, se aplica a todo el campo. Se refleja en la vista previa del correo.
           </p>
 
           <div className="border border-gray-200 rounded-lg p-3 space-y-3">
-            <h4 className="text-sm font-semibold text-gray-800">Zona 1 — Cabecera (textos)</h4>
+            <h4 className="text-sm font-semibold text-gray-800">Promoción 1</h4>
             <CampoTextoEstilable
               label="Título (ej. Inspirational Blog / CulturAll Access)"
               valor={bloque.titulo}
@@ -412,6 +613,11 @@ const EditorBloque = ({ bloque, onChange, promociones }) => {
               multilinea
               filas={4}
             />
+            <CampoColorCaja
+              label="Color de fondo de la caja"
+              valor={bloque.caja_bg}
+              onChange={(v) => onChange({ ...bloque, caja_bg: v })}
+            />
             <div className="grid grid-cols-2 gap-3">
               <Campo label="Botón 1 — texto">
                 <input type="text" value={bloque.cta1_texto || ''} onChange={set('cta1_texto')} className={inputClase} />
@@ -420,67 +626,21 @@ const EditorBloque = ({ bloque, onChange, promociones }) => {
                 <input type="text" value={bloque.cta1_link || ''} onChange={set('cta1_link')} className={inputClase} />
               </Campo>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Campo label="Etiqueta día (ej. SÁBADO)">
-                <input type="text" value={bloque.etiqueta_dia || ''} onChange={set('etiqueta_dia')} className={inputClase} />
-              </Campo>
-              <Campo label="Fecha (ej. 17 / 09)">
-                <input type="text" value={bloque.fecha_display || ''} onChange={set('fecha_display')} className={inputClase} />
-              </Campo>
-            </div>
-            <Campo label="Etiqueta debajo de imagen 1 (NEWSLETTER)">
-              <input type="text" value={bloque.meta_label || ''} onChange={set('meta_label')} className={inputClase} />
+            <Campo label="Etiqueta día (ej. SÁBADO)">
+              <input type="text" value={bloque.etiqueta_dia || ''} onChange={set('etiqueta_dia')} className={inputClase} />
             </Campo>
-          </div>
-
-          <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-gray-800">Imágenes del diseño</h4>
             <SlotImagenEditorial
               numero="1"
               titulo="Imagen 1 — arriba derecha"
-              ayuda="Foto vertical / cuadrada del hero (la del chocolate en el mockup)."
+              ayuda="Cuadrada/vertical del hero. En el correo se ve ~218×218 px. Máximo recomendado sin perder calidad (retina): 436×436 px (o 600×600). JPG < 300–500 KB."
               valor={bloque.imagen_1 || ''}
               onChange={(url) => onChange({ ...bloque, imagen_1: url })}
               forma="vertical"
             />
-            <SlotImagenEditorial
-              numero="2"
-              titulo="Imagen 2 — mitad de página"
-              ayuda="Foto horizontal a la izquierda (cama / libro en el mockup)."
-              valor={bloque.imagen_2 || ''}
-              onChange={(url) => onChange({ ...bloque, imagen_2: url })}
-              forma="horizontal"
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <SlotImagenEditorial
-                numero="3"
-                titulo="Imagen 3"
-                ayuda="Galería · izquierda"
-                valor={bloque.imagen_3 || ''}
-                onChange={(url) => onChange({ ...bloque, imagen_3: url })}
-                forma="vertical"
-              />
-              <SlotImagenEditorial
-                numero="4"
-                titulo="Imagen 4"
-                ayuda="Galería · centro"
-                valor={bloque.imagen_4 || ''}
-                onChange={(url) => onChange({ ...bloque, imagen_4: url })}
-                forma="vertical"
-              />
-              <SlotImagenEditorial
-                numero="5"
-                titulo="Imagen 5"
-                ayuda="Galería · derecha"
-                valor={bloque.imagen_5 || ''}
-                onChange={(url) => onChange({ ...bloque, imagen_5: url })}
-                forma="vertical"
-              />
-            </div>
           </div>
 
           <div className="border border-gray-200 rounded-lg p-3 space-y-3">
-            <h4 className="text-sm font-semibold text-gray-800">Zona 2 — Textos del destacado</h4>
+            <h4 className="text-sm font-semibold text-gray-800">Promoción 2</h4>
             <CampoTextoEstilable
               label="Título (ej. New day)"
               valor={bloque.seccion2_titulo}
@@ -489,13 +649,25 @@ const EditorBloque = ({ bloque, onChange, promociones }) => {
               onChangeEstilo={setEstiloCampo('seccion2_titulo')}
             />
             <CampoTextoEstilable
-              label="Texto"
+              label="Subtítulo (dentro de la caja)"
+              valor={bloque.seccion2_subtitulo}
+              onChangeTexto={(v) => onChange({ ...bloque, seccion2_subtitulo: v })}
+              estilo={estilos.seccion2_subtitulo}
+              onChangeEstilo={setEstiloCampo('seccion2_subtitulo')}
+            />
+            <CampoTextoEstilable
+              label="Texto (dentro de la caja)"
               valor={bloque.seccion2_texto}
               onChangeTexto={(v) => onChange({ ...bloque, seccion2_texto: v })}
               estilo={estilos.seccion2_texto}
               onChangeEstilo={setEstiloCampo('seccion2_texto')}
               multilinea
               filas={3}
+            />
+            <CampoColorCaja
+              label="Color de fondo de la caja"
+              valor={bloque.seccion2_caja_bg}
+              onChange={(v) => onChange({ ...bloque, seccion2_caja_bg: v })}
             />
             <div className="grid grid-cols-2 gap-3">
               <Campo label="Botón 2 — texto">
@@ -505,10 +677,18 @@ const EditorBloque = ({ bloque, onChange, promociones }) => {
                 <input type="text" value={bloque.cta2_link || ''} onChange={set('cta2_link')} className={inputClase} />
               </Campo>
             </div>
+            <SlotImagenEditorial
+              numero="2"
+              titulo="Imagen 2 — mitad de página"
+              ayuda="Horizontal a la izquierda. En el correo se ve ~248×162 px. Máximo recomendado sin perder calidad (retina): 496×324 px (o 800×520). JPG < 300–500 KB."
+              valor={bloque.imagen_2 || ''}
+              onChange={(url) => onChange({ ...bloque, imagen_2: url })}
+              forma="horizontal"
+            />
           </div>
 
           <div className="border border-gray-200 rounded-lg p-3 space-y-3">
-            <h4 className="text-sm font-semibold text-gray-800">Zona 3 y 4 — Galería y cierre</h4>
+            <h4 className="text-sm font-semibold text-gray-800">Promociones</h4>
             <CampoTextoEstilable
               label="Título galería"
               valor={bloque.galeria_titulo}
@@ -516,6 +696,32 @@ const EditorBloque = ({ bloque, onChange, promociones }) => {
               estilo={estilos.galeria_titulo}
               onChangeEstilo={setEstiloCampo('galeria_titulo')}
             />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <SlotImagenEditorial
+                numero="3"
+                titulo="Imagen 3"
+                ayuda="Galería · izquierda. Display ~152×220 px. Máximo recomendado: 304×440 px (o 400×580). JPG < 300–500 KB."
+                valor={bloque.imagen_3 || ''}
+                onChange={(url) => onChange({ ...bloque, imagen_3: url })}
+                forma="vertical"
+              />
+              <SlotImagenEditorial
+                numero="4"
+                titulo="Imagen 4"
+                ayuda="Galería · centro. Display ~152×220 px. Máximo recomendado: 304×440 px (o 400×580). JPG < 300–500 KB."
+                valor={bloque.imagen_4 || ''}
+                onChange={(url) => onChange({ ...bloque, imagen_4: url })}
+                forma="vertical"
+              />
+              <SlotImagenEditorial
+                numero="5"
+                titulo="Imagen 5"
+                ayuda="Galería · derecha. Display ~152×220 px. Máximo recomendado: 304×440 px (o 400×580). JPG < 300–500 KB."
+                valor={bloque.imagen_5 || ''}
+                onChange={(url) => onChange({ ...bloque, imagen_5: url })}
+                forma="vertical"
+              />
+            </div>
             <CampoTextoEstilable
               label="Frase de cierre"
               valor={bloque.cierre_titulo}
@@ -689,7 +895,7 @@ const CampanaEditor = ({ campanaId, onVolver }) => {
           titulo: c.titulo || '',
           intro_texto: c.intro_texto || '',
           footer_texto: c.footer_texto || '',
-          color_primario: c.color_primario || FORM_INICIAL.color_primario,
+          color_primario: colorPrimarioMarca(c.color_primario),
           // Siempre incluir el diseño editorial (mapa + Imagen 1–5) aunque haya otros bloques
           bloques: asegurarBloqueEditorial(bloquesCargados),
         });
